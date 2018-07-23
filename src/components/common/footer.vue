@@ -12,7 +12,7 @@
             <div class="pic iconfont"></div>
             <p>客服中心</p>
         </router-link>
-        <router-link :to="{name:'beiquan2'}" class="my" :class="{active:urlRouter == '/My'}">
+        <router-link :to="{name:'my'}" class="my" :class="{active:urlRouter == '/My'}">
             <div class="pic iconfont"></div>
             <p>我的</p>
         </router-link>

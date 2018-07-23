@@ -12,6 +12,8 @@ const LoginIndex = resolve => require(['@/components/account/index'], resolve)
 const Login = resolve => require(['@/components/account/login'], resolve)
 const Cart = resolve => require(['@/components/cart'], resolve)
 const About = resolve => require(['@/components/my/about'], resolve)
+const My = resolve => require(['@/components/my/index'], resolve)
+const Seat = resolve => require(['@/components/seat/index'], resolve)
 
 Vue.use(Router)
 
@@ -67,6 +69,24 @@ export default new Router({
       meta: {
         index: 2
       }
+    }, {
+      path: '/My',
+      name: 'my',
+      component: My,
+      meta: {
+        index: 1
+      }
+    }, {
+      path: '/Seat',
+      name: 'seat',
+      component: Seat,
+      meta: {
+        index: 1
+      }
+    }, {
+      path: '/Zulin',
+      name: 'zulin',
+      redirect: '/Seat'
     }
   ]
 })
