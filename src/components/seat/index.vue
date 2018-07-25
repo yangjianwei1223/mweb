@@ -25,12 +25,12 @@
           </a>
         </div>
         <div v-infinite-scroll="infinite" infinite-scroll-disabled="busy" infinite-scroll-distance="10" class="_v-container">
-          <ul>
-            <li>
-              <a data-action-url="http://mweb.95laibei.com/Seat/Detail/11699" class="whiteBack clearfix ui-link">
-                <img class="lazyDetail" src="https://cdn.product.img.95laibei.com/180622114035070980.jpg@!standard_square_m">
-                <p class="ptitle onelinetext">惠尔顿 9个月-12岁 全能宝3 儿童安全座椅</p>
-                <p class="rent">押金  <span>¥1398</span></p><p class="sum">已领用<span>1498</span>台</p>
+          <ul class="dbitem clearfix">
+            <li v-for="(item,index) in zulilist" :key="index">
+              <a :href='"/Seat/Detail/"+item.ProductBaseId' class="clearfix">
+                <img class="lazyDetail" v-lazy='item.ImgPath+"@!standard_square_m"'>
+                <p class="ptitle onelinetext">{{item.Title}}</p>
+                <p class="rent">押金  <span>¥{{item.Price}}</span></p><p class="sum">已领用<span>{{item.Sales}}</span>台</p>
               </a>
             </li>
           </ul>
@@ -38,7 +38,31 @@
         </div>
       </div>
       <div class="mall" v-show="tab==1">
-        座椅商城
+        <section id="zulinseatsales" class="zulin-seatsales-banner">
+          <ul class="zulin-seatsales-filterOne">
+            <li class="zunlin-filterOne-item" data-sort="1" onclick="Seat_Index.ChooseChannel(this)"><span>综合</span></li>
+            <li class="zunlin-filterOne-item zunlin-filterOne-price" data-sort="3" onclick="Seat_Index.ChooseChannel(this)"><span>价格</span></li>
+            <li class="zunlin-filterOne-item" data-sort="2" onclick="Seat_Index.ChooseChannel(this)"><span>销量</span></li>
+          </ul>
+          <ul class="zulin-seatsales-filterTwo">
+            <li class="zunlin-filterTwo-item arrownone" onclick="Seat_Index.ClearnProperty()" data-id="0" data-name="全部"><span>全部</span></li>
+            <li id="ZunlinBrandId" data-type="ZunlinBrandId" class="zunlin-filterTwo-item arow-down" onclick="Seat_Index.SetPropertyList(this)" data-id="0" data-name="品牌"><span>品牌<i></i></span></li>
+            <li id="ZunlinAge" data-type="ZunlinAge" class="zunlin-filterTwo-item arow-down" onclick="Seat_Index.SetPropertyList(this)" data-id="0" data-name="年龄"><span>年龄<i></i></span></li>
+            <li id="ZunlinRestraints" data-type="ZunlinRestraints" class="zunlin-filterTwo-item arow-down" onclick="Seat_Index.SetPropertyList(this)" data-id="0" data-name="接口"><span>接口<i></i></span></li>
+          </ul>
+          <div class="zulin-seatsales-filterPop">
+            <ul id="SeatPropertyList" class="zulin-filterPop-list clearfix">
+              <li class="zulin-filterPop-item " data-id="202"><a class="link"><span class="item">9个月-12岁</span></a></li>
+              <li class="zulin-filterPop-item " data-id="203"><a class="link"><span class="item">9个月-12岁</span></a></li>
+              <li class="zulin-filterPop-item " data-id="204"><a class="link"><span class="item">9个月-12岁</span></a></li>
+              <li class="zulin-filterPop-item " data-id="205"><a class="link"><span class="item">9个月-12岁</span></a></li>
+            </ul>
+            <div class="zulin-seatsales-btn">
+                <a class="zulin-pop-btn zulin-btn-reset">重置</a>
+                <a class="zulin-pop-btn zulin-btn-confirm">确定</a>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
     <go-top></go-top>
@@ -60,9 +84,12 @@ export default {
   data () {
     return {
       tab: 0,
-      page: 0,
       busy: false,
       showLoading: true,
+      page: 0,
+      BrandId: [],
+      Age: [],
+      Restraints: [],
       tips: '正在加载',
       zulilist: []
     }
@@ -81,12 +108,16 @@ export default {
       this.page += 1
       this.busy = true
       let model = {
-        Token: '5061b637-a63e-4665-b448-b1b5bfeb4447',
+        Sort: this.Sort,
+        Freight: 0,
+        BrandId: this.BrandId,
+        Age: this.Age,
+        Restraints: this.Restraints,
         pageIndex: this.page,
         pageSize: 20
       }
       this.$http({
-        url: apiport.BeiQuan_GetNewsList,
+        url: apiport.Product_GetZulinList,
         method: 'post',
         header: {
           'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
@@ -94,6 +125,7 @@ export default {
         data: qs.stringify({ reqJson: JSON.stringify(model) })
       })
         .then(res => {
+          console.log(res)
           if (res.data.Data.length > 0) {
             this.zulilist = this.zulilist.concat(res.data.Data)
             this.busy = false
@@ -184,5 +216,211 @@ export default {
       flex:1;
       font-size: 0;
     }
+}
+.dbitem{
+  margin-top:.1rem;
+  li{
+    width: 50%;
+    float: left;
+    margin-top:.1rem;
+    box-sizing:border-box;
+    a{
+      display:block;
+      background-color: #fff;
+    }
+    img{
+      height: 3.7rem;
+      display: block;
+    }
+    .ptitle{
+      padding:0 .2rem;
+      font-size:13px;
+      color:#333;
+      line-height:2;
+    }
+    .rent{
+      float:left;
+      padding-left:.2rem;
+      padding-bottom: .1rem;
+      font-size:12px;
+      color:#929292;
+      width: 1.6rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      span{
+        font-size:13px;
+        color:#ff9c00;
+      }
+    }
+    .sum{
+      float: right;
+      padding-right: .2rem;
+      padding-bottom: .1rem;
+      font-size: 10px;
+      color: #929292;
+      width: 1.6rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: right;
+    }
+  }
+  li:nth-child(2n){
+    padding-left: .1rem;
+  }
+}
+.tips{
+  text-align:center;
+  line-height:50px;
+  margin-bottom:50px;
+}
+// 租赁筛选
+.zulin-seatsales-banner{
+  position:fixed;
+  top: 1rem;
+  left: 0;
+  width: 100%;
+  z-index: 21;
+  .zulin-seatsales-filterOne,.zulin-seatsales-filterTwo{
+    position: relative;
+    height: .78rem;
+    line-height:.78rem;
+    font-size: 0;
+    width: 100%;
+    background-color: #fff;
+    border-bottom:1px solid #fafafa;
+  }
+  .zulin-seatsales-filterOne{
+    .zunlin-filterOne-item {
+      display: inline-block;
+      width: 33%;
+      font-size: 15px;
+      border-right: 0;
+      box-sizing: border-box;
+      text-align: center;
+      color: #9fa0a0;
+      padding: 0 6px;
+      margin: 7px 0;
+      height: 28px;
+      line-height: 28px;
+      vertical-align: middle;
+    }
+    .zunlin-filterOne-price:after{
+      content: "";
+      display: inline-block;
+      background: url(https://cdn.sys.img.95laibei.com/Content/Images/zulin-sales_2.png) no-repeat center;
+      background-position: 0 -30px;
+      background-size: 100px 100px;
+      width: 8px;
+      height: 10px;
+      margin-left: 4px;
+    }
+    .zunlin-filterOne-price.arrow-up:after{
+      background-position: 0 -15px;
+    }
+    .zunlin-filterOne-price.arrow-down:after{
+      background-position: 0 0;
+    }
+  }
+  .zulin-seatsales-filterTwo{
+    .zunlin-filterTwo-item{
+      display: inline-block;
+      width: 25%;
+      font-size: 12px;
+      border-right: 0;
+      box-sizing: border-box;
+      text-align: center;
+      color: #9fa0a0;
+      padding: 0 6px;
+      margin: 7px 0;
+      height: 28px;
+      line-height: 28px;
+      vertical-align: middle;
+      &.arow-down i{
+        display: inline-block;
+        background: url(https://cdn.sys.img.95laibei.com/Content/Images/zulin-sales_2.png) no-repeat center;
+        background-position: 0 -20px;
+        background-size: 100px 100px;
+        width: 8px;
+        height: 5px;
+        vertical-align: middle;
+        margin-left: 2px;
+      }
+      &.arow-down.active i{
+        background-position: 0 -15px;
+      }
+    }
+    span{
+      display: block;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      text-align: center;
+      height: 100%;
+      color: #9fa0a0;
+      background-color: #fafafa;
+      line-height: 28px;
+      border: 1px solid #fafafa;
+    }
+  }
+  .zulin-seatsales-filterPop{
+    background: #fff;
+    position: relative;
+    .zulin-filterPop-list{
+      padding: .3rem .2rem;
+      width: 100%;
+      box-sizing: border-box;
+      height: 200px;
+      overflow: scroll;
+      .zulin-filterPop-item{
+        float: left;
+        width: 50%;
+        height: 43px;
+        line-height: 43px;
+        box-sizing: border-box;
+        .link{
+          display: block;
+          margin: 0 5px;
+          padding-left: 5px;
+          position: relative;
+          .item{
+            display: block;
+            max-width: 160px;
+            padding-right: 20px;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+          }
+        }
+      }
+    }
+    .zulin-seatsales-btn{
+      width: 100%;
+      height: 48px;
+      line-height: 48px;
+      box-sizing: border-box;
+      font-size: 0;
+      &::before{
+        content: "";
+        position: absolute;
+        left: 0;
+        height: 1px;
+        width: 100%;
+        background-color: #fafafa;
+      }
+      .zulin-pop-btn{
+        display: inline-block;
+        width: 50%;
+        font-size: 16px;
+        text-align: center;
+        box-sizing: border-box;
+        &.zulin-btn-confirm{
+          color: #fff;
+          background: #ff9c00;
+        }
+      }
+    }
+  }
 }
 </style>

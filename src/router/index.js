@@ -14,6 +14,8 @@ const Cart = resolve => require(['@/components/cart'], resolve)
 const About = resolve => require(['@/components/my/about'], resolve)
 const My = resolve => require(['@/components/my/index'], resolve)
 const Seat = resolve => require(['@/components/seat/index'], resolve)
+const RentKnowledge = resolve => require(['@/components/seat/rentknowledge'], resolve)
+const ServiceAssurance = resolve => require(['@/components/seat/serviceassurance'], resolve)
 
 Vue.use(Router)
 
@@ -87,6 +89,20 @@ export default new Router({
       path: '/Zulin',
       name: 'zulin',
       redirect: '/Seat'
+    }, {
+      path: '/Zulin/RentKnowledge',
+      name: 'rentknowledge',
+      component: RentKnowledge,
+      meta: {
+        index: 2
+      }
+    }, {
+      path: '/Zulin/ServiceAssurance',
+      name: 'serviceassurance',
+      component: ServiceAssurance,
+      meta: {
+        index: 2
+      }
     }
   ]
 })
