@@ -2,7 +2,7 @@
   <div class="swiper">
     <swiper :options="swiperOption">
       <swiper-slide v-for="(item, index) in swiperdata" :key="index">
-          <a :href="item.Url">
+          <a :href="item.Url ? item.Url : 'javascript:;'">
             <img :src='item.Img+"@!standard_src_l"'>
           </a>
       </swiper-slide>

@@ -14,6 +14,7 @@ const Cart = resolve => require(['@/components/cart'], resolve)
 const About = resolve => require(['@/components/my/about'], resolve)
 const My = resolve => require(['@/components/my/index'], resolve)
 const Seat = resolve => require(['@/components/seat/index'], resolve)
+const SeatDetail = resolve => require(['@/components/seat/detail'], resolve)
 const RentKnowledge = resolve => require(['@/components/seat/rentknowledge'], resolve)
 const ServiceAssurance = resolve => require(['@/components/seat/serviceassurance'], resolve)
 
@@ -84,6 +85,13 @@ export default new Router({
       component: Seat,
       meta: {
         index: 1
+      }
+    }, {
+      path: '/Seat/Detail/:id',
+      name: 'seat',
+      component: SeatDetail,
+      meta: {
+        index: 2
       }
     }, {
       path: '/Zulin',

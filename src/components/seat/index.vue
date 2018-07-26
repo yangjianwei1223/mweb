@@ -3,7 +3,8 @@
     <header class="header">
       <div><a class="iconfont back" @click="back">&#xe651;</a></div>
       <div class="tabs">
-        <a href="javascript:;" :class="{active:tab==0}" @click="tabfun(0)">座椅租赁</a><a href="javascript:;" :class="{active:tab==1}" @click="tabfun(1)">座椅商城</a>
+        <a href="javascript:;" :class="{active:tab==0}" @click="tabfun(0)">座椅租赁
+        </a><a href="javascript:;" :class="{active:tab==1}" @click="tabfun(1)">座椅商城</a>
       </div>
       <div>
       </div>
@@ -26,7 +27,7 @@
         </div>
         <div v-infinite-scroll="infinite" infinite-scroll-disabled="busy" infinite-scroll-distance="10" class="_v-container">
           <ul class="dbitem clearfix">
-            <li v-for="(item,index) in zulilist" :key="index">
+            <li v-for="(item,index) in zulinlist" :key="index">
               <a :href='"/Seat/Detail/"+item.ProductBaseId' class="clearfix">
                 <img class="lazyDetail" v-lazy='item.ImgPath+"@!standard_square_m"'>
                 <p class="ptitle onelinetext">{{item.Title}}</p>
@@ -50,7 +51,7 @@
             <li id="ZunlinAge" data-type="ZunlinAge" class="zunlin-filterTwo-item arow-down" onclick="Seat_Index.SetPropertyList(this)" data-id="0" data-name="年龄"><span>年龄<i></i></span></li>
             <li id="ZunlinRestraints" data-type="ZunlinRestraints" class="zunlin-filterTwo-item arow-down" onclick="Seat_Index.SetPropertyList(this)" data-id="0" data-name="接口"><span>接口<i></i></span></li>
           </ul>
-          <div class="zulin-seatsales-filterPop">
+          <div class="zulin-seatsales-filterPop" v-show="filter">
             <ul id="SeatPropertyList" class="zulin-filterPop-list clearfix">
               <li class="zulin-filterPop-item " data-id="202"><a class="link"><span class="item">9个月-12岁</span></a></li>
               <li class="zulin-filterPop-item " data-id="203"><a class="link"><span class="item">9个月-12岁</span></a></li>
@@ -63,6 +64,19 @@
             </div>
           </div>
         </section>
+        <div v-infinite-scroll="infinite1" infinite-scroll-disabled="busy1" infinite-scroll-distance="10" class="_v-container">
+          <ul class="singleitem">
+            <li v-for="(item,index) in seatlist" :key="index" class="item">
+              <a :href='"/Seat/Detail/"+item.ProductBaseId' class="clearfix">
+                <img class="lazyDetail" v-lazy='item.ImgPath+"@!standard_square_m"'>
+                <p class="ptitle onelinetext">{{item.Title}}</p>
+                <p class="pcontent twolinetext">{{item.Content}}</p>
+                <p class="price"><span class="num"><span>¥</span> {{item.Price}}</span><span class="soldout-num">已售出{{item.Sales}}台</span></p>
+              </a>
+            </li>
+          </ul>
+          <div v-if="showLoading" class="tips">{{tips1}}</div>
+        </div>
       </div>
     </div>
     <go-top></go-top>
@@ -85,13 +99,19 @@ export default {
     return {
       tab: 0,
       busy: false,
+      busy1: true,
       showLoading: true,
+      showLoading1: true,
       page: 0,
+      page1: 0,
       BrandId: [],
       Age: [],
       Restraints: [],
       tips: '正在加载',
-      zulilist: []
+      tips1: '正在加载',
+      zulinlist: [],
+      seatlist: [],
+      filter: false
     }
   },
   components: {
@@ -102,17 +122,20 @@ export default {
       this.$router.back()
     },
     tabfun: function (index) {
+      document.body.scrollTop = document.documentElement.scrollTop = 0
       this.tab = index
+      if (index === 0) {
+        this.busy = false
+        this.busy1 = true
+      } else {
+        this.busy = true
+        this.busy1 = false
+      }
     },
     infinite () {
       this.page += 1
       this.busy = true
       let model = {
-        Sort: this.Sort,
-        Freight: 0,
-        BrandId: this.BrandId,
-        Age: this.Age,
-        Restraints: this.Restraints,
         pageIndex: this.page,
         pageSize: 20
       }
@@ -127,11 +150,46 @@ export default {
         .then(res => {
           console.log(res)
           if (res.data.Data.length > 0) {
-            this.zulilist = this.zulilist.concat(res.data.Data)
+            this.zulinlist = this.zulinlist.concat(res.data.Data)
             this.busy = false
           } else {
             this.tips = '已经到底了...'
             this.busy = true
+          }
+        })
+        .catch(error => {
+          console.log(2)
+          console.log(error)
+        })
+    },
+    infinite1 () {
+      this.page1 += 1
+      this.busy1 = true
+      let model = {
+        Sort: this.Sort,
+        Freight: 0,
+        BrandId: this.BrandId,
+        Age: this.Age,
+        Restraints: this.Restraints,
+        pageIndex: this.page1,
+        pageSize: 20
+      }
+      this.$http({
+        url: apiport.Product_GetSeatList,
+        method: 'post',
+        header: {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+        },
+        data: qs.stringify({ reqJson: JSON.stringify(model) })
+      })
+        .then(res => {
+          console.log(res)
+          if (res.data.Data.length > 0) {
+            this.seatlist = this.seatlist.concat(res.data.Data)
+            this.busy1 = false
+          } else {
+            this.tips1 = '已经到底了...'
+            this.busy1 = true
           }
         })
         .catch(error => {
@@ -419,6 +477,62 @@ export default {
           color: #fff;
           background: #ff9c00;
         }
+      }
+    }
+  }
+}
+// 座椅商城
+.singleitem{
+  position: relative;
+  margin-top: 2.6rem;
+  background-color: #fff;
+  .item{
+    margin-left: .3rem;
+    padding: .3rem .3rem .3rem 0;
+    border-bottom: 1px solid #fbfbfb;
+    img{
+      float: left;
+      width: 1.8rem;
+      height: 1.8rem;
+      border-radius: .2rem;
+    }
+    .ptitle{
+      margin-left: 2rem;
+      width: 4.9rem;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+      font-size: .28rem;
+      line-height: .4rem;
+      color: #3e3a39;
+    }
+    .pcontent{
+      margin-left: 2rem;
+      width: 4.9rem;
+      height: .8rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      font-size: .24rem;
+      color: #9fa0a0;
+      line-height: .4rem;
+    }
+    .price{
+      margin-top: .2rem;
+      margin-left: 2rem;
+      overflow: hidden;
+      .num{
+        display: inline-block;
+        font-size: .32rem;
+        color: #ff9c00;
+      }
+      .soldout-num{
+        float: right;
+        margin-left: .1rem;
+        font-size: .26rem;
+        color: #9fa0a0;
       }
     }
   }
