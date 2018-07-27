@@ -5,6 +5,7 @@ import Router from 'vue-router'
 // import Beiquan from '@/components/beiquan/list'
 // import BeiquanDetail from '@/components/beiquan/detail'
 // import Login from '@/components/account/login'
+// import CommentList from '@/components/optimization/commentlist'
 const Index = resolve => require(['@/components/index'], resolve)
 const Beiquan = resolve => require(['@/components/beiquan/list'], resolve)
 const BeiquanDetail = resolve => require(['@/components/beiquan/detail'], resolve)
@@ -17,6 +18,7 @@ const Seat = resolve => require(['@/components/seat/index'], resolve)
 const SeatDetail = resolve => require(['@/components/seat/detail'], resolve)
 const RentKnowledge = resolve => require(['@/components/seat/rentknowledge'], resolve)
 const ServiceAssurance = resolve => require(['@/components/seat/serviceassurance'], resolve)
+const CommentList = resolve => require(['@/components/optimization/commentlist'], resolve)
 
 Vue.use(Router)
 
@@ -108,6 +110,13 @@ export default new Router({
       path: '/Zulin/ServiceAssurance',
       name: 'serviceassurance',
       component: ServiceAssurance,
+      meta: {
+        index: 2
+      }
+    }, {
+      path: '/Optimization/CommentList/:id',
+      name: 'commentlist',
+      component: CommentList,
       meta: {
         index: 2
       }

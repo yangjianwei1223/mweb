@@ -12,27 +12,27 @@
     <div class="container">
       <div class="zulin" v-show="tab==0">
         <div class="seat-sum">
-          <a href="/Zulin/RentKnowledge" class="piclink">
-            <img src="https://cdn.sys.img.95laibei.com/Content/Images/zuindex-101.png" class="pic" alt="租赁须知">
-          </a>
-          <a href="/Zulin/ServiceAssurance" class="piclink">
-            <img src="https://cdn.sys.img.95laibei.com/Content/Images/zuindex-102.png" class="pic" alt="服务保障">
-          </a>
-          <a href="/Activitys/SeatInstallVideo" class="piclink">
-            <img src="https://cdn.sys.img.95laibei.com/Content/Images/zuindex-103.png" class="pic" alt="安装视频">
-          </a>
-          <a href="/Zulin/FreeInstall" class="piclink">
-            <img src="https://cdn.sys.img.95laibei.com/Content/Images/zuindex-104.png" class="pic" alt="全国门店">
-          </a>
+          <router-link to="/Zulin/RentKnowledge" class="piclink">
+           <img src="https://cdn.sys.img.95laibei.com/Content/Images/zuindex-101.png" class="pic" alt="租赁须知">
+          </router-link>
+          <router-link to="/Zulin/ServiceAssurance" class="piclink">
+           <img src="https://cdn.sys.img.95laibei.com/Content/Images/zuindex-102.png" class="pic" alt="服务保障">
+          </router-link>
+          <router-link to="/Activitys/SeatInstallVideo" class="piclink">
+           <img src="https://cdn.sys.img.95laibei.com/Content/Images/zuindex-103.png" class="pic" alt="安装视频">
+          </router-link>
+          <router-link to="/Zulin/FreeInstall" class="piclink">
+           <img src="https://cdn.sys.img.95laibei.com/Content/Images/zuindex-104.png" class="pic" alt="全国门店">
+          </router-link>
         </div>
         <div v-infinite-scroll="infinite" infinite-scroll-disabled="busy" infinite-scroll-distance="10" class="_v-container">
           <ul class="dbitem clearfix">
             <li v-for="(item,index) in zulinlist" :key="index">
-              <a :href='"/Seat/Detail/"+item.ProductBaseId' class="clearfix">
+              <router-link :to='"/Seat/Detail/"+item.ProductBaseId' class="clearfix">
                 <img class="lazyDetail" v-lazy='item.ImgPath+"@!standard_square_m"'>
                 <p class="ptitle onelinetext">{{item.Title}}</p>
                 <p class="rent">押金  <span>¥{{item.Price}}</span></p><p class="sum">已领用<span>{{item.Sales}}</span>台</p>
-              </a>
+              </router-link>
             </li>
           </ul>
           <div tip="正在加载" v-if="showLoading" class="tips">{{tips}}</div>
@@ -67,12 +67,12 @@
         <div v-infinite-scroll="infinite1" infinite-scroll-disabled="busy1" infinite-scroll-distance="10" class="_v-container">
           <ul class="singleitem">
             <li v-for="(item,index) in seatlist" :key="index" class="item">
-              <a :href='"/Seat/Detail/"+item.ProductBaseId' class="clearfix">
+              <router-link :to='"/Seat/Detail/"+item.ProductBaseId' class="clearfix">
                 <img class="lazyDetail" v-lazy='item.ImgPath+"@!standard_square_m"'>
                 <p class="ptitle onelinetext">{{item.Title}}</p>
                 <p class="pcontent twolinetext">{{item.Content}}</p>
                 <p class="price"><span class="num"><span>¥</span> {{item.Price}}</span><span class="soldout-num">已售出{{item.Sales}}台</span></p>
-              </a>
+              </router-link>
             </li>
           </ul>
           <div v-if="showLoading" class="tips">{{tips1}}</div>

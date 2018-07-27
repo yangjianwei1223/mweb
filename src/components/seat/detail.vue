@@ -30,6 +30,7 @@
       <h3 class="textcolorr"><span class="iconfont">&#xe66b;  </span><span>消息通知</span></h3>
       <p class="thirdtext">{{AdvertisingRemark}}</p>
     </section>
+    <comment :ProductBaseId="$route.params.id"></comment>
     <div class="tw">
       <h5 class="specialefth88">
           <span class="tips">图文详情</span>
@@ -42,6 +43,19 @@
     <div class="headimg">
       <span>更多精选商品</span>
     </div>
+    <ul class="dbitem clearfix">
+      <li v-for="(item,index) in ListOtherProducts" :key="index">
+        <router-link :to='"/Seat/Detail/"+item.ProductBaseId' class="clearfix">
+          <img class="lazyDetail" v-lazy='item.ImgPath+"@!standard_square_m"'>
+          <p class="ptitle onelinetext">{{item.Title}}</p>
+          <p class="rent">押金  <span>¥{{item.Price}}</span></p><p class="sum">已领用<span>{{item.Sales}}</span>台</p>
+        </router-link>
+      </li>
+    </ul>
+    <div class="sole">
+      <span>已经到底了</span>
+    </div>
+    <v-footer :footdata="footdata"></v-footer>
   </div>
 </template>
 
@@ -49,10 +63,14 @@
 import qs from 'qs'
 import apiport from '../../util/api'
 import swiper from '../common/swiper'
+import vFooter from './footer'
+import comment from './comment'
 export default {
   name: 'seatdetail',
   components: {
-    swiper
+    swiper,
+    vFooter,
+    comment
   },
   data () {
     return {
@@ -63,12 +81,9 @@ export default {
       Price: 0,
       Sales: 0,
       AdvertisingRemark: '',
-      DetailContent: ''
-    }
-  },
-  methods: {
-    back () {
-      this.$router.back()
+      DetailContent: '',
+      ListOtherProducts: [],
+      footdata: {}
     }
   },
   computed: {
@@ -79,35 +94,52 @@ export default {
       return '座椅租赁'
     }
   },
-  mounted: function () {
-    // 首页数据请求
-    let model1 = {
-      ProductBaseId: this.$route.params.id,
-      GetCount: 8,
-      Token: this.$store.state.UserToken
+  methods: {
+    back () {
+      this.$router.back()
+    },
+    getdetaildata () {
+      let model1 = {
+        ProductBaseId: this.$route.params.id,
+        GetCount: 8,
+        Token: this.$store.state.UserToken
+      }
+      this.$http({
+        url: apiport.Product_GetZLDetailById,
+        method: 'post',
+        // header:{
+        //   "Content-Type":'application/x-www-form-urlencoded;charset=UTF-8'
+        // },
+        data: qs.stringify({ reqJson: JSON.stringify(model1) })
+      }).then((res) => {
+        console.log(2, this.$route.params.id)
+        console.log(res)
+        this.swiper = JSON.parse(JSON.stringify(res.data.ImgList).replace(/Path/g, 'Img'))
+        this.SaleType = res.data.SaleType
+        this.goodstitle = res.data.Title
+        this.goodsdesc = res.data.ProductContent
+        this.Price = res.data.Price
+        this.Sales = res.data.Sales
+        this.AdvertisingRemark = res.data.AdvertisingRemark
+        this.DetailContent = res.data.DetailContent
+        this.ListOtherProducts = res.data.ListOtherProducts
+      }).catch((error) => {
+        console.log(2)
+        console.log(error)
+      })
     }
-    this.$http({
-      url: apiport.Product_GetZLDetailById,
-      method: 'post',
-      // header:{
-      //   "Content-Type":'application/x-www-form-urlencoded;charset=UTF-8'
-      // },
-      data: qs.stringify({ reqJson: JSON.stringify(model1) })
-    }).then((res) => {
-      console.log(1)
-      console.log(res)
-      this.swiper = JSON.parse(JSON.stringify(res.data.ImgList).replace(/Path/g, 'Img'))
-      this.SaleType = res.data.SaleType
-      this.goodstitle = res.data.Title
-      this.goodsdesc = res.data.ProductContent
-      this.Price = res.data.Price
-      this.Sales = res.data.Sales
-      this.AdvertisingRemark = res.data.AdvertisingRemark
-      this.DetailContent = res.data.DetailContent
-    }).catch((error) => {
-      console.log(2)
-      console.log(error)
-    })
+  },
+  mounted: function () {
+    this.getdetaildata()
+  },
+  watch: {
+    // '$route' (to, from) {
+    //   document.body.scrollTop = document.documentElement.scrollTop = 0
+    //   this.getdetaildata()
+    // }
+  },
+  beforeRouteUpdate (to, from, next) {
+    this.getdetaildata()
   }
 }
 </script>
@@ -187,6 +219,7 @@ export default {
     color: #ff9c00;
     border: 1px solid #ff9c00;
     border-radius: 3px;
+    line-height: 1.3;
   }
   .title{
     display: inline;
@@ -287,10 +320,14 @@ export default {
   }
 }
 .headimg{
+  position: relative;
   width: 70%;
   margin: 0 15% .2rem;
   color: #999;
   font-size: 12px;
+  text-align: center;
+  line-height: .8rem;
+  height: .8rem;
   &::before{
     content: '';
     position: absolute;
@@ -299,6 +336,80 @@ export default {
     height: 1px;
     background-color: #dedddd;
     top: .4rem;
+  }
+  span{
+    position: relative;
+    line-height: .8rem;
+    padding: 0 .4rem;
+    background-color: #efefef;
+  }
+}
+.dbitem{
+  margin-top:.1rem;
+  li{
+    width: 50%;
+    float: left;
+    margin-top:.1rem;
+    box-sizing:border-box;
+    a{
+      display:block;
+      background-color: #fff;
+    }
+    img{
+      height: 3.7rem;
+      display: block;
+    }
+    .ptitle{
+      padding:0 .2rem;
+      font-size:13px;
+      color:#333;
+      line-height:2;
+    }
+    .rent{
+      float:left;
+      padding-left:.2rem;
+      padding-bottom: .1rem;
+      font-size:12px;
+      color:#929292;
+      width: 1.6rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      span{
+        font-size:13px;
+        color:#ff9c00;
+      }
+    }
+    .sum{
+      float: right;
+      padding-right: .2rem;
+      padding-bottom: .1rem;
+      font-size: 10px;
+      color: #929292;
+      width: 1.6rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: right;
+    }
+  }
+  li:nth-child(2n){
+    padding-left: .1rem;
+  }
+}
+.sole{
+  margin-bottom:.4rem;
+  height:.4rem;
+  line-height:.4rem;
+  border-bottom:1px solid #dedddd;
+  text-align:center;
+  span{
+  display:inline-block;
+  line-height:.8rem;
+  padding:0 .4rem 1.2rem;
+  background-color:#efefef;
+  font-size:12px;
+  color:#9fa0a0;
   }
 }
 </style>

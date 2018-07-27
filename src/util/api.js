@@ -88,6 +88,7 @@ export default{
   Goods_GetZulinByGoodsId: APIDomain + '/MWeb/Goods/GetZulinByGoodsId',
   Goods_GetZMXYByGoodsId: APIDomain + '/MWeb/Goods/GetZMXYByGoodsId',
   Goods_GetPinTuanByGoodsId: APIDomain + '/MWeb/Goods/GetPinTuanByGoodsId',
+  CommentBase_GetList: APIDomain + '/MWeb/CommentBase/GetList',
   // 积分接口
   Points_GetBaseList: APIDomain + '/MWeb/Points/GetBaseList',
   Points_GetCommonPayById: APIDomain + '/MWeb/Points/GetCommonPayById',
