@@ -23,7 +23,7 @@ export default{
   Product_GetProductDetail: APIDomain + '/MWeb/Product/GetProductDetail',
   Product_BasePraise: APIDomain + '/MWeb/Product/BasePraise',
   Product_GetZLDetailById: APIDomain + '/MWeb/Product/GetZLDetailById',
-  Product_GetZilinProperty: APIDomain + '/MWeb/Product/GetZilinProperty',
+  Product_GetZulinProperty: APIDomain + '/MWeb/Product/GetZilinProperty',
   Product_GetZulinHotList: APIDomain + '/MWeb/Product/GetZulinHotList',
   Product_GetZulinList: APIDomain + '/MWeb/Product/GetZulinList',
   Product_GetSeatList: APIDomain + '/MWeb/Product/GetSeatList',

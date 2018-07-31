@@ -46,7 +46,7 @@
     <ul class="dbitem clearfix">
       <li v-for="(item,index) in ListOtherProducts" :key="index">
         <router-link :to='"/Seat/Detail/"+item.ProductBaseId' class="clearfix">
-          <img class="lazyDetail" v-lazy='item.ImgPath+"@!standard_square_m"'>
+          <img class="lazyDetail" v-lazy='item.ImgPath+"@!standard_square_m"' :key="item.ProductBaseId">
           <p class="ptitle onelinetext">{{item.Title}}</p>
           <p class="rent">押金  <span>¥{{item.Price}}</span></p><p class="sum">已领用<span>{{item.Sales}}</span>台</p>
         </router-link>
@@ -133,14 +133,15 @@ export default {
     this.getdetaildata()
   },
   watch: {
-    // '$route' (to, from) {
-    //   document.body.scrollTop = document.documentElement.scrollTop = 0
-    //   this.getdetaildata()
-    // }
-  },
-  beforeRouteUpdate (to, from, next) {
-    this.getdetaildata()
+    '$route' (to, from) {
+      console.log(123123)
+      document.body.scrollTop = document.documentElement.scrollTop = 0
+      this.getdetaildata()
+    }
   }
+  // beforeRouteUpdate (to, from, next) {
+  //   this.getdetaildata()
+  // }
 }
 </script>
 

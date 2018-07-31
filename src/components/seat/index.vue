@@ -41,22 +41,21 @@
       <div class="mall" v-show="tab==1">
         <section id="zulinseatsales" class="zulin-seatsales-banner">
           <ul class="zulin-seatsales-filterOne">
-            <li class="zunlin-filterOne-item" data-sort="1" onclick="Seat_Index.ChooseChannel(this)"><span>综合</span></li>
-            <li class="zunlin-filterOne-item zunlin-filterOne-price" data-sort="3" onclick="Seat_Index.ChooseChannel(this)"><span>价格</span></li>
-            <li class="zunlin-filterOne-item" data-sort="2" onclick="Seat_Index.ChooseChannel(this)"><span>销量</span></li>
+            <li class="zunlin-filterOne-item" :class="{active:sort==1}" @click="sortfun(1)"><span>综合</span></li>
+            <li class="zunlin-filterOne-item zunlin-filterOne-price" :class='{active:sort==3||sort==4, "arrow-up":sort==3, "arrow-down": sort == 4}' @click="sortfun(3)"><span>价格</span></li>
+            <li class="zunlin-filterOne-item" :class="{active:sort==2}" @click="sortfun(2)"><span>销量</span></li>
           </ul>
           <ul class="zulin-seatsales-filterTwo">
-            <li class="zunlin-filterTwo-item arrownone" onclick="Seat_Index.ClearnProperty()" data-id="0" data-name="全部"><span>全部</span></li>
-            <li id="ZunlinBrandId" data-type="ZunlinBrandId" class="zunlin-filterTwo-item arow-down" onclick="Seat_Index.SetPropertyList(this)" data-id="0" data-name="品牌"><span>品牌<i></i></span></li>
-            <li id="ZunlinAge" data-type="ZunlinAge" class="zunlin-filterTwo-item arow-down" onclick="Seat_Index.SetPropertyList(this)" data-id="0" data-name="年龄"><span>年龄<i></i></span></li>
-            <li id="ZunlinRestraints" data-type="ZunlinRestraints" class="zunlin-filterTwo-item arow-down" onclick="Seat_Index.SetPropertyList(this)" data-id="0" data-name="接口"><span>接口<i></i></span></li>
+            <li class="zunlin-filterTwo-item arrownone" @click="filterfun(0)"><span>全部</span></li>
+            <li class="zunlin-filterTwo-item arow-down" @click="filterfun(1)"><span>品牌<i></i></span></li>
+            <li class="zunlin-filterTwo-item arow-down" @click="filterfun(2)"><span>年龄<i></i></span></li>
+            <li class="zunlin-filterTwo-item arow-down" @click="filterfun(3)"><span>接口<i></i></span></li>
           </ul>
           <div class="zulin-seatsales-filterPop" v-show="filter">
             <ul id="SeatPropertyList" class="zulin-filterPop-list clearfix">
-              <li class="zulin-filterPop-item " data-id="202"><a class="link"><span class="item">9个月-12岁</span></a></li>
-              <li class="zulin-filterPop-item " data-id="203"><a class="link"><span class="item">9个月-12岁</span></a></li>
-              <li class="zulin-filterPop-item " data-id="204"><a class="link"><span class="item">9个月-12岁</span></a></li>
-              <li class="zulin-filterPop-item " data-id="205"><a class="link"><span class="item">9个月-12岁</span></a></li>
+              <li class="zulin-filterPop-item" v-show="filternum==1" v-for="(item, index) in seatBrandList" :key="index"><a class="link" href="javascript:;" :data-id="item.PropertyId"><span class="item">{{item.PropertyName}}</span></a></li>
+              <li class="zulin-filterPop-item" v-show="filternum==2" v-for="(item, index) in ageList" :key="index"><a class="link" href="javascript:;" :data-id="item.PropertyId"><span class="item">{{item.PropertyName}}</span></a></li>
+              <li class="zulin-filterPop-item" v-show="filternum==3" v-for="(item, index) in restraintsList" :key="index"><a class="link" href="javascript:;" :data-id="item.PropertyId"><span class="item">{{item.PropertyName}}</span></a></li>
             </ul>
             <div class="zulin-seatsales-btn">
                 <a class="zulin-pop-btn zulin-btn-reset">重置</a>
@@ -77,6 +76,7 @@
           </ul>
           <div v-if="showLoading" class="tips">{{tips1}}</div>
         </div>
+        <div class="cover" v-show="filter" @click.stop="filter=false"></div>
       </div>
     </div>
     <go-top></go-top>
@@ -104,6 +104,7 @@ export default {
       showLoading1: true,
       page: 0,
       page1: 0,
+      sort: 1,
       BrandId: [],
       Age: [],
       Restraints: [],
@@ -111,7 +112,11 @@ export default {
       tips1: '正在加载',
       zulinlist: [],
       seatlist: [],
-      filter: false
+      filter: false,
+      filternum: 0,
+      seatBrandList: [],
+      ageList: [],
+      restraintsList: []
     }
   },
   components: {
@@ -130,6 +135,56 @@ export default {
       } else {
         this.busy = true
         this.busy1 = false
+      }
+    },
+    sortfun (i) {
+      this.seatlist = []
+      this.page1 = 0
+      this.busy1 = false
+      if (i === 1 || i === 2) {
+        this.sort = i
+      } else if (i === 3 && this.sort === 3) {
+        this.sort = 4
+      } else {
+        this.sort = 3
+      }
+      this.infinite1()
+    },
+    getPropertyList () {
+      let model = {
+      }
+      this.$http({
+        url: apiport.Product_GetZulinProperty,
+        method: 'post',
+        header: {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+        },
+        data: qs.stringify({ reqJson: JSON.stringify(model) })
+      })
+        .then(res => {
+          console.log(res)
+          let da = res.data
+          this.seatBrandList = da.SeatBrandList
+          this.ageList = da.AgeList
+          this.restraintsList = da.RestraintsList
+        })
+        .catch(error => {
+          console.log(2)
+          console.log(error)
+        })
+    },
+    filterfun (j) {
+      if (j === 0) {
+        this.filter = false
+        this.BrandId = []
+        this.Age = []
+        this.Restraints = []
+      } else {
+        this.filter = true
+        this.filternum = j
+        if (!this.seatBrandList.length) {
+          this.getPropertyList()
+        }
       }
     },
     infinite () {
@@ -166,7 +221,7 @@ export default {
       this.page1 += 1
       this.busy1 = true
       let model = {
-        Sort: this.Sort,
+        Sort: this.sort,
         Freight: 0,
         BrandId: this.BrandId,
         Age: this.Age,
@@ -363,6 +418,9 @@ export default {
       height: 28px;
       line-height: 28px;
       vertical-align: middle;
+      &.active{
+        color:@base-ycolor3;
+      }
     }
     .zunlin-filterOne-price:after{
       content: "";
@@ -536,5 +594,14 @@ export default {
       }
     }
   }
+}
+.cover{
+  position:fixed;
+  top:2.6rem;
+  left: 0;
+  width:100%;
+  bottom: 0;
+  background:rgba(0,0,0,.3);
+  z-index: 20;
 }
 </style>
