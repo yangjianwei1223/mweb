@@ -18,7 +18,9 @@ const Seat = resolve => require(['@/components/seat/index'], resolve)
 const SeatDetail = resolve => require(['@/components/seat/detail'], resolve)
 const RentKnowledge = resolve => require(['@/components/seat/rentknowledge'], resolve)
 const ServiceAssurance = resolve => require(['@/components/seat/serviceassurance'], resolve)
+const ZulinConfirm = resolve => require(['@/components/order/zulinconfirm'], resolve)
 const CommentList = resolve => require(['@/components/optimization/commentlist'], resolve)
+const GoodsPay = resolve => require(['@/components/pay/goodspay'], resolve)
 
 Vue.use(Router)
 
@@ -90,7 +92,7 @@ export default new Router({
       }
     }, {
       path: '/Seat/Detail/:id',
-      name: 'seat',
+      name: 'seatdetail',
       component: SeatDetail,
       meta: {
         index: 2
@@ -117,6 +119,20 @@ export default new Router({
       path: '/Optimization/CommentList/:id',
       name: 'commentlist',
       component: CommentList,
+      meta: {
+        index: 2
+      }
+    }, {
+      path: '/Order/ZulinConfirm/:id',
+      name: 'zulinconfirm',
+      component: ZulinConfirm,
+      meta: {
+        index: 2
+      }
+    }, {
+      path: '/Pay/GoodsPay',
+      name: 'goodspay',
+      component: GoodsPay,
       meta: {
         index: 2
       }

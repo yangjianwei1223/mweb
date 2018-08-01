@@ -7,14 +7,24 @@
     <a id="aPraise" class="act-item like-btn" data-id="6160" >
       <i class="ProductDetailPraiseIcon collect unlikeicon"></i><span class="like-num ProductDetailPraise" id="spanThumbUp">7</span>
     </a>
-    <a class="act-item cartbtn">加入购物车</a>
-    <a class="act-item buybtn">立即购买</a>
+    <a href="javascript:;" @click="isopensku" class="act-item buybtn" v-if="footdata.SaleType!==1">立即租赁</a>
+    <template v-else>
+      <a class="act-item cartbtn">加入购物车</a>
+      <a class="act-item buybtn">立即购买</a>
+    </template>
 </div>
 </template>
 
 <script>
 export default {
-  name: 'detailfooter'
+  name: 'detailfooter',
+  props: ['footdata'],
+  methods: {
+    isopensku: function () {
+      let isopen = !this.$store.state.opensku
+      this.$store.commit('OPEN_SKU', isopen)
+    }
+  }
 }
 </script>
 

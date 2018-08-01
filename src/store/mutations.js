@@ -4,6 +4,9 @@
 const mutations = {
   [types.SET_TOKEN] (state, token) {
     state.UserToken = token
+  },
+  [types.OPEN_SKU] (state, isopen) {
+    state.opensku = isopen
   }
 }
 export default mutations

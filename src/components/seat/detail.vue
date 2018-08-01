@@ -55,6 +55,52 @@
     <div class="sole">
       <span>已经到底了</span>
     </div>
+    <section class="popupmask" v-show="isopensku">
+      <div class="goodstype">
+        <div class="back iconfont">&#xe665;</div>
+        <div class="title clearfix">
+          <div class="left"><img src="https://cdn.product.img.95laibei.com/171221094014534027.jpg@!standard_square_m"></div>
+          <div class="right">
+            <div class="top" id="ProductGoodsTitle">芝麻座椅</div>
+            <div class="bottom price"><span id="ProductGoodsPrice">押金 ¥ 440</span><i id="GoodsStockQuentity">&nbsp;&nbsp;库存：1901件</i></div>
+          </div>
+          <div style="clear:both"></div>
+          <div id="RentListDiv" style="">
+            <div class="type">
+              <h1>租用期限</h1>
+              <ul class="RentDetailList">
+                <li class="checked" data-rentid="70" data-price="5">一月-5元</li>
+                <li data-rentid="71" data-price="15">二月-15元</li>
+                <li data-rentid="72" data-price="155">三月-155元</li>
+              </ul>
+            </div>
+          </div>
+          </div>
+          <div id="SalePropertyList" class="SalePropertyList">
+            <div class="type">
+              <h1>领用方式</h1>
+              <ul>
+                <li class="" style="" data-propertyid="42" data-propertyitemid="441">邮寄</li>
+                <li class="" style="" data-propertyid="42" data-propertyitemid="442">杭州自提1</li>
+                <li class="" style="" data-propertyid="42" data-propertyitemid="443">深圳自提</li>
+                <li class="styledisabled" style="display:none;" data-propertyid="42" data-propertyitemid="444">天津自提</li>
+              </ul>
+            </div>
+          </div>
+          <div class="goodsnum clearfix" v-if="SaleType===1">
+            <div class="left">购买数量</div>
+            <div class="right">
+              <a class="sign-decrease">－</a>
+              <input type="tel">
+              <a class="sign-plus">＋</a>
+            </div>
+          </div>
+          <div class="buybtnwrap">
+            <router-link to="/Order/ZulinConfirm/22" v-if="SaleType!==1">立即租赁</router-link>
+            <router-link to="" v-else>我想要</router-link>
+          </div>
+      </div>
+  </section>
     <v-footer :footdata="footdata"></v-footer>
   </div>
 </template>
@@ -82,8 +128,7 @@ export default {
       Sales: 0,
       AdvertisingRemark: '',
       DetailContent: '',
-      ListOtherProducts: [],
-      footdata: {}
+      ListOtherProducts: []
     }
   },
   computed: {
@@ -92,6 +137,12 @@ export default {
         return '座椅购买'
       }
       return '座椅租赁'
+    },
+    footdata: function () {
+      return {'SaleType': this.SaleType}
+    },
+    isopensku: function () {
+      return this.$store.state.opensku
     }
   },
   methods: {
@@ -411,6 +462,119 @@ export default {
   background-color:#efefef;
   font-size:12px;
   color:#9fa0a0;
+  }
+}
+.popupmask{
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: rgba(122,122,122,0.3);
+  z-index: 1001;
+}
+.goodstype {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: #fff;
+  padding-top: .2rem;
+  box-sizing: border-box;
+  .back{
+    position: absolute;
+    right: .1rem;
+    top: .1rem;
+    font-size: 24px;
+    color: #ccc;
+    font-weight: 700;
+    z-index: 22;
+  }
+  .title{
+    padding-bottom: .2rem;
+    border-bottom: 1px solid #ededed;
+    .left{
+      float: left;
+      width: 1.5rem;
+      margin-left: .2rem;
+      font-size: 0;
+    }
+    .right{
+      margin-left: 2rem;
+      height: 1.5rem;
+      position: relative;
+      .top{
+        line-height: 1.4;
+        height: 44px;
+        width: 5.1rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        display: -webkit-box;
+        color: #333;
+      }
+      .bottom{
+        position: absolute;
+        bottom: 0;
+        vertical-align: bottom;
+        line-height: 1;
+        font-weight: 600;
+        font-size: 18px;
+        color: #ff9c00;
+        i{
+          font-style: normal;
+          font-weight: 500;
+          font-size: 10px;
+          color: #999;
+        }
+      }
+    }
+  }
+}
+.goodstype{
+  .type{
+    margin-left: .2rem;
+    h1{
+      line-height: .8rem;
+      font-size: 13px;
+      color: #666;
+    }
+    li{
+      display: inline-block;
+      background-color: #fff;
+      color: #666;
+      font-size: 12px;
+      padding: 6px 10px;
+      text-align: center;
+      border: 1px solid #CCC;
+      border-radius: 4px;
+      margin-right: .2rem;
+      margin-bottom: 6px;
+      &.checked{
+        background-color: #f1bc19;
+        border: 1px solid #f1bc19;
+        color: #fff;
+      }
+    }
+  }
+  .SalePropertyList{
+    max-height: 200px;
+    overflow: auto;
+  }
+  .buybtnwrap{
+    border-top: 1px solid #E5E5E5;
+    padding: 30px 0 15px;
+    text-align: center;
+    a{
+      display: inline-block;
+      width: 90%;
+      border-radius: 4px;
+      line-height: 44px;
+      text-align: center;
+      background-color: #f1bc19;
+      color: #fff;
+    }
   }
 }
 </style>

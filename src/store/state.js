@@ -1,4 +1,5 @@
 const state = {
-  UserToken: ''
+  UserToken: '',
+  opensku: false
 }
 export default state
