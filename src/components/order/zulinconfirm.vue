@@ -71,7 +71,7 @@
     </section>
     <div class="zcfoot">
       <p class="left price">需支付 :&nbsp;&nbsp;<span>¥ 140.01</span></p>
-      <router-link to="/Pay/GoodsPay" class="right">提交订单</router-link>
+      <router-link to="/Pay/GoodsPay?s=1" class="right">提交订单</router-link>
     </div>
   </div>
 </template>

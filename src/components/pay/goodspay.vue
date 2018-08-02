@@ -15,13 +15,13 @@
     <section class="sectc" style="margin-top:0">
       <div class="title">使用第三方支付</div>
       <div class="pf">
-          <div class="rpay OrderPaySelect" id="zfbPay">
-              <label id="zfbOrderPaySelect" class="selectpays selected"></label>
+          <div class="rpay OrderPaySelect" id="zfbPay" style="display:none" >
+              <label id="zfbOrderPaySelect" class="selectpays"></label>
               <i class="iconfont zfbicon">&#xe619;</i> 支付宝支付
               <span id="zfbPricePartOrderPay" class="cprice">¥ 140.01</span>
           </div>
           <div class="rpay OrderPaySelect" id="wxPay">
-              <label id="wxOrderPaySelect" class="selectpays"></label>
+              <label id="wxOrderPaySelect" class="selectpays selected"></label>
               <i class="iconfont wxicon">&#xe615;</i> 微信支付
               <span id="wxPricePartOrderPay" class="cprice"></span>
           </div>
@@ -35,7 +35,7 @@
     <section class="secsl">
       <div class="paytotal">支付总额：<span class="price"><span id="OrderPayGoodsPay">¥ 140.01</span></span><span id="OrderPayTotalPoint" class="gstotal"></span></div>
     </section>
-    <button class="btnabb">确认支付</button>
+    <button class="btnabb" @click="wxpay">确认支付</button>
     <section class="payingtips" v-show="paying">
       <div class="pcontent">
         <div>
@@ -48,6 +48,9 @@
 </template>
 
 <script>
+import qs from 'qs'
+import apiport from '../../util/api'
+
 import head from '@/components/common/header'
 export default {
   name: 'goodspay',
@@ -58,6 +61,75 @@ export default {
     return {
       headinfo: {title: '交易支付'},
       paying: false
+    }
+  },
+  mounted: function () {
+  },
+  methods: {
+    wxpay () {
+      let _that = this
+      let model = {
+        IsMixPay: 0,
+        PaymentMethod: 2,
+        Remark: '商品购买',
+        // Token: this.$store.state.UserToken,
+        Token: '05ddde16-e42c-47ac-9bc1-34ab66922cdd',
+        type: 1,
+        relationId: 9253,
+        openId: 'ogLhexO7JRgr7dAO4-Lfirupf2cw',
+        IsWeChatBrowser: true
+      }
+      this.$http({
+        url: apiport.WeiXin_GetJsApiParam,
+        method: 'post',
+        header: {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+        },
+        data: qs.stringify({ reqJson: JSON.stringify(model) })
+      })
+        .then(res => {
+          console.log(213123, res)
+          alert(res.data.jsApiParamJson)
+          _that.callpay(JSON.parse(res.data.jsApiParamJson), res.data.payDetailId, _that.sucFun, _that.errFun)
+        })
+        .catch(error => {
+          console.log(2)
+          console.log(error)
+        })
+    },
+    callpay (wxJsApiParam, payDetailId, sucFun, errFun) {
+      alert(wxJsApiParam)
+      if (typeof WeixinJSBridge === 'undefined') {
+        if (document.addEventListener) {
+          document.addEventListener('WeixinJSBridgeReady', this.jsApiCall, false)
+        } else if (document.attachEvent) {
+          document.attachEvent('WeixinJSBridgeReady', this.jsApiCall)
+          document.attachEvent('onWeixinJSBridgeReady', this.jsApiCall)
+        }
+      } else {
+        this.jsApiCall(wxJsApiParam, payDetailId, sucFun, errFun)
+      }
+    },
+    jsApiCall (wxJsApiParam, payDetailId, sucFun, errFun) {
+      // eslint-disable-next-line
+      WeixinJSBridge.invoke(
+        'getBrandWCPayRequest',
+        wxJsApiParam, // josn串
+        function (res) {
+          alert(JSON.stringify(res))
+          if (res.err_msg === 'get_brand_wcpay_request:ok') {
+            sucFun(payDetailId)
+          } else {
+            errFun()
+          }
+        }
+      )
+    },
+    sucFun () {
+      alert('支付成功')
+    },
+    errFun () {
+      alert('支付失败')
     }
   }
 }

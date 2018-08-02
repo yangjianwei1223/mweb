@@ -55,9 +55,9 @@
     <div class="sole">
       <span>已经到底了</span>
     </div>
-    <section class="popupmask" v-show="isopensku">
+    <section class="popupmask" v-show="isopensku" @click="maskclosesku">
       <div class="goodstype">
-        <div class="back iconfont">&#xe665;</div>
+        <div class="back iconfont" @click="closesku">&#xe665;</div>
         <div class="title clearfix">
           <div class="left"><img src="https://cdn.product.img.95laibei.com/171221094014534027.jpg@!standard_square_m"></div>
           <div class="right">
@@ -69,21 +69,16 @@
             <div class="type">
               <h1>租用期限</h1>
               <ul class="RentDetailList">
-                <li class="checked" data-rentid="70" data-price="5">一月-5元</li>
-                <li data-rentid="71" data-price="15">二月-15元</li>
-                <li data-rentid="72" data-price="155">三月-155元</li>
+                <li v-for="(item, index) in RentDetailList" :key="index" :class="{checked: index==0}" :data-rentid="item.Id" :data-price="item.RentAmount">{{item.RentName}}-{{item.RentAmount}}元</li>
               </ul>
             </div>
           </div>
           </div>
           <div id="SalePropertyList" class="SalePropertyList">
-            <div class="type">
-              <h1>领用方式</h1>
+            <div class="type" v-for="(item, index) in SalePropertyList" :key="index">
+              <h1>{{item.DisplayName}}</h1>
               <ul>
-                <li class="" style="" data-propertyid="42" data-propertyitemid="441">邮寄</li>
-                <li class="" style="" data-propertyid="42" data-propertyitemid="442">杭州自提1</li>
-                <li class="" style="" data-propertyid="42" data-propertyitemid="443">深圳自提</li>
-                <li class="styledisabled" style="display:none;" data-propertyid="42" data-propertyitemid="444">天津自提</li>
+                <li v-for="(item1, index1) in item.ItemList" :key="index1" v-if="item1.Status" :class="{checked:item.ItemList.length==1}" :data-propertyid="item1.PropertyId" :data-propertyitemid="item1.PropertyItemId">{{item1.PropertyValue}}</li>
               </ul>
             </div>
           </div>
@@ -96,12 +91,12 @@
             </div>
           </div>
           <div class="buybtnwrap">
-            <router-link to="/Order/ZulinConfirm/22" v-if="SaleType!==1">立即租赁</router-link>
-            <router-link to="" v-else>我想要</router-link>
+            <router-link to="/Order/ZulinConfirm/22" v-if="SaleType!==1" @click.native="closesku">立即租赁</router-link>
+            <router-link to="" v-else @click.native="closesku">我想要</router-link>
           </div>
       </div>
   </section>
-    <v-footer :footdata="footdata"></v-footer>
+    <v-footer :footdata="footdata" @getGoodspro="getGoodsApiData"></v-footer>
   </div>
 </template>
 
@@ -128,7 +123,9 @@ export default {
       Sales: 0,
       AdvertisingRemark: '',
       DetailContent: '',
-      ListOtherProducts: []
+      ListOtherProducts: [],
+      RentDetailList: [],
+      SalePropertyList: []
     }
   },
   computed: {
@@ -158,22 +155,47 @@ export default {
       this.$http({
         url: apiport.Product_GetZLDetailById,
         method: 'post',
-        // header:{
-        //   "Content-Type":'application/x-www-form-urlencoded;charset=UTF-8'
-        // },
         data: qs.stringify({ reqJson: JSON.stringify(model1) })
       }).then((res) => {
         console.log(2, this.$route.params.id)
-        console.log(res)
-        this.swiper = JSON.parse(JSON.stringify(res.data.ImgList).replace(/Path/g, 'Img'))
-        this.SaleType = res.data.SaleType
-        this.goodstitle = res.data.Title
-        this.goodsdesc = res.data.ProductContent
-        this.Price = res.data.Price
-        this.Sales = res.data.Sales
-        this.AdvertisingRemark = res.data.AdvertisingRemark
-        this.DetailContent = res.data.DetailContent
-        this.ListOtherProducts = res.data.ListOtherProducts
+        console.log('商品详情', res)
+        let data = res.data
+        this.swiper = JSON.parse(JSON.stringify(data.ImgList).replace(/Path/g, 'Img'))
+        this.SaleType = data.SaleType
+        this.goodstitle = data.Title
+        this.goodsdesc = data.ProductContent
+        this.Price = data.Price
+        this.Sales = data.Sales
+        this.AdvertisingRemark = data.AdvertisingRemark
+        this.DetailContent = data.DetailContent
+        this.ListOtherProducts = data.ListOtherProducts
+        this.RentDetailList = data.RentDetailList
+      }).catch((error) => {
+        console.log(2)
+        console.log(error)
+      })
+    },
+    closesku () {
+      this.$store.commit('OPEN_SKU', false)
+    },
+    maskclosesku (e) {
+      if (e.target.tagName === 'SECTION') {
+        this.closesku()
+      }
+    },
+    getGoodsApiData () {
+      let model1 = {
+        ProductBaseId: this.$route.params.id,
+        Token: this.$store.state.UserToken
+      }
+      this.$http({
+        url: apiport.Goods_GetBaseListByProductId,
+        method: 'post',
+        data: qs.stringify({ reqJson: JSON.stringify(model1) })
+      }).then((res) => {
+        console.log(2, this.$route.params.id)
+        console.log('商品属性', res)
+        this.SalePropertyList = res.data.SalePropertyList
       }).catch((error) => {
         console.log(2)
         console.log(error)
@@ -493,6 +515,9 @@ export default {
   .title{
     padding-bottom: .2rem;
     border-bottom: 1px solid #ededed;
+    .type{
+      padding-bottom: 0;
+    }
     .left{
       float: left;
       width: 1.5rem;
@@ -504,6 +529,7 @@ export default {
       height: 1.5rem;
       position: relative;
       .top{
+        font-size: 16px;
         line-height: 1.4;
         height: 44px;
         width: 5.1rem;
@@ -535,6 +561,7 @@ export default {
 .goodstype{
   .type{
     margin-left: .2rem;
+    padding-bottom: .2rem;
     h1{
       line-height: .8rem;
       font-size: 13px;

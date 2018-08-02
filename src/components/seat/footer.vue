@@ -23,6 +23,7 @@ export default {
     isopensku: function () {
       let isopen = !this.$store.state.opensku
       this.$store.commit('OPEN_SKU', isopen)
+      this.$emit('getGoodspro')
     }
   }
 }

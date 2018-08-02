@@ -25,115 +25,115 @@ const GoodsPay = resolve => require(['@/components/pay/goodspay'], resolve)
 Vue.use(Router)
 
 export default new Router({
-    mode: 'history',
-    routes: [{
-        path: '/',
-        name: 'index',
-        component: Index,
-        meta: {
-            index: 0
-        }
-    }, {
-        path: '/Beiquan/List',
-        name: 'beiquan',
-        component: Beiquan,
-        meta: {
-            index: 1
-        }
-    }, {
-        path: '/Beiquan/Detail/:id',
-        component: BeiquanDetail,
-        meta: {
-            index: 2
-        }
-    }, {
-        path: '/Account/Index',
-        name: 'loginindex',
-        component: LoginIndex,
-        meta: {
-            index: 1
-        }
-    }, {
-        path: '/Account/Login',
-        name: 'login',
-        component: Login,
-        meta: {
-            index: 1
-        }
-    }, {
-        path: '/Home/Cart',
-        name: 'cart',
-        component: Cart,
-        meta: {
-            requireAuth: true,
-            index: 1
-        }
-    }, {
-        path: '/My/About',
-        name: 'about',
-        component: About,
-        meta: {
-            index: 2
-        }
-    }, {
-        path: '/My',
-        name: 'my',
-        component: My,
-        meta: {
-            index: 1
-        }
-    }, {
-        path: '/Seat',
-        name: 'seat',
-        component: Seat,
-        meta: {
-            index: 1
-        }
-    }, {
-        path: '/Seat/Detail/:id',
-        name: 'seatdetail',
-        component: SeatDetail,
-        meta: {
-            index: 2
-        }
-    }, {
-        path: '/Zulin',
-        name: 'zulin',
-        redirect: '/Seat'
-    }, {
-        path: '/Zulin/RentKnowledge',
-        name: 'rentknowledge',
-        component: RentKnowledge,
-        meta: {
-            index: 2
-        }
-    }, {
-        path: '/Zulin/ServiceAssurance',
-        name: 'serviceassurance',
-        component: ServiceAssurance,
-        meta: {
-            index: 2
-        }
-    }, {
-        path: '/Optimization/CommentList/:id',
-        name: 'commentlist',
-        component: CommentList,
-        meta: {
-            index: 2
-        }
-    }, {
-        path: '/Order/ZulinConfirm/:id',
-        name: 'zulinconfirm',
-        component: ZulinConfirm,
-        meta: {
-            index: 2
-        }
-    }, {
-        path: '/Pay/GoodsPay',
-        name: 'goodspay',
-        component: GoodsPay,
-        meta: {
-            index: 2
-        }
-    }]
+  mode: 'history',
+  routes: [{
+    path: '/',
+    name: 'index',
+    component: Index,
+    meta: {
+      index: 0
+    }
+  }, {
+    path: '/Beiquan/List',
+    name: 'beiquan',
+    component: Beiquan,
+    meta: {
+      index: 1
+    }
+  }, {
+    path: '/Beiquan/Detail/:id',
+    component: BeiquanDetail,
+    meta: {
+      index: 2
+    }
+  }, {
+    path: '/Account/Index',
+    name: 'loginindex',
+    component: LoginIndex,
+    meta: {
+      index: 1
+    }
+  }, {
+    path: '/Account/Login',
+    name: 'login',
+    component: Login,
+    meta: {
+      index: 1
+    }
+  }, {
+    path: '/Home/Cart',
+    name: 'cart',
+    component: Cart,
+    meta: {
+      requireAuth: true,
+      index: 1
+    }
+  }, {
+    path: '/My/About',
+    name: 'about',
+    component: About,
+    meta: {
+      index: 2
+    }
+  }, {
+    path: '/My',
+    name: 'my',
+    component: My,
+    meta: {
+      index: 1
+    }
+  }, {
+    path: '/Seat',
+    name: 'seat',
+    component: Seat,
+    meta: {
+      index: 1
+    }
+  }, {
+    path: '/Seat/Detail/:id',
+    name: 'seatdetail',
+    component: SeatDetail,
+    meta: {
+      index: 2
+    }
+  }, {
+    path: '/Zulin',
+    name: 'zulin',
+    redirect: '/Seat'
+  }, {
+    path: '/Zulin/RentKnowledge',
+    name: 'rentknowledge',
+    component: RentKnowledge,
+    meta: {
+      index: 2
+    }
+  }, {
+    path: '/Zulin/ServiceAssurance',
+    name: 'serviceassurance',
+    component: ServiceAssurance,
+    meta: {
+      index: 2
+    }
+  }, {
+    path: '/Optimization/CommentList/:id',
+    name: 'commentlist',
+    component: CommentList,
+    meta: {
+      index: 2
+    }
+  }, {
+    path: '/Order/ZulinConfirm/:id',
+    name: 'zulinconfirm',
+    component: ZulinConfirm,
+    meta: {
+      index: 2
+    }
+  }, {
+    path: '/Pay/GoodsPay',
+    name: 'goodspay',
+    component: GoodsPay,
+    meta: {
+      index: 2
+    }
+  }]
 })
