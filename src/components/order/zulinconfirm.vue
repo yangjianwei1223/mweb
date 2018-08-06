@@ -2,7 +2,7 @@
   <div>
     <v-header :headinfo="headinfo"></v-header>
     <section class="confirmadd">
-      <router-link class="clearfix" to="http://t-mweb.95laibei.com/My/AddressManage?returnUrl=http://t-mweb.95laibei.com/Order/ZulinConfirm/8099">
+      <router-link class="clearfix" :to='{path:"/My/AddressManage",query:{returnUrl:"/Order/ZulinConfirm/8099"}}'>
         <div class="iconfont dwlogo">&#xe61a;</div>
         <div class="title">
           <p>杨健伟&nbsp;&nbsp; 15271947992</p>

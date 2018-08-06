@@ -78,7 +78,7 @@
             <div class="type" v-for="(item, index) in SalePropertyList" :key="index">
               <h1>{{item.DisplayName}}</h1>
               <ul>
-                <li v-for="(item1, index1) in item.ItemList" :key="index1" v-if="item1.Status" :class="{checked:item.ItemList.length==1}" :data-propertyid="item1.PropertyId" :data-propertyitemid="item1.PropertyItemId">{{item1.PropertyValue}}</li>
+                <li v-for="(item1, index1) in item.ItemList" :key="index1" v-if="item1.Status" @click="checkprops(item1,index1)" :class="{checked:item.ItemList.length===1 || item1.state===1,styledisabled:item.ItemList.state===2}" :data-propertyid="item1.PropertyId" :data-propertyitemid="item1.PropertyItemId">{{item1.PropertyValue}}</li>
               </ul>
             </div>
           </div>
@@ -197,19 +197,35 @@ export default {
       }).then((res) => {
         console.log(2, this.$route.params.id)
         console.log('商品属性', res.data)
-        this.SalePropertyList = res.data.SalePropertyList
+        // this.SalePropertyList = res.data.SalePropertyList
         this.GoodsBaseList = res.data.GoodsBaseList
         this.goodsPrice = this.GoodsBaseList[0].Price
+        // 给每个销售属性价格状态0：未选 1：选中 2：不能选
+        for (let i = 0; i < res.data.SalePropertyList.length; i++) {
+          for (let j = 0; j < res.data.SalePropertyList[i].ItemList.length; j++) {
+            res.data.SalePropertyList[i].ItemList[j].state = 0
+          }
+        }
+        this.SalePropertyList = res.data.SalePropertyList
+        console.log(123123, this.SalePropertyList)
         // 获取商品的总库存和商品最低显示价格
         for (let i = 0; i < this.GoodsBaseList.length; i++) {
           this.totalStockQuentity += this.GoodsBaseList[i].StockQuentity
-          console.log(this.goodsPrice, this.GoodsBaseList[i].Price, this.goodsPrice > this.GoodsBaseList[i].Price)
           this.goodsPrice = this.goodsPrice > this.GoodsBaseList[i].Price ? this.GoodsBaseList[i].Price : this.goodsPrice
         }
       }).catch((error) => {
         console.log(2)
         console.log(error)
       })
+    },
+    checkprops (item, index) {
+      console.log(234)
+      for (let i = 0; i < this.SalePropertyList.length; i++) {
+        for (let j = 0; j < this.SalePropertyList[i].ItemList.length; j++) {
+          this.SalePropertyList[i].ItemList[j].state = 0
+        }
+      }
+      item.state = 1
     }
   },
   mounted: function () {
@@ -217,7 +233,6 @@ export default {
   },
   watch: {
     '$route' (to, from) {
-      console.log(123123)
       document.body.scrollTop = document.documentElement.scrollTop = 0
       this.getdetaildata()
     }
@@ -592,6 +607,9 @@ export default {
         background-color: #f1bc19;
         border: 1px solid #f1bc19;
         color: #fff;
+      }
+      &.styledisabled{
+        opacity: .4;
       }
     }
   }
