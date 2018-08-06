@@ -2,7 +2,9 @@
    <header class="header">
       <div><a class="iconfont back" @click="back">&#xe651;</a></div>
       <div>{{headinfo.title}}</div>
-      <div></div>
+      <div>
+        <a v-if="headinfo.rightbtntext1" href="javascript:;" @click.stop="rightbtnfun1">{{headinfo.rightbtntext1}}</a>
+      </div>
     </header>
 </template>
 
@@ -13,6 +15,9 @@ export default {
   methods: {
     back () {
       this.$router.back()
+    },
+    rightbtnfun1 () {
+      this.$emit('rightbtn1click')
     }
   }
 }

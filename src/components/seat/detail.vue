@@ -61,8 +61,8 @@
         <div class="title clearfix">
           <div class="left"><img src="https://cdn.product.img.95laibei.com/171221094014534027.jpg@!standard_square_m"></div>
           <div class="right">
-            <div class="top" id="ProductGoodsTitle">芝麻座椅</div>
-            <div class="bottom price"><span id="ProductGoodsPrice">押金 ¥ 440</span><i id="GoodsStockQuentity">&nbsp;&nbsp;库存：1901件</i></div>
+            <div class="top" id="ProductGoodsTitle">{{goodstitle}}</div>
+            <div class="bottom price"><span id="ProductGoodsPrice">押金 ¥ {{goodsPrice}}</span><i id="GoodsStockQuentity">&nbsp;&nbsp;库存：{{totalStockQuentity}}件</i></div>
           </div>
           <div style="clear:both"></div>
           <div id="RentListDiv" style="">
@@ -125,7 +125,9 @@ export default {
       DetailContent: '',
       ListOtherProducts: [],
       RentDetailList: [],
-      SalePropertyList: []
+      SalePropertyList: [],
+      totalStockQuentity: 0,
+      goodsPrice: 0.00
     }
   },
   computed: {
@@ -194,8 +196,16 @@ export default {
         data: qs.stringify({ reqJson: JSON.stringify(model1) })
       }).then((res) => {
         console.log(2, this.$route.params.id)
-        console.log('商品属性', res)
+        console.log('商品属性', res.data)
         this.SalePropertyList = res.data.SalePropertyList
+        this.GoodsBaseList = res.data.GoodsBaseList
+        this.goodsPrice = this.GoodsBaseList[0].Price
+        // 获取商品的总库存和商品最低显示价格
+        for (let i = 0; i < this.GoodsBaseList.length; i++) {
+          this.totalStockQuentity += this.GoodsBaseList[i].StockQuentity
+          console.log(this.goodsPrice, this.GoodsBaseList[i].Price, this.goodsPrice > this.GoodsBaseList[i].Price)
+          this.goodsPrice = this.goodsPrice > this.GoodsBaseList[i].Price ? this.GoodsBaseList[i].Price : this.goodsPrice
+        }
       }).catch((error) => {
         console.log(2)
         console.log(error)

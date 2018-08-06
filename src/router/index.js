@@ -21,6 +21,8 @@ const ServiceAssurance = resolve => require(['@/components/seat/serviceassurance
 const ZulinConfirm = resolve => require(['@/components/order/zulinconfirm'], resolve)
 const CommentList = resolve => require(['@/components/optimization/commentlist'], resolve)
 const GoodsPay = resolve => require(['@/components/pay/goodspay'], resolve)
+const AddressManage = resolve => require(['@/components/my/addressmanage'], resolve)
+const AddAddress = resolve => require(['@/components/my/addaddress'], resolve)
 
 Vue.use(Router)
 
@@ -135,5 +137,27 @@ export default new Router({
     meta: {
       index: 2
     }
-  }]
+  }, {
+    path: '/My/AddressManage',
+    name: 'adresslist',
+    component: AddressManage,
+    meta: {
+      index: 2
+    }
+  }, {
+    path: '/My/AddAddress',
+    name: 'addaddress',
+    component: AddAddress,
+    meta: {
+      index: 2
+    }
+  }, {
+    path: '/My/AddAddress/:id',
+    name: 'editaddress',
+    component: AddAddress,
+    meta: {
+      index: 2
+    }
+  }
+  ]
 })
