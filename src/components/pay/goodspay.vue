@@ -18,22 +18,22 @@
           <div class="rpay OrderPaySelect" id="zfbPay" style="display:none" >
               <label id="zfbOrderPaySelect" class="selectpays"></label>
               <i class="iconfont zfbicon">&#xe619;</i> 支付宝支付
-              <span id="zfbPricePartOrderPay" class="cprice">¥ 140.01</span>
+              <span id="zfbPricePartOrderPay" class="cprice">¥ {{thirdPayPoint}}</span>
           </div>
           <div class="rpay OrderPaySelect" id="wxPay">
               <label id="wxOrderPaySelect" class="selectpays selected"></label>
               <i class="iconfont wxicon">&#xe615;</i> 微信支付
-              <span id="wxPricePartOrderPay" class="cprice"></span>
+              <span id="wxPricePartOrderPay" class="cprice">¥ {{thirdPayPoint}}</span>
           </div>
           <div class="rpay OrderPaySelect" id="zmxyPay" style="display:none;">
               <label id="zmxyOrderPaySelect" class="selectpays"></label>
               <i class="alipayicon"></i> 芝麻信用借还
-              <span id="zmxyPayPricePartOrderPay" class="cprice"></span>
+              <span id="zmxyPayPricePartOrderPay" class="cprice">¥ {{thirdPayPoint}}</span>
           </div>
         </div>
     </section>
     <section class="secsl">
-      <div class="paytotal">支付总额：<span class="price"><span id="OrderPayGoodsPay">¥ 140.01</span></span><span id="OrderPayTotalPoint" class="gstotal"></span></div>
+      <div class="paytotal">支付总额：<span class="price"><span id="OrderPayGoodsPay">¥ {{PointsQuantity}}</span></span><span id="OrderPayTotalPoint" class="gstotal"></span></div>
     </section>
     <button class="btnabb" @click="wxpay">确认支付</button>
     <section class="payingtips" v-show="paying">
@@ -60,10 +60,38 @@ export default {
   data () {
     return {
       headinfo: {title: '交易支付'},
-      paying: false
+      paying: false,
+      OrderType: 1,
+      PointsUsable: 0,
+      PointsQuantity: 0,
+      thirdPayPoint: 0
     }
   },
   mounted: function () {
+    let model = {
+      ParentOrderId: this.$route.query.id,
+      Token: this.$store.state.UserToken
+    }
+    this.$http({
+      url: apiport.Order_GetPayDetailById,
+      method: 'post',
+      header: {
+        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+      },
+      data: qs.stringify({ reqJson: JSON.stringify(model) })
+    })
+      .then(res => {
+        console.log('订单支付信息', res.data)
+        let data = res.data
+        this.OrderType = data.OrderType
+        this.PointsUsable = data.PointsUsable
+        this.PointsQuantity = data.PointsQuantity
+        this.thirdPayPoint = (Number(data.PointsQuantity - data.PointsUsable)).toFixed(2)
+      })
+      .catch(error => {
+        console.log(2)
+        console.log(error)
+      })
   },
   methods: {
     wxpay () {
@@ -72,10 +100,10 @@ export default {
         IsMixPay: 0,
         PaymentMethod: 2,
         Remark: '商品购买',
-        // Token: this.$store.state.UserToken,
-        Token: '05ddde16-e42c-47ac-9bc1-34ab66922cdd',
+        Token: this.$store.state.UserToken,
+        // Token: 'b739dcce-e8b7-41d4-a94a-21fa2de359c1',
         type: 1,
-        relationId: 9253,
+        relationId: this.$route.query.id,
         openId: 'ogLhexO7JRgr7dAO4-Lfirupf2cw',
         IsWeChatBrowser: true
       }
@@ -141,6 +169,7 @@ export default {
   box-shadow: 0 -1px 1px #ebebec, 0 1px 1px #ebebec;
   background-color: #fff;
   margin-top: 1rem;
+  font-size: 16px;
   .title{
     line-height: .8rem;
     background-color: #fff;

@@ -29,16 +29,8 @@ export default {
     }
   },
   created: function () {
-    let tokenInfo = JSON.parse(localStorage.getItem('UserToken'))
-    if (tokenInfo) {
-      let currenttime = new Date().getTime()
-      let exptime = new Date(tokenInfo.ExpTime).getTime()
-      if (currenttime > exptime) {
-        localStorage.removeItem('UserToken')
-      } else {
-        this.$store.state.UserToken = tokenInfo.ObjectData.Token
-      }
-    }
+  },
+  beforeMount: function () {
   }
 }
 </script>

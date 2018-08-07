@@ -5,8 +5,8 @@
       <router-link class="clearfix" :to='{path:"/My/AddressManage",query:{returnUrl:"/Order/ZulinConfirm/8099"}}'>
         <div class="iconfont dwlogo">&#xe61a;</div>
         <div class="title">
-          <p>杨健伟&nbsp;&nbsp; 15271947992</p>
-          <p>天津市天津市和平区嘎嘎嘎</p>
+          <p>{{ContactName}}&nbsp;&nbsp; {{ContactPhone}}</p>
+          <p>{{FullAddress}}</p>
         </div>
         <div class="arrow iconfont">&#xe61e;</div>
       </router-link>
@@ -15,11 +15,11 @@
         <div class="item">
           <router-link to="">
             <div class="left">
-              <img src="https://cdn.product.img.95laibei.com/171221094138456004.jpg@!standard_square_m">
+              <img :src="GoodsImgPath">
             </div>
             <div class="center">
-              <p class="title twolinetext">芝麻座椅</p>
-              <p class="style">领用方式：邮寄；</p>
+              <p class="title twolinetext">{{GoodsTitle}}</p>
+              <p class="style">{{PropertyValue}}</p>
               <p class="style c1">租用期限：一月-5元</p>
             </div>
             <div class="right">
@@ -33,22 +33,22 @@
         <div class="title">宝宝信息</div>
         <div class="linput">
             <label>出生日期/预产期</label>
-            <input disabled="" type="text" id="BirthDay" data-role="none" value="2018-08-01" style="color:#9fa0a0;">
-            <input type="date" onchange="$('#BirthDay').val($(this).val())" class="dateinput" data-role="none" value="" placeholder="请选择出生日期/预产期">
+            <input disabled="" type="text" :value="BirthDay" style="color:#9fa0a0;">
+            <input type="date" class="dateinput" data-role="none" value="" placeholder="请选择出生日期/预产期">
         </div>
         <div class="lradio">
             <label>宝宝性别</label>
             <div class="group">
                 <div class="ilwrap">
-                    <input type="radio" id="InsuredPersonSex0" data-role="none" name="InsuredPersonSex" value="0">
+                    <input type="radio" id="InsuredPersonSex0" data-role="none" name="InsuredPersonSex" value="0" :checked="InsuredPersonSex === 0">
                     <label for="InsuredPersonSex0">男孩&nbsp;&nbsp;</label>
                 </div>
                 <div class="ilwrap">
-                    <input type="radio" id="InsuredPersonSex1" data-role="none" name="InsuredPersonSex" value="1">
+                    <input type="radio" id="InsuredPersonSex1" data-role="none" name="InsuredPersonSex" value="1" :checked="InsuredPersonSex === 1">
                     <label for="InsuredPersonSex1">女孩&nbsp;&nbsp;</label>
                 </div>
                 <div class="ilwrap">
-                    <input type="radio" id="InsuredPersonSex2" data-role="none" name="InsuredPersonSex" value="2" checked="checked">
+                    <input type="radio" id="InsuredPersonSex2" data-role="none" name="InsuredPersonSex" value="2" :checked="InsuredPersonSex === 2">
                     <label for="InsuredPersonSex2">未知&nbsp;&nbsp;</label>
                 </div>
             </div>
@@ -71,12 +71,15 @@
     </section>
     <div class="zcfoot">
       <p class="left price">需支付 :&nbsp;&nbsp;<span>¥ 140.01</span></p>
-      <router-link to="/Pay/GoodsPay?s=1" class="right">提交订单</router-link>
+      <a href="javascript:;"  @click="AddZulinBase" class="right">提交订单</a>
     </div>
   </div>
 </template>
 
 <script>
+import qs from 'qs'
+import apiport from '../../util/api'
+
 import head from '@/components/common/header'
 export default {
   name: 'zulinconfirm',
@@ -85,7 +88,88 @@ export default {
   },
   data () {
     return {
-      headinfo: {'title': '领用确认'}
+      headinfo: {'title': '领用确认'},
+      ConsigneeId: 0,
+      ContactName: '',
+      ContactPhone: '',
+      FullAddress: '',
+      GoodsImgPath: '',
+      GoodsTitle: '',
+      PropertyValue: '',
+      GoodsPrice: '',
+      BirthDay: '',
+      InsuredPersonSex: 0,
+      orderid: ''
+    }
+  },
+  mounted: function () {
+    let model = {
+      Token: this.$store.state.UserToken,
+      GoodsBaseId: this.$route.params.id,
+      ConsigneeId: 0,
+      RentId: ''
+    }
+    this.$http({
+      url: apiport.Goods_GetZulinByGoodsId,
+      method: 'post',
+      header: {
+        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+      },
+      data: qs.stringify({ reqJson: JSON.stringify(model) })
+    })
+      .then(res => {
+        let data = res.data
+        console.log('领用信息', data)
+        this.ConsigneeId = data.ConsigneeId
+        this.ContactName = data.ContactName
+        this.ContactPhone = data.ContactPhone
+        this.FullAddress = data.FullAddress
+        this.GoodsImgPath = data.GoodsImgPath + '@!standard_square_m'
+        this.GoodsTitle = data.GoodsTitle
+        this.PropertyValue = data.PropertyValue
+        this.GoodsPrice = data.GoodsPrice
+        this.BirthDay = data.SeatPolicyModel.BirthDay
+        this.InsuredPersonSex = data.SeatPolicyModel.InsuredPersonSex
+      })
+      .catch(error => {
+        console.log(2)
+        console.log(error)
+      })
+  },
+  methods: {
+    AddZulinBase () {
+      // let _that = this
+      let model = {
+        Token: this.$store.state.UserToken,
+        BirthDay: this.BirthDay,
+        ConsigneeId: this.ConsigneeId,
+        DiscountCouponId: '0',
+        GoodsId: this.$route.params.id,
+        IdentityCard: '',
+        InsuredPersonSex: this.InsuredPersonSex,
+        IsChangeDeposit: 0,
+        PromotionCode: '17',
+        RentId: 0
+      }
+      this.$http({
+        url: apiport.Order_AddZulinBase,
+        method: 'post',
+        header: {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+        },
+        data: qs.stringify({ reqJson: JSON.stringify(model) })
+      })
+        .then(res => {
+          let data = res.data
+          console.log('提交订单', data)
+          alert('提交订单')
+          // _that.$router.push({path: '/Pay/GoodsPay', query: {id: res.data.Data}})
+          window.location.href = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx7ff0669994ee3210&redirect_uri=https%3a%2f%2ft3-mweb.95laibei.com%2fpay%2fWxCode&response_type=code&scope=snsapi_userinfo&state=GoodsPay|' + res.data.Data + '#wechat_redirect'
+        })
+        .catch(error => {
+          console.log(2)
+          console.log(error)
+        })
     }
   }
 }

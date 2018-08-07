@@ -23,6 +23,16 @@ Vue.config.productionTip = false
 
 router.beforeEach((to, from, next) => {
   console.log(to.matched)
+  let tokenInfo = JSON.parse(localStorage.getItem('UserToken'))
+  if (tokenInfo) {
+    let currenttime = new Date().getTime()
+    let exptime = new Date(tokenInfo.ExpTime).getTime()
+    if (currenttime > exptime) {
+      localStorage.removeItem('UserToken')
+    } else {
+      store.state.UserToken = tokenInfo.ObjectData.Token
+    }
+  }
   if (to.meta.requireAuth) {
     // 判断是否需要登录权限
     if (store.state.UserToken) {

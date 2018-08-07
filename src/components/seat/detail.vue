@@ -91,7 +91,7 @@
             </div>
           </div>
           <div class="buybtnwrap">
-            <router-link to="/Order/ZulinConfirm/22" v-if="SaleType!==1" @click.native="closesku">立即租赁</router-link>
+            <router-link :to='"/Order/ZulinConfirm/" + skubaseid' v-if="SaleType!==1" @click.native="closesku">立即租赁</router-link>
             <router-link to="" v-else @click.native="closesku">我想要</router-link>
           </div>
       </div>
@@ -127,7 +127,8 @@ export default {
       RentDetailList: [],
       SalePropertyList: [],
       totalStockQuentity: 0,
-      goodsPrice: 0.00
+      goodsPrice: 0.00,
+      skubaseid: ''
     }
   },
   computed: {
@@ -200,6 +201,7 @@ export default {
         // this.SalePropertyList = res.data.SalePropertyList
         this.GoodsBaseList = res.data.GoodsBaseList
         this.goodsPrice = this.GoodsBaseList[0].Price
+        this.skubaseid = this.GoodsBaseList[0].GoodsBaseId
         // 给每个销售属性价格状态0：未选 1：选中 2：不能选
         for (let i = 0; i < res.data.SalePropertyList.length; i++) {
           for (let j = 0; j < res.data.SalePropertyList[i].ItemList.length; j++) {

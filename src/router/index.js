@@ -128,6 +128,7 @@ export default new Router({
     name: 'zulinconfirm',
     component: ZulinConfirm,
     meta: {
+      requireAuth: true,
       index: 2
     }
   }, {
@@ -135,6 +136,7 @@ export default new Router({
     name: 'goodspay',
     component: GoodsPay,
     meta: {
+      requireAuth: true,
       index: 2
     }
   }, {
@@ -142,6 +144,7 @@ export default new Router({
     name: 'adresslist',
     component: AddressManage,
     meta: {
+      requireAuth: true,
       index: 2
     }
   }, {
@@ -149,6 +152,7 @@ export default new Router({
     name: 'addaddress',
     component: AddAddress,
     meta: {
+      requireAuth: true,
       index: 2
     }
   }, {
@@ -156,6 +160,7 @@ export default new Router({
     name: 'editaddress',
     component: AddAddress,
     meta: {
+      requireAuth: true,
       index: 2
     }
   }
