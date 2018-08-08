@@ -99,6 +99,7 @@ export default{
   WeiXin_GetOrderId: APIDomain + '/MWeb/WeiXin/GetOrderId',
   WeiXin_XCXGetOrderId: APIDomain + '/MWeb/WeiXin/XCXGetOrderId',
   WeiXin_GetInfoByOpenId: APIDomain + '/MWeb/WeiXin/GetInfoByOpenId',
+  WeiXin_GetOpenId: APIDomain + '/MWeb/WeiXin/GetOpenId',
   // 订单接口
   Order_AddBase: APIDomain + '/MWeb/Order/AddBase',
   Order_GetBaseById: APIDomain + '/MWeb/Order/GetBaseById',

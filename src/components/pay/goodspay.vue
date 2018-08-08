@@ -104,7 +104,7 @@ export default {
         // Token: 'b739dcce-e8b7-41d4-a94a-21fa2de359c1',
         type: 1,
         relationId: this.$route.query.id,
-        openId: 'ogLhexO7JRgr7dAO4-Lfirupf2cw',
+        openId: window.sessionStorage.getItem('MainOpenId'),
         IsWeChatBrowser: true
       }
       this.$http({

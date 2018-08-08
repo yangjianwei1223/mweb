@@ -21,6 +21,7 @@ const ServiceAssurance = resolve => require(['@/components/seat/serviceassurance
 const ZulinConfirm = resolve => require(['@/components/order/zulinconfirm'], resolve)
 const CommentList = resolve => require(['@/components/optimization/commentlist'], resolve)
 const GoodsPay = resolve => require(['@/components/pay/goodspay'], resolve)
+const Wxcode = resolve => require(['@/components/pay/wxcode'], resolve)
 const AddressManage = resolve => require(['@/components/my/addressmanage'], resolve)
 const AddAddress = resolve => require(['@/components/my/addaddress'], resolve)
 
@@ -161,6 +162,13 @@ export default new Router({
     component: AddAddress,
     meta: {
       requireAuth: true,
+      index: 2
+    }
+  }, {
+    path: '/Pay/WxCode',
+    name: 'wxcode',
+    component: Wxcode,
+    meta: {
       index: 2
     }
   }

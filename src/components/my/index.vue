@@ -128,6 +128,7 @@ export default {
   position: relative;
   height: 3.1rem;
   color: #fff;
+  background: -webkit-linear-gradient(top,#ffda2a,#f6763f);
   background: linear-gradient(top,#ffda2a,#f6763f);
   .message{
     position:relative;

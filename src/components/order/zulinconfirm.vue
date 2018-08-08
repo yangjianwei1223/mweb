@@ -138,7 +138,7 @@ export default {
   },
   methods: {
     AddZulinBase () {
-      // let _that = this
+      let _that = this
       let model = {
         Token: this.$store.state.UserToken,
         BirthDay: this.BirthDay,
@@ -162,9 +162,13 @@ export default {
         .then(res => {
           let data = res.data
           console.log('提交订单', data)
-          alert('提交订单')
-          // _that.$router.push({path: '/Pay/GoodsPay', query: {id: res.data.Data}})
-          window.location.href = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx7ff0669994ee3210&redirect_uri=https%3a%2f%2ft3-mweb.95laibei.com%2fpay%2fWxCode&response_type=code&scope=snsapi_userinfo&state=GoodsPay|' + res.data.Data + '#wechat_redirect'
+          let openid = window.sessionStorage.getItem('MainOpenId')
+          // eslint-disable-next-line
+          if (!openid && navigator.userAgent.toLowerCase().match(/MicroMessenger/i) == 'micromessenger') {
+            window.location.href = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx7ff0669994ee3210&redirect_uri=https%3a%2f%2ft-mweb.95laibei.com%2fpay%2fWxCode&response_type=code&scope=snsapi_userinfo&state=GoodsPay|' + res.data.Data + '#wechat_redirect'
+            return true
+          }
+          _that.$router.push({path: '/Pay/GoodsPay', query: {id: res.data.Data}})
         })
         .catch(error => {
           console.log(2)
