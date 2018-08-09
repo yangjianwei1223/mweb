@@ -187,6 +187,7 @@ export default {
       }
     },
     getGoodsApiData () {
+      if (this.GoodsBaseList) return
       let model1 = {
         ProductBaseId: this.$route.params.id,
         Token: this.$store.state.UserToken

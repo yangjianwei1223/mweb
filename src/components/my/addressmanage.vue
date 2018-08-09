@@ -8,7 +8,7 @@
             <div class="name">收货人: <span>{{item.RealName}}</span></div>
             <div class="tel">{{item.Mobile}}</div>
           </div>
-          <a onclick="My_AddressManage.ChooseAddress('',2440)" class="item" :data-addid="item.ConsigneeId">
+          <a href="javascript:;" class="item" @click="chooseaddress(item.ConsigneeId)">
             <div class="para">{{item.FullAddress}}</div>
           </a>
         </div>
@@ -143,6 +143,10 @@ export default {
     },
     addaddress () {
       this.$router.push({ path: '/My/AddAddress' })
+    },
+    chooseaddress (id) {
+      window.sessionStorage.setItem('ChooseConsigneeId', id)
+      this.$router.go(-1)
     }
   }
 }

@@ -101,24 +101,23 @@ export default {
         PaymentMethod: 2,
         Remark: '商品购买',
         Token: this.$store.state.UserToken,
-        // Token: 'b739dcce-e8b7-41d4-a94a-21fa2de359c1',
         type: 1,
         relationId: this.$route.query.id,
         openId: window.sessionStorage.getItem('MainOpenId'),
-        IsWeChatBrowser: true
+        IsWeChatBrowser: false
       }
       this.$http({
         url: apiport.WeiXin_GetJsApiParam,
         method: 'post',
-        header: {
-          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-        },
         data: qs.stringify({ reqJson: JSON.stringify(model) })
       })
         .then(res => {
-          console.log(213123, res)
-          alert(res.data.jsApiParamJson)
-          _that.callpay(JSON.parse(res.data.jsApiParamJson), res.data.payDetailId, _that.sucFun, _that.errFun)
+          console.log('获取微信的参数appid等', res)
+          if (model.IsWeChatBrowser) {
+            _that.callpay(JSON.parse(res.data.jsApiParamJson), res.data.payDetailId, _that.sucFun, _that.errFun)
+          } else {
+            window.location.href = res.data.jsApiParamJson + '&redirect_url=' + encodeURIComponent('https%3a%2f%2ft-mweb.95laibei.com%2f/Pay/GoodsPay?id=' + model.relationId + '&paydetailId=' + res.data.payDetailId + '&paymentmethod=6')
+          }
         })
         .catch(error => {
           console.log(2)
@@ -142,7 +141,7 @@ export default {
       // eslint-disable-next-line
       WeixinJSBridge.invoke(
         'getBrandWCPayRequest',
-        wxJsApiParam, // josn串
+        wxJsApiParam, // json串
         function (res) {
           alert(JSON.stringify(res))
           if (res.err_msg === 'get_brand_wcpay_request:ok') {

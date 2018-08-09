@@ -24,6 +24,7 @@ const GoodsPay = resolve => require(['@/components/pay/goodspay'], resolve)
 const Wxcode = resolve => require(['@/components/pay/wxcode'], resolve)
 const AddressManage = resolve => require(['@/components/my/addressmanage'], resolve)
 const AddAddress = resolve => require(['@/components/my/addaddress'], resolve)
+const Setting = resolve => require(['@/components/my/setting'], resolve)
 
 Vue.use(Router)
 
@@ -84,6 +85,14 @@ export default new Router({
     component: My,
     meta: {
       index: 1
+    }
+  }, {
+    path: '/My/Setting',
+    name: 'setting',
+    component: Setting,
+    meta: {
+      requireAuth: true,
+      index: 2
     }
   }, {
     path: '/Seat',

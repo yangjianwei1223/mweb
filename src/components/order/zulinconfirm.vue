@@ -103,10 +103,11 @@ export default {
     }
   },
   mounted: function () {
+    this.ConsigneeId = window.sessionStorage.getItem('ChooseConsigneeId') || 0
     let model = {
       Token: this.$store.state.UserToken,
       GoodsBaseId: this.$route.params.id,
-      ConsigneeId: 0,
+      ConsigneeId: this.ConsigneeId,
       RentId: ''
     }
     this.$http({
@@ -138,7 +139,7 @@ export default {
   },
   methods: {
     AddZulinBase () {
-      let _that = this
+      // let _that = this
       let model = {
         Token: this.$store.state.UserToken,
         BirthDay: this.BirthDay,
@@ -168,7 +169,8 @@ export default {
             window.location.href = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx7ff0669994ee3210&redirect_uri=https%3a%2f%2ft-mweb.95laibei.com%2fpay%2fWxCode&response_type=code&scope=snsapi_userinfo&state=GoodsPay|' + res.data.Data + '#wechat_redirect'
             return true
           }
-          _that.$router.push({path: '/Pay/GoodsPay', query: {id: res.data.Data}})
+          // _that.$router.push({path: '/Pay/GoodsPay', query: {id: res.data.Data}})
+          window.location.href = '/Pay/GoodsPay?id=' + res.data.Data
         })
         .catch(error => {
           console.log(2)

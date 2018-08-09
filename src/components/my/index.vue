@@ -13,8 +13,9 @@
           </div>
         </section>
         <div class="baseinfo">
-          <a class="nickname" id="My_Index_NikeName" src="/My/DataSet"><span class="">{{Nickname}}</span></a>
-          <a class="iconfont" src="/My/Points">&#xe678;<span id="Index_points">{{PointsUsable}}</span>贝壳</a>
+          <router-link v-if="Nickname" class="nickname" id="My_Index_NikeName" to="/My/DataSet"><span class="">{{Nickname}}</span></router-link>
+          <router-link v-if="Nickname" class="iconfont" to="/My/Points">&#xe678;<span id="Index_points">{{PointsUsable}}</span>贝壳</router-link>
+          <router-link v-else to='{path:"/Account/Index",query:{redict:"/My/Index"}}' style="color:#fff">去登录</router-link>
         </div>
         <a class="gocart" src="/Home/Cart">
           <i class="iconfont newsmention" id="ShoppingCartCount">&#xe67c;</i>
@@ -96,7 +97,7 @@ export default {
       data: qs.stringify({ reqJson: JSON.stringify(model) })
     }).then((res) => {
       this.Nickname = res.data.Nickname
-      this.FaceImage = res.data.FaceImage
+      this.FaceImage = res.data.FaceImage || 'https://cdn.sys.img.95laibei.com/Content/Images/default-portrait-0419.png'
       this.PointsUsable = res.data.PointsUsable
       this.NotPayCount = res.data.NotPayCount
       this.NoShippedCount = res.data.NoShippedCount
