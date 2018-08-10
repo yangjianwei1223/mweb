@@ -95,12 +95,44 @@ export default {
     ClearWebView () {
       // eslint-disable-next-line
       let deleteKeyRules = [[1, '95laibei_template'], [1, 'category_top'], [1, 'core_parent'], [1, 'usersearchkey'], [2, 'articlechannels'], [2, 'currentchannel'], [2, 'isclose'], [2, 'cache'], [2, 'cacheVerisonKey']]
+      let delArr = []
+      let lStorage = window.localStorage
+      // get delete storage key
+      for (let i = 0; i < lStorage.length; i++) {
+        let key = lStorage.key(i)
+        for (var j = 0; j < deleteKeyRules.length; j++) {
+          let curKey = deleteKeyRules[j][0]
+          let curValue = deleteKeyRules[j][1]
+          if (curKey === 1) {
+            if (key.toLowerCase().indexOf(curValue) > -1) {
+              delArr.push(key)
+              break
+            }
+          } else if (curKey === 2) {
+            if (key.toLowerCase() === curValue) {
+              delArr.push(key)
+              break
+            }
+          }
+        }
+      }
+      // end get delete storage key
+      // start delete localstorage
+      for (let m = 0; m < delArr.length; m++) {
+        lStorage.removeItem(delArr[m])
+      }
+      window.sessionStorage.clear()
+      console.log('清除缓存')
+    },
+    SettingEnabledSound () {
+      console.log('IM 待改')
     }
   }
 }
 </script>
 
 <style lang="less" scoped>
+@import "../../assets/less/variable";
 .tag-wrap{
   padding-top: 1rem;
   background:#fff;
@@ -132,6 +164,35 @@ export default {
       font-size: 13px;
       color: #333;
     }
+    .emulate-button{
+      display: block;
+      width: 50px;
+      height: 24px;
+      margin: 0;
+      background: #dcdddd;
+      border-radius: 12px;
+      position: relative;
+      transition: all .3s ease;
+      &:after{
+        content: '';
+        display: block;
+        width: 18px;
+        height: 18px;
+        border-radius: 100%;
+        background: #fff;
+        position: absolute;
+        left: 3px;
+        top: 3px;
+        transform: translateZ(0);
+        transition: all .3s ease;
+      }
+    }
+    .raw-checkbox:checked + label{
+      background: @base-ycolor;
+    }
+    .raw-checkbox:checked + label:after{
+      left: 29px;
+    }
   }
   .tag:last-child a{
     border-bottom:none;
@@ -140,7 +201,7 @@ export default {
 .signoutbtn{
   display: inline-block;
   width: 7rem;
-  background-color: #f1bc19;
+  background-color: @base-ycolor;
   border: none;
   font-size: 18px;
   color: #fff!important;

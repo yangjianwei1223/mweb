@@ -25,6 +25,9 @@ const Wxcode = resolve => require(['@/components/pay/wxcode'], resolve)
 const AddressManage = resolve => require(['@/components/my/addressmanage'], resolve)
 const AddAddress = resolve => require(['@/components/my/addaddress'], resolve)
 const Setting = resolve => require(['@/components/my/setting'], resolve)
+const Bindset = resolve => require(['@/components/my/bindset'], resolve)
+const SetPassword = resolve => require(['@/components/my/setpassword'], resolve)
+const LoginCenter = resolve => require(['@/components/wechat/logincenter'], resolve)
 
 Vue.use(Router)
 
@@ -90,6 +93,22 @@ export default new Router({
     path: '/My/Setting',
     name: 'setting',
     component: Setting,
+    meta: {
+      requireAuth: true,
+      index: 2
+    }
+  }, {
+    path: '/My/Bindset',
+    name: 'bindset',
+    component: Bindset,
+    meta: {
+      requireAuth: true,
+      index: 2
+    }
+  }, {
+    path: '/My/SetPassword',
+    name: 'setpassword',
+    component: SetPassword,
     meta: {
       requireAuth: true,
       index: 2
@@ -177,6 +196,13 @@ export default new Router({
     path: '/Pay/WxCode',
     name: 'wxcode',
     component: Wxcode,
+    meta: {
+      index: 2
+    }
+  }, {
+    path: '/Wechat/LoginCenter',
+    name: 'logincenter',
+    component: LoginCenter,
     meta: {
       index: 2
     }
