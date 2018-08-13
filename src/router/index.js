@@ -26,6 +26,7 @@ const AddressManage = resolve => require(['@/components/my/addressmanage'], reso
 const AddAddress = resolve => require(['@/components/my/addaddress'], resolve)
 const Setting = resolve => require(['@/components/my/setting'], resolve)
 const Bindset = resolve => require(['@/components/my/bindset'], resolve)
+const Dataset = resolve => require(['@/components/my/dataset'], resolve)
 const SetPassword = resolve => require(['@/components/my/setpassword'], resolve)
 const LoginCenter = resolve => require(['@/components/wechat/logincenter'], resolve)
 
@@ -188,6 +189,14 @@ export default new Router({
     path: '/My/AddAddress/:id',
     name: 'editaddress',
     component: AddAddress,
+    meta: {
+      requireAuth: true,
+      index: 2
+    }
+  }, {
+    path: '/My/Dataset',
+    name: 'dataset',
+    component: Dataset,
     meta: {
       requireAuth: true,
       index: 2

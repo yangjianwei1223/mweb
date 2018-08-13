@@ -3,7 +3,7 @@
     <section class="miheader">
       <div class="my-setting clearfix">
         <div id="im-messagelink" class="message iconfont">&#xe67a;</div>
-        <a class="setting iconfont" href="/My/Setting">&#xe677;</a>
+        <router-link class="setting iconfont" to="/My/Setting">&#xe677;</router-link>
       </div>
       <div class="my-info">
         <section class="portrait" id="MyIndexPersonalIn">
