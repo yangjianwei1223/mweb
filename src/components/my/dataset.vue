@@ -7,7 +7,7 @@
           <div class="tag-core">头像</div>
           <div class="tag-arrow iconfont">
             <img :src="FaceImage">
-            <input type="file" accept="image/*">&#xe61e;
+            <input type="file" accept="image/*" @change="changeavator">&#xe61e;
           </div>
         </div>
       </div>
@@ -27,8 +27,8 @@
         <div>
           <div class="tag-core">性别</div>
           <div class="tag-arrow">
-            <label class="gender" :class="{selected: Sex==1}">男</label>
-            <label class="gender" :class="{selected: Sex==0}">女</label>
+            <label class="gender" :class="{selected: Sex==1}" @click="changesex(1)">男</label>
+            <label class="gender" :class="{selected: Sex==0}" @click="changesex(0)">女</label>
           </div>
         </div>
       </div>
@@ -36,7 +36,13 @@
         <div class="birthday">
           <div class="tag-core">生日</div>
           <div class="tag-arrow iconfont"><span>{{Birthday}}</span>&#xe61e;</div>
-          <input type="date" :value="Birthday" min="1918-08-13" max="2018-08-13">
+          <input type="date" :value="Birthday" min="1918-08-13" max="2018-08-13" @change="changebirthday">
+        </div>
+      </div>
+      <div class="tag" v-if="Category">
+        <div>
+          <div class="tag-core">来呗认证说明</div>
+          <div class="tag-arrow iconfont"><span>{{CategoryDesc}}</span>&#xe61e;</div>
         </div>
       </div>
       <div class="tag">
@@ -66,6 +72,8 @@ export default {
       Nickname: '',
       Sex: 0,
       Birthday: '',
+      Category: '',
+      CategoryDesc: '',
       Signature: ''
     }
   },
@@ -86,12 +94,63 @@ export default {
         this.Nickname = data.Nickname
         this.Sex = data.Sex
         this.Birthday = data.Birthday
+        this.Category = data.Category
+        this.CategoryDesc = data.CategoryDesc
         this.Signature = data.Signature
       })
       .catch(error => {
         console.log(2)
         console.log(error)
       })
+  },
+  methods: {
+    changesex (sexid) {
+      if (this.Sex === sexid) {
+        return true
+      } else {
+        this.Sex = sexid
+        let model = {
+          Token: this.$store.state.UserToken,
+          Sex: this.Sex
+        }
+        this.$http({
+          url: apiport.Account_ChangeBaseSex,
+          method: 'post',
+          data: qs.stringify({ reqJson: JSON.stringify(model) })
+        })
+          .then(res => {
+            console.log('修改性别', res.data)
+          })
+          .catch(error => {
+            console.log(2)
+            console.log(error)
+          })
+      }
+    },
+    changebirthday () {
+      if (!this.Birthday) {
+        return true
+      }
+      let model = {
+        Token: this.$store.state.UserToken,
+        Birthday: this.Birthday
+      }
+      this.$http({
+        url: apiport.Account_ChangeBirthday,
+        method: 'post',
+        data: qs.stringify({ reqJson: JSON.stringify(model) })
+      })
+        .then(res => {
+          console.log('修改生日', res.data)
+        })
+        .catch(error => {
+          console.log(2)
+          console.log(error)
+        })
+    },
+    changeavator (e) {
+      console.log('头像', e.target.files)
+    }
   }
 }
 </script>
@@ -135,6 +194,23 @@ export default {
       -webkit-box-align: center;
       display: -webkit-box;
       border-bottom:1px solid #ededed;
+      .gender{
+        &::before{
+          content: "";
+          display: inline-block;
+          width: 20px;
+          height: .88rem;
+          background: url(https://cdn.sys.img.95laibei.com/Content/Images/circleunselect.png) no-repeat center;
+          background-size: 14px;
+          vertical-align: middle;
+          margin-left: 30px;
+          margin-right: 6px;
+        }
+        &.selected::before{
+          background: url(https://cdn.sys.img.95laibei.com/Content/Images/circleselect_1.png) no-repeat center;
+          background-size: 14px;
+        }
+      }
     }
     .portrait{
       img{
