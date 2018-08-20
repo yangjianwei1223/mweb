@@ -2,7 +2,7 @@
   <section class="mybuyins">
     <h5 class="title">
       <span class="tips">{{listdata.text}}</span>
-      <a class="more" :href="listdata.href">查看全部  &gt;</a>
+      <router-link class="more" :to="listdata.href">查看全部  &gt;</router-link>
     </h5>
     <ul class="clearfix">
       <li>

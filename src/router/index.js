@@ -28,6 +28,8 @@ const Setting = resolve => require(['@/components/my/setting'], resolve)
 const Bindset = resolve => require(['@/components/my/bindset'], resolve)
 const Dataset = resolve => require(['@/components/my/dataset'], resolve)
 const SetPassword = resolve => require(['@/components/my/setpassword'], resolve)
+const ZulinBuyIn = resolve => require(['@/components/my/zulinbuyin'], resolve)
+const BuyIn = resolve => require(['@/components/my/buyin'], resolve)
 const LoginCenter = resolve => require(['@/components/wechat/logincenter'], resolve)
 
 Vue.use(Router)
@@ -197,6 +199,22 @@ export default new Router({
     path: '/My/Dataset',
     name: 'dataset',
     component: Dataset,
+    meta: {
+      requireAuth: true,
+      index: 2
+    }
+  }, {
+    path: '/My/ZulinBuyIn',
+    name: 'zulinbuyIn',
+    component: ZulinBuyIn,
+    meta: {
+      requireAuth: true,
+      index: 2
+    }
+  }, {
+    path: '/My/BuyIn',
+    name: 'buyin',
+    component: BuyIn,
     meta: {
       requireAuth: true,
       index: 2
