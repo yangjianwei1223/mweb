@@ -12,6 +12,7 @@ const BeiquanDetail = resolve => require(['@/components/beiquan/detail'], resolv
 const LoginIndex = resolve => require(['@/components/account/index'], resolve)
 const Login = resolve => require(['@/components/account/login'], resolve)
 const Cart = resolve => require(['@/components/cart'], resolve)
+const AboutUs = resolve => require(['@/components/home/about'], resolve)
 const About = resolve => require(['@/components/my/about'], resolve)
 const My = resolve => require(['@/components/my/index'], resolve)
 const Seat = resolve => require(['@/components/seat/index'], resolve)
@@ -77,6 +78,13 @@ export default new Router({
     meta: {
       requireAuth: true,
       index: 1
+    }
+  }, {
+    path: '/Home/About',
+    name: 'aboutus',
+    component: AboutUs,
+    meta: {
+      index: 2
     }
   }, {
     path: '/My/About',
