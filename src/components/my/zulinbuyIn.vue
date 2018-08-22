@@ -3,49 +3,87 @@
     <v-header :headinfo="headinfo"></v-header>
     <div class="navbar">
       <ul class="navbar-ul">
-        <li class="active" @click='changestate(0)'><span>全部</span></li>
-        <li @click='changestate(1)'><span>待付款</span></li>
-        <li @click='changestate(2)'><span>代发货</span></li>
-        <li @click='changestate(3)'><span>待收货</span></li>
-        <li @click='changestate(4)'><span>待评价</span></li>
-        <li @click='changestate(5)'><span>退租/归还</span></li>
+        <li :class="{active:OrderState==0}" @click='changestate(0)'><span>全部</span></li>
+        <li :class="{active:OrderState==1}" @click='changestate(1)'><span>待付款</span></li>
+        <li :class="{active:OrderState==2}" @click='changestate(2)'><span>待发货</span></li>
+        <li :class="{active:OrderState==3}" @click='changestate(3)'><span>待收货</span></li>
+        <li :class="{active:OrderState==5}" @click='changestate(5)'><span>待评价</span></li>
+        <li :class="{active:OrderState==4}" @click='changestate(4)'><span>退租/归还</span></li>
       </ul>
     </div>
     <section class="order-cont">
       <ul v-infinite-scroll="infinite" infinite-scroll-disabled="busy" infinite-scroll-distance="10">
         <li v-for="(item, index) in orderlist" :key="index">
-          <div class="topxl">
-            <div class="padf">
-              {{item.CreateTime}}
-              <span class="state" v-if="item.OrderStatus===9">交易关闭</span>
-              <span class="state" v-else-if="item.OrderStatus===2">交易成功</span>
-              <span class="state" v-else-if="item.OrderStatus===1 && item.PayStatus===1">等待买家付款</span>
-              <span class="state" v-else-if="item.OrderStatus===1 && item.ExpressStatus===1">等待卖家发货</span>
-              <span class="state" v-else-if="item.OrderStatus===1 && item.ExpressStatus===2">等待买家收货</span>
-              <span class="state" v-else-if="item.OrderStatus===1 && item.ExpressStatus===3">交易成功</span>
+          <template v-if="OrderState!==4">
+            <div class="topxl">
+              <div class="padf">
+                {{item.CreateTime}}
+                <span class="state" v-if="item.OrderStatus===9">交易关闭</span>
+                <span class="state" v-else-if="item.OrderStatus===2">交易成功</span>
+                <span class="state" v-else-if="item.OrderStatus===1 && item.PayStatus===1">等待买家付款</span>
+                <span class="state" v-else-if="item.OrderStatus===1 && item.ExpressStatus===1">等待卖家发货</span>
+                <span class="state" v-else-if="item.OrderStatus===1 && item.ExpressStatus===2">等待买家收货</span>
+                <span class="state" v-else-if="item.OrderStatus===1 && item.ExpressStatus===3">交易成功</span>
+              </div>
             </div>
-          </div>
-          <div class="item">
-            <router-link :to='"/Order/ZulinDetail/"+ item.OrderBaseId'>
-              <div class="left">
-                <img src="https://cdn.product.img.95laibei.com/171117170923432226.jpg@!standard_square_s">
+            <div class="item">
+              <router-link :to='"/Order/ZulinDetail/"+ item.OrderBaseId'>
+                <div class="left">
+                  <img :src='item.OrderGoodsList[0].GoodsImgPath + "@!standard_square_s"'>
+                </div>
+                <div class="center">
+                  <p>{{item.OrderGoodsList[0].GoodsTitle}}</p>
+                  <p class="style">{{item.OrderGoodsList[0].GoodsPropertyName}}</p>
+                </div>
+                <div class="right">
+                  <p>¥ {{item.OrderGoodsList[0].GoodsPrice}}</p>
+                  <p class="thirdtext">×{{item.OrderGoodsList[0].GoodsQuantity}}</p>
+                </div>
+              </router-link>
+            </div>
+            <div class="total">合计：¥<span>{{item.OrderMoney}}</span>(含运费¥{{item.FreightMoney}})</div>
+            <div class="o-tabbtn">
+              <ul class="MyBuyInOrderOper">
+                <li data-id="18510">删除订单</li>
+              </ul>
+            </div>
+          </template>
+          <template v-else>
+            <div class="topxl">
+              <div class="padf">
+                <template v-if="item.PayType===5">申请归还时间：</template>
+                <template v-else>申请退租时间：</template>
+                {{item.ApplyTime}}
+                <span class="state" v-if="item.Status===2">退货中</span>
+                <span class="state" v-else-if="item.Status===3">等待买家退货</span>
+                <span class="state" v-else-if="item.Status===4 && item.PayType===5">归还中</span>
+                <span class="state" v-else-if="item.Status===4">退租中</span>
+                <span class="state" v-else-if="item.Status===5 && item.PayType===5">归还成功</span>
+                <span class="state" v-else-if="item.Status===5">退租成功</span>
+                <span class="state" v-else-if="item.Status===6 && item.PayType===5">归还关闭</span>
+                <span class="state" v-else-if="item.Status===6">退租关闭</span>
               </div>
-              <div class="center">
-                <p>孕妇孕妇衣服</p>
-                <p class="style">测试：aaa；</p>
-              </div>
-              <div class="right">
-                <p>¥ 1</p>
-                <p class="thirdtext">×1</p>
-              </div>
-            </router-link>
-          </div>
-          <div class="total">合计：¥<span>1</span>(含运费¥0)</div>
-          <div class="o-tabbtn">
-            <ul class="MyBuyInOrderOper">
-              <li data-id="18510">删除订单</li>
-            </ul>
-          </div>
+            </div>
+            <div class="item">
+              <router-link :to='"/Order/RefundHistory"+ item.OrderGoodsId'>
+                <div class="left">
+                  <img :src='item.GoodsImgPath + "@!standard_square_s"'>
+                </div>
+                <div class="center">
+                  <p>{{item.GoodsTitle}}</p>
+                  <p class="style">{{item.GoodsPropertyName}}</p>
+                </div>
+              </router-link>
+            </div>
+            <div class="total">退款金额：¥<span>{{item.RefundMoney}}</span></div>
+            <div class="o-tabbtn" v-if="item.Status === 3 || item.Status ===4 ">
+              <ul class="MyBuyInOrderOper">
+                <li v-if="item.Status === 3"><router-link :to='"/Order/ReturnGoods/" + item.OrderGoodsId'>退货</router-link></li>
+                <li v-if="item.Status === 4"><router-link :to='"/Order/ApplyRefund/" + item.OrderGoodsId'>修改申请</router-link></li>
+                <li v-if="item.Status === 4" @click="CancelRefund(item.OrderGoodsId)">撤销申请</li>
+              </ul>
+            </div>
+          </template>
         </li>
       </ul>
     </section>
@@ -87,15 +125,19 @@ export default {
     infinite () {
       this.cunrrentPageIndex += 1
       this.busy = true
+      let getlisturl = apiport.Order_GetMyList
+      if (this.OrderState === 4) {
+        getlisturl = apiport.Order_GetMyRefundList
+      }
       let model = {
         Token: this.$store.state.UserToken,
         OrderType: 2,
-        OrderState: this.OrderStatus,
+        OrderState: this.OrderState,
         pageIndex: this.cunrrentPageIndex,
         pageSize: this.pageSize
       }
       this.$http({
-        url: apiport.Order_GetMyList,
+        url: getlisturl,
         method: 'post',
         data: qs.stringify({ reqJson: JSON.stringify(model) })
       })
@@ -108,6 +150,34 @@ export default {
             this.tips = '已经到底了...'
             this.busy = true
           }
+        })
+        .catch(error => {
+          console.log(2)
+          console.log(error)
+        })
+    },
+    changestate (state) {
+      if (state === this.OrderState) {
+        return true
+      }
+      this.OrderState = state
+      this.cunrrentPageIndex = 0
+      this.orderlist = []
+      this.tips = '正在加载'
+      this.busy = false
+      this.infinite()
+    },
+    CancelRefund (id) {
+      let model = {
+        Token: this.$store.state.UserToken,
+      }
+      this.$http({
+        url: apiport.Order_CancelRefund,
+        method: 'post',
+        data: qs.stringify({ reqJson: JSON.stringify(model) })
+      })
+        .then(res => {
+          console.log('撤销申请', res.data)
         })
         .catch(error => {
           console.log(2)
@@ -164,7 +234,7 @@ export default {
     .item{
       a{
         display:flex;
-        padding: 0 .2rem;
+        padding:.2rem 0;
         .left{
           width: 1.6rem;
           margin-left: .2rem;
