@@ -31,6 +31,7 @@ const Dataset = resolve => require(['@/components/my/dataset'], resolve)
 const SetPassword = resolve => require(['@/components/my/setpassword'], resolve)
 const ZulinBuyIn = resolve => require(['@/components/my/zulinbuyin'], resolve)
 const BuyIn = resolve => require(['@/components/my/buyin'], resolve)
+const Deposit = resolve => require(['@/components/my/deposit'], resolve)
 const LoginCenter = resolve => require(['@/components/wechat/logincenter'], resolve)
 
 Vue.use(Router)
@@ -226,6 +227,14 @@ export default new Router({
     meta: {
       requireAuth: true,
       index: 2
+    }
+  }, {
+    path: '/My/Deposit',
+    name: 'deposit',
+    component: Deposit,
+    meta: {
+      requireAuth: true,
+      index: 1
     }
   }, {
     path: '/Pay/WxCode',

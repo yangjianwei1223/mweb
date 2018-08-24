@@ -170,6 +170,7 @@ export default {
     CancelRefund (id) {
       let model = {
         Token: this.$store.state.UserToken,
+        OrderGoodsId: id
       }
       this.$http({
         url: apiport.Order_CancelRefund,
@@ -194,11 +195,11 @@ export default {
   position:fixed;
   left: 0;
   top: 1rem;
+  width: 100%;
   overflow-x: auto;
   z-index: 2;
   .navbar-ul{
     display: flex;
-    background-color: #fff;
     flex-wrap: nowrap;
     li{
       flex:1;
@@ -206,6 +207,7 @@ export default {
       font-size: 13px;
       text-align: center;
       line-height: .8rem;
+      background-color: #fff;
       &.active{
         color:@base-ycolor3;
         span{
