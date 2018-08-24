@@ -44,6 +44,8 @@
             <div class="total">合计：¥<span>{{item.OrderMoney}}</span>(含运费¥{{item.FreightMoney}})</div>
             <div class="o-tabbtn">
               <ul class="MyBuyInOrderOper">
+                <li v-if="item.OrderStatus === 1 && item.PayStatus === 1"><router-link :to='"/Order/ReturnGoods/" + item.OrderGoodsId'>我要付款</router-link></li>
+                <li v-if="item.OrderStatus === 1 && item.PayStatus === 1"><router-link :to='"/Order/ReturnGoods/" + item.OrderGoodsId'>取消订单</router-link></li>
                 <li data-id="18510">删除订单</li>
               </ul>
             </div>
