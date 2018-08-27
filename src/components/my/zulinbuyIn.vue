@@ -114,7 +114,7 @@ export default {
       headinfo: {title: '我的订单'},
       orderlist: [],
       OrderState: 0,
-      cunrrentPageIndex: 0,
+      currentPageIndex: 0,
       pageSize: 20,
       busy: false,
       showLoading: true,
@@ -125,7 +125,7 @@ export default {
   },
   methods: {
     infinite () {
-      this.cunrrentPageIndex += 1
+      this.currentPageIndex += 1
       this.busy = true
       let getlisturl = apiport.Order_GetMyList
       if (this.OrderState === 4) {
@@ -135,7 +135,7 @@ export default {
         Token: this.$store.state.UserToken,
         OrderType: 2,
         OrderState: this.OrderState,
-        pageIndex: this.cunrrentPageIndex,
+        pageIndex: this.currentPageIndex,
         pageSize: this.pageSize
       }
       this.$http({
@@ -163,7 +163,7 @@ export default {
         return true
       }
       this.OrderState = state
-      this.cunrrentPageIndex = 0
+      this.currentPageIndex = 0
       this.orderlist = []
       this.tips = '正在加载'
       this.busy = false
@@ -181,6 +181,11 @@ export default {
       })
         .then(res => {
           console.log('撤销申请', res.data)
+          this.currentPageIndex = 0
+          this.orderlist = []
+          this.tips = '正在加载'
+          this.busy = false
+          this.infinite()
         })
         .catch(error => {
           console.log(2)
