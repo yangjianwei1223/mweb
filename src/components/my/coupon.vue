@@ -29,16 +29,23 @@
         </div>
         <div class="fline" v-else>
           <div class="loan">
-            ¥&nbsp;<span>{{item.DeductMoney}}</span>
-            <p>满¥15000使用</p>
+            <span>免邮券</span>
           </div>
           <div class="copy">
-            <p class="title twolinetext">提篮分享活动300优惠卷123</p>
-            <p><i class="iconfont">&#xe60d;</i> 普通商品适用</p>
-            <a class="touse" data-action-url="/">立即使用</a>
+            <p>限抵用于安全座椅邮费</p>
+            <p>全平台可用</p>
+            <p v-if="item.IsLimitGoodsUsed">(部分商品可用)</p>
+             <div v-if="status===2" class=touse></div>
+            <div v-else-if="status===3" class="touse"></div>
+            <router-link v-else-if="item.IsLimitGoodsUsed || item.IsLimitCategoryUsed" class="touse" :to='"/My/CouponValidProList/" + item.DiscountCouponId'>立即使用</router-link>
+            <router-link v-else-if="item.ZuLinGoodsUsed && !item.GeneralGoodsUsed" class="touse" to='/Zulin'>立即使用</router-link>
+            <!-- <router-link v-else-if="!item.ZuLinGoodsUsed && item.GeneralGoodsUsed" class="touse" to='/'>立即使用</router-link> -->
+            <router-link v-else class="touse" to='/'>立即使用</router-link>
           </div>
         </div>
-        <div class="time">2018.08.27至2018.11.10</div>
+        <div v-if="status===1" class="time">{{item.BeginTime}}至{{item.EndTime}}</div>
+        <div v-else-if="status===2" class="time">{{item.UsedTime}}已使用</div>
+        <div v-else class="time">{{item.EndTime}}已过期</div>
       </li>
     </ul>
     <div tip="正在加载" v-if="showLoading" class="tips">{{tips}}</div>

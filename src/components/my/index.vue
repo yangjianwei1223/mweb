@@ -15,7 +15,7 @@
         <div class="baseinfo">
           <router-link v-if="Nickname" class="nickname" id="My_Index_NikeName" to="/My/DataSet"><span class="">{{Nickname}}</span></router-link>
           <router-link v-if="Nickname" class="iconfont" to="/My/Points">&#xe678;<span id="Index_points">{{PointsUsable}}</span>贝壳</router-link>
-          <router-link v-else to='{path:"/Account/Index",query:{redict:"/My/Index"}}' style="color:#fff">去登录</router-link>
+          <router-link v-else :to='{path:"/Account/Index",query:{redict:"/My/Index"}}' style="color:#fff">去登录</router-link>
         </div>
         <a class="gocart" src="/Home/Cart">
           <i class="iconfont newsmention" id="ShoppingCartCount">&#xe67c;</i>
@@ -64,7 +64,7 @@ export default {
         count: []
       },
       items: [
-        {icon: '&#xe684;', text: '邀请有礼', count: '', href: '/My/Shares', color: '#FFA810', show: true},
+        {icon: '&#xe684;', text: '邀请有礼', count: '', href: '/My/Share', color: '#FFA810', show: true},
         {icon: '&#xe67f;', text: '我的收藏', count: '', href: '/My/Praise', color: '#FF89A8', show: true},
         {icon: '&#xe685;', text: '我的活动', count: '', href: '/LocalLife/MyActivity', color: '#FCD430', show: false},
         {icon: '&#xe680;', text: '我的押金条', count: '', href: '/My/Deposit', color: '#FF5050', show: true},

@@ -33,6 +33,9 @@ const ZulinBuyIn = resolve => require(['@/components/my/zulinbuyin'], resolve)
 const BuyIn = resolve => require(['@/components/my/buyin'], resolve)
 const Deposit = resolve => require(['@/components/my/deposit'], resolve)
 const Coupon = resolve => require(['@/components/my/coupon'], resolve)
+const Praise = resolve => require(['@/components/my/praise'], resolve)
+const Share = resolve => require(['@/components/my/share'], resolve)
+const ShareQRCode = resolve => require(['@/components/my/shareqrcode'], resolve)
 const LoginCenter = resolve => require(['@/components/wechat/logincenter'], resolve)
 
 Vue.use(Router)
@@ -241,6 +244,30 @@ export default new Router({
     path: '/My/Coupon',
     name: 'coupon',
     component: Coupon,
+    meta: {
+      requireAuth: true,
+      index: 2
+    }
+  }, {
+    path: '/My/Praise',
+    name: 'praise',
+    component: Praise,
+    meta: {
+      requireAuth: true,
+      index: 2
+    }
+  }, {
+    path: '/My/Share',
+    name: 'share',
+    component: Share,
+    meta: {
+      requireAuth: true,
+      index: 2
+    }
+  }, {
+    path: '/My/ShareQRCode',
+    name: 'ShareQRCode',
+    component: ShareQRCode,
     meta: {
       requireAuth: true,
       index: 2
