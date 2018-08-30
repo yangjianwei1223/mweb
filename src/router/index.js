@@ -37,6 +37,7 @@ const Praise = resolve => require(['@/components/my/praise'], resolve)
 const Share = resolve => require(['@/components/my/share'], resolve)
 const ShareQRCode = resolve => require(['@/components/my/shareqrcode'], resolve)
 const LoginCenter = resolve => require(['@/components/wechat/logincenter'], resolve)
+const SeatInstallVideo = resolve => require(['@/components/activitys/seatinstallvideo'], resolve)
 
 Vue.use(Router)
 
@@ -283,6 +284,13 @@ export default new Router({
     path: '/Wechat/LoginCenter',
     name: 'logincenter',
     component: LoginCenter,
+    meta: {
+      index: 2
+    }
+  }, {
+    path: '/Activitys/SeatInstallVideo',
+    name: 'seatinstallvideo',
+    component: SeatInstallVideo,
     meta: {
       index: 2
     }
