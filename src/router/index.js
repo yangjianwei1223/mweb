@@ -38,6 +38,7 @@ const Share = resolve => require(['@/components/my/share'], resolve)
 const ShareQRCode = resolve => require(['@/components/my/shareqrcode'], resolve)
 const LoginCenter = resolve => require(['@/components/wechat/logincenter'], resolve)
 const SeatInstallVideo = resolve => require(['@/components/activitys/seatinstallvideo'], resolve)
+const FreeInstall = resolve => require(['@/components/zulin/freeinstall'], resolve)
 
 Vue.use(Router)
 
@@ -291,6 +292,13 @@ export default new Router({
     path: '/Activitys/SeatInstallVideo',
     name: 'seatinstallvideo',
     component: SeatInstallVideo,
+    meta: {
+      index: 2
+    }
+  }, {
+    path: '/Zulin/FreeInstall',
+    name: 'FreeInstall',
+    component: FreeInstall,
     meta: {
       index: 2
     }
