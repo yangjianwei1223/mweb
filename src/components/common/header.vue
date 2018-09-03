@@ -14,7 +14,11 @@ export default {
   props: ['headinfo'],
   methods: {
     back () {
-      this.$router.back()
+      if (this.headinfo.leftfun === 1) {
+        this.$emit('hidediv')
+      } else {
+        this.$router.back()
+      }
     },
     rightbtnfun1 () {
       this.$emit('rightbtn1click')
@@ -63,8 +67,9 @@ export default {
     font-size: 16px;
     .rightbtn1{
       display: inline-block;
-      width: .6rem;
+      min-width: .6rem;
       /deep/ img{
+        width: .6rem;
         vertical-align: middle;
       }
     }

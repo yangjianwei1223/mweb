@@ -1,7 +1,7 @@
 ﻿//  let  APIDomain='http://v2base.api.95laibei.com';
 // let APIDomain = 'https://base-api.95laibei.com'
-// let APIDomain = 'https://t-base-api.95laibei.com'
-let APIDomain = '/api'
+let APIDomain = 'https://t-base-api.95laibei.com'
+// let APIDomain = '/api'
 
 export default{
   // 通用方法类接口

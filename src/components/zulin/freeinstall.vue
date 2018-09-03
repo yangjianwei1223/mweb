@@ -23,7 +23,7 @@
       <go-top></go-top>
     </div>
     <div v-show="!show">
-      <v-header :headinfo='headinfo1'></v-header>
+      <v-header :headinfo='headinfo1' @hidediv="hidemap"></v-header>
       <baidumap class="bdmapwrap" :poi="poi" ref="bdmap"></baidumap>
     </div>
   </div>
@@ -43,7 +43,7 @@ export default {
   data () {
     return {
       headinfo: {title: '全国门店', rightbtntext1: '<img src="https://cdn.sys.img.95laibei.com/Content/Images/ShareQRCode-0517v2.png">'},
-      headinfo1: {title: '地址详情'},
+      headinfo1: {title: '地址详情', leftfun: 1},
       show: 1,
       poi: [120.263028, 30.245315, '九五来呗儿童安全座椅'],
       shoplist: [{
@@ -125,7 +125,12 @@ export default {
       this.show = 0
       console.log(this.poi, poi)
       this.poi = poi.split(',')
-      this.$refs.bdmap.getBaiDuApi()
+      this.$nextTick(function () {
+        this.$refs.bdmap.getBaiDuApi(this.poi)
+      })
+    },
+    hidemap () {
+      this.show = 1
     }
   }
 }

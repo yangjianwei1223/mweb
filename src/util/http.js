@@ -1,4 +1,5 @@
 ﻿import axios from 'axios'
+import router from '../router'
 // import store from '@/vuex/store.js'
 // import router from '../router'
 
@@ -31,8 +32,10 @@ api.interceptors.response.use(function (response) {
 // setTimeout(()=>{
 //    store.commit('SET_LOADING',false);
 // },300)
-  if (response.ResultNo !== '00000000') {
-    console.log('chucuole')
+  if (response.data.ResultNo === '04040003') {
+    // this.$router.push({name: 'loginindex'})
+    router.push({name: 'loginindex'})
+    return true
   }
   return response
 }, function (error) {

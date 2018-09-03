@@ -17,10 +17,10 @@
           <router-link v-if="Nickname" class="iconfont" to="/My/Points">&#xe678;<span id="Index_points">{{PointsUsable}}</span>贝壳</router-link>
           <router-link v-else :to='{path:"/Account/Index",query:{redict:"/My/Index"}}' style="color:#fff">去登录</router-link>
         </div>
-        <a class="gocart" src="/Home/Cart">
+        <router-link class="gocart" to="/Home/Cart">
           <i class="iconfont newsmention" id="ShoppingCartCount">&#xe67c;</i>
           <span>购物车</span>
-        </a>
+        </router-link>
       </div>
     </section>
     <order :listdata="zulinlist"></order>
