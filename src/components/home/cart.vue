@@ -3,40 +3,38 @@
     <v-header :headinfo="headinfo" @rightbtn1click="editgoods"></v-header>
     <section class="order-cont">
     <ul class="order-list">
-      <li>
-        <div class="item">
-          <input type="hidden" class="ProductBaseId" value="6310">
-          <input type="hidden" class="GoodsId" value="8051" valuenew="8051">
-          <div class="line">
-            <div class="mleft iconfont CartGoodsItem textcolorr" data-goodsid="8051" data-productid="6310">&#xe66e;</div>
-            <div class="left">
-              <a data-action-url="/Optimization/Detail/6310" data-role="none" class="cart-redirect" href="">
-                <img src="https://cdn.product.img.95laibei.com/171212161038670576.jpg@!standard_square_m">
-              </a>
+      <li class="item">
+        <input type="hidden" class="ProductBaseId" value="6310">
+        <input type="hidden" class="GoodsId" value="8051" valuenew="8051">
+        <div class="line">
+          <div class="mleft iconfont" data-goodsid="8051" data-productid="6310">&#xe66e;</div>
+          <div class="left">
+            <a data-action-url="/Optimization/Detail/6310" data-role="none" class="cart-redirect" href="">
+              <img src="https://cdn.product.img.95laibei.com/171212161038670576.jpg@!standard_square_m">
+            </a>
+          </div>
+          <div class="center" v-show="editstatus === 0">
+            <a data-action-url="/Optimization/Detail/6310" data-role="none" class="cart-redirect" href="">
+              <p>11111111111</p>
+              <p class="style thirdtext">规格：大规格；款式：红色款式；</p>
+              <p><span class="textcolorr price">¥12</span><span class="quantity" style="float:right">×1</span></p>
+            </a>
+          </div>
+          <div class="center edit" v-show="editstatus === 1">
+            <div class="edit-quantity">
+              <p class="minus">
+                <a class="sign-decrease ui-link">-</a>
+              </p>
+              <p class="edit-input">
+                <input oninput="Global_CommonHelper.CheckOnlyNumber(this, 10)" type="tel" data-role="none" value="1" data-max="15">
+              </p>
+              <p class="plus">
+                <a class="sign-plus ui-link">+</a>
+              </p>
             </div>
-            <div class="center" style="display: none;">
-              <a data-action-url="/Optimization/Detail/6310" data-role="none" class="cart-redirect" href="">
-                <p>11111111111</p>
-                <p class="style thirdtext">规格：大规格；款式：红色款式；</p>
-                <p><span class="textcolorr price">¥12</span><span class="quantity" style="float:right">×1</span></p>
-              </a>
-            </div>
-            <div class="center edit" style="display: block;">
-              <div class="edit-quantity">
-                <p class="minus">
-                  <a class="sign-decrease ui-link">-</a>
-                </p>
-                <p class="edit-input">
-                  <input oninput="Global_CommonHelper.CheckOnlyNumber(this, 10)" type="tel" data-role="none" value="1" data-max="15">
-                </p>
-                <p class="plus">
-                  <a class="sign-plus ui-link">+</a>
-                </p>
-              </div>
-              <div class="edit-sku">
-                <p>规格：大规格；款式：红色款式；</p>
-                <div class="cart-del iconfont">&#xe68a;</div>
-              </div>
+            <div class="edit-sku">
+              <p>规格：大规格；款式：红色款式；</p>
+              <div class="cart-del iconfont">&#xe68a;</div>
             </div>
           </div>
         </div>
@@ -135,6 +133,132 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style lang="less" scoped>
 @import "../../assets/less/variable";
+.order-cont{
+  padding-top: 1rem;
+  .order-list{
+    .item{
+      background-color: #fff;
+      margin-bottom: .2rem;
+      .line{
+        display: flex;
+        padding: .2rem 0;
+        .mleft{
+          font-size: 20px;
+          line-height: 1.6rem;
+          margin-left: .2rem;
+          color: #c9caca;
+        }
+        .left{
+          width: 1.6rem;
+          margin-left: .2rem;
+          margin-right: .2rem;
+          font-size: 0;
+        }
+        .center{
+          flex: 1;
+          font-size: 12px;
+          padding-right: .2rem;
+          .style{
+            line-height: .3rem;
+            min-height: .6rem;
+            color: @base-ycolor4;
+          }
+          .price{
+            font-size: 16px;
+            line-height: .4rem;
+            color: @base-ycolor3;
+          }
+          .quantity{
+            float: right;
+          }
+          .edit-quantity{
+            display: flex;
+            align-items: center;
+            text-align: center;
+            height: .8rem;
+            line-height: .8rem;
+            border-bottom: 1px solid #fff;
+            .minus,.plus{
+              font-size: 20px;
+              width: .8rem;
+              background-color: #F7F7F7;
+            }
+            .edit-input{
+              flex: 1;
+              margin: 0 .1rem;
+              border-left: 1px solid #fff;
+              border-right: 1px solid #fff;
+              input{
+                -webkit-appearance: none;
+                border: none;
+                background-color: #F7F7F7;
+                text-align: center;
+                width: 100%;
+                height: .8rem;
+              }
+            }
+          }
+          .edit-sku{
+            display: flex;
+            margin-top: .2rem;
+            height: .8rem;
+            position: relative;
+            p{
+              overflow: hidden;
+              -webkit-line-clamp: 2;
+              -webkit-box-orient: vertical;
+              display: -webkit-box;
+              display: flex;
+              word-break: break-all;
+              word-wrap: break-word;
+              flex: 3.5;
+              background: #F7F7F7;
+              padding: 0 .5rem 0 .2rem;
+              text-overflow: ellipsis;
+              line-height: .4rem;
+              max-height: .8rem;
+              box-sizing: border-box;
+              &::after{
+                font-family: iconfont;
+                content: "\e609";
+                display: inline-block;
+                color: #333;
+                position: absolute;
+                right: 1rem;
+                width: .5rem;
+                line-height: .8rem;
+                top: 0;
+                bottom: 0;
+                text-align: center;
+              }
+            }
+            .cart-del{
+              display: inline-block;
+              flex: .9;
+              color: #999;
+              text-align: center;
+              border-radius: 4px;
+              font-size: 18px;
+              line-height: .8rem;
+              margin-left: .1rem;
+            }
+          }
+        }
+      }
+    }
+  }
+  .invalid{
+    background-color: #fff;
+    .topxl{
+      display: -webkit-box;
+      background-color: #efefef;
+      color: #9fa0a0;
+      padding-bottom: .2rem;
+      -webkit-box-orient: vertical;
+      -webkit-box-align: center;
+    }
+  }
+}
 .cutpay{
   position: fixed;
   bottom: 0;
