@@ -10,8 +10,8 @@
     <div class="sdtitle">
       <span class="buylimit">包邮</span>
       <div class="title">{{goodstitle}}</div>
-      <div class="tip twolinetext">{{goodsdesc}}</div>
-      <i class="iconfont showmore toclose">&#xe609;</i>
+      <div id="ProductContent" class="tip" :class="{twolinetext: sellpointsline && isshowmoreline}">{{goodsdesc}}</div>
+      <i class="iconfont showmore" v-if="sellpointsline" @click="setpointstyle" v-html="arrow"></i>
     </div>
     <div class="seatprice">
       <p class="pay">￥<span>{{Price}}</span></p>
@@ -65,11 +65,11 @@
             <div class="bottom price"><span id="ProductGoodsPrice">押金 ¥ {{goodsPrice}}</span><i id="GoodsStockQuentity">&nbsp;&nbsp;库存：{{totalStockQuentity}}件</i></div>
           </div>
           <div style="clear:both"></div>
-          <div id="RentListDiv" style="">
+          <div id="RentListDiv" v-if="RentDetailList.length>0">
             <div class="type">
               <h1>租用期限</h1>
               <ul class="RentDetailList">
-                <li v-for="(item, index) in RentDetailList" :key="index" :class="{checked: index==0}" :data-rentid="item.Id" :data-price="item.RentAmount">{{item.RentName}}-{{item.RentAmount}}元</li>
+                <li v-for="(item, index) in RentDetailList" :key="index" :class="{checked: index===periodindex}" :data-rentid="item.Id" :data-price="item.RentAmount" @click="chooseonly(index)">{{item.RentName}}-{{item.RentAmount}}元</li>
               </ul>
             </div>
           </div>
@@ -78,7 +78,7 @@
             <div class="type" v-for="(item, index) in SalePropertyList" :key="index">
               <h1>{{item.DisplayName}}</h1>
               <ul>
-                <li v-for="(item1, index1) in item.ItemList" :key="index1" v-if="item1.Status" @click="checkprops(item1,index1)" :class="{checked:item.ItemList.length===1 || item1.state===1,styledisabled:item.ItemList.state===2}" :data-propertyid="item1.PropertyId" :data-propertyitemid="item1.PropertyItemId">{{item1.PropertyValue}}</li>
+                <li v-for="(item1, index1) in item.ItemList" :key="index1" v-if="item1.Status" @click="checkprops(item,item1,index1)" :class="{checked:item.ItemList.length===1 || item1.state===1,styledisabled:item1.state === 2}" :data-propertyid="item1.PropertyId" :data-propertyitemid="item1.PropertyItemId">{{item1.PropertyValue}}</li>
               </ul>
             </div>
           </div>
@@ -126,9 +126,14 @@ export default {
       ListOtherProducts: [],
       RentDetailList: [],
       SalePropertyList: [],
+      GoodsBaseList: [],
       totalStockQuentity: 0,
       goodsPrice: 0.00,
-      skubaseid: ''
+      skubaseid: '',
+      sellpointsline: false,
+      isshowmoreline: true,
+      arrow: '&#xe609',
+      periodindex: 0
     }
   },
   computed: {
@@ -161,7 +166,7 @@ export default {
         data: qs.stringify({ reqJson: JSON.stringify(model1) })
       }).then((res) => {
         console.log(2, this.$route.params.id)
-        console.log('商品详情', res)
+        console.log('商品详情', res.data)
         let data = res.data
         this.swiper = JSON.parse(JSON.stringify(data.ImgList).replace(/Path/g, 'Img'))
         this.SaleType = data.SaleType
@@ -173,6 +178,9 @@ export default {
         this.DetailContent = data.DetailContent
         this.ListOtherProducts = data.ListOtherProducts
         this.RentDetailList = data.RentDetailList
+        this.$nextTick(function () {
+          this.judgemoreline()
+        })
       }).catch((error) => {
         console.log(2)
         console.log(error)
@@ -187,7 +195,7 @@ export default {
       }
     },
     getGoodsApiData () {
-      if (this.GoodsBaseList) return
+      if (this.GoodsBaseList.length > 0) return
       let model1 = {
         ProductBaseId: this.$route.params.id,
         Token: this.$store.state.UserToken
@@ -199,7 +207,6 @@ export default {
       }).then((res) => {
         console.log(2, this.$route.params.id)
         console.log('商品属性', res.data)
-        // this.SalePropertyList = res.data.SalePropertyList
         this.GoodsBaseList = res.data.GoodsBaseList
         this.goodsPrice = this.GoodsBaseList[0].Price
         this.skubaseid = this.GoodsBaseList[0].GoodsBaseId
@@ -217,18 +224,89 @@ export default {
           this.goodsPrice = this.goodsPrice > this.GoodsBaseList[i].Price ? this.GoodsBaseList[i].Price : this.goodsPrice
         }
       }).catch((error) => {
-        console.log(2)
         console.log(error)
       })
     },
-    checkprops (item, index) {
-      console.log(234)
-      for (let i = 0; i < this.SalePropertyList.length; i++) {
-        for (let j = 0; j < this.SalePropertyList[i].ItemList.length; j++) {
-          this.SalePropertyList[i].ItemList[j].state = 0
+    checkprops (pitem, item, index) {
+      console.log(pitem)
+      if (item.state === 2) {
+        return true
+      } else if (item.state === 1) {
+        item.state = 0
+      } else {
+        let checkCode = pitem.Code
+        for (let i = 0; i < this.SalePropertyList.length; i++) {
+          // 同一属性值单选
+          if (this.SalePropertyList[i].Code === checkCode) {
+            for (let j = 0; j < this.SalePropertyList[i].ItemList.length; j++) {
+              this.SalePropertyList[i].ItemList[j].state = 0
+            }
+            item.state = 1
+          }
+          // 同一属性值单选 end
         }
       }
-      item.state = 1
+      // 库存为0 的sku不让点
+      this.$nextTick(function () {
+        let _that = this
+        _that.SalePropertyList.forEach(function (item, index) {
+          item.ItemList.forEach(function (item1, index1) {
+            let totalItemStockQuentity = 0
+            _that.GoodsBaseList.forEach(function (item2, index2) {
+              let IsCurrenType = true
+              item2.GoodsTypeItemList.forEach(function (item3, index3) {
+                if (item1.PropertyId === item3.PropertyId) {
+                  if (item1.PropertyItemId !== item3.PropertyItemId) {
+                    IsCurrenType = false
+                    return true
+                  }
+                } else {
+                  let checkEle = document.querySelectorAll('#SalePropertyList li.checked')
+                  checkEle.forEach(function (ele, index4) {
+                    let chkPropertyId = parseInt(ele.dataset.propertyid)
+                    let chkPropertyItemId = parseInt(ele.dataset.propertyitemid)
+                    if (item3.PropertyId === chkPropertyId && item3.PropertyItemId !== chkPropertyItemId) {
+                      IsCurrenType = false
+                      return true
+                    }
+                  })
+                }
+              })
+              IsCurrenType && (totalItemStockQuentity += item2.StockQuentity)
+            })
+            if (totalItemStockQuentity === 0) {
+              item1.state = 2
+            } else {
+              item1.state === 1 || (item1.state = 0)
+            }
+          })
+        })
+      })
+    },
+    judgemoreline () {
+      let ele = document.getElementById('ProductContent')
+      let styles = window.getComputedStyle(ele, null)
+      let lh = parseInt(styles.lineHeight, 10)
+      let h = parseInt(styles.height, 10)
+      let lc = Math.round(h / lh)
+      lc > 2 && (this.sellpointsline = true)
+      console.log(lc)
+    },
+    setpointstyle () {
+      if (this.arrow === '&#xe60c') {
+        this.arrow = '&#xe609'
+        this.isshowmoreline = true
+      } else {
+        this.arrow = '&#xe60c'
+        this.isshowmoreline = false
+      }
+    },
+    chooseonly (index) {
+      if (this.periodindex === index) {
+        this.periodindex = ''
+      } else {
+        this.periodindex = index
+      }
     }
   },
   mounted: function () {
@@ -332,6 +410,7 @@ export default {
   .tip{
     color: #9fa0a0;
     font-size: 14px;
+    line-height: 18px;
     margin-top: .2rem;
     word-wrap: break-word;
   }
