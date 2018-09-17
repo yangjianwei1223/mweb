@@ -148,7 +148,7 @@ export default new Router({
   }, {
     path: '/Zulin',
     name: 'zulin',
-    redirect: '/Seat'
+    redirect: {name: 'seat', query: {zulin: true}}
   }, {
     path: '/Zulin/RentKnowledge',
     name: 'rentknowledge',

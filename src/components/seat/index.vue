@@ -122,6 +122,13 @@ export default {
   components: {
     goTop
   },
+  mounted () {
+    if (!this.$route.query.zulin) {
+      this.tab = 1
+      this.busy = true
+      this.busy1 = false
+    }
+  },
   methods: {
     back: function () {
       this.$router.back()

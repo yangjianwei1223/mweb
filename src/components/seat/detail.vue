@@ -59,9 +59,9 @@
       <div class="goodstype">
         <div class="back iconfont" @click="closesku">&#xe665;</div>
         <div class="title clearfix">
-          <div class="left"><img src="https://cdn.product.img.95laibei.com/171221094014534027.jpg@!standard_square_m"></div>
+          <div class="left"><img :src='skugoodsimg + "@!standard_square_m"'></div>
           <div class="right">
-            <div class="top" id="ProductGoodsTitle">{{goodstitle}}</div>
+            <div class="top">{{skugoodstitle}}</div>
             <div class="bottom price"><span id="ProductGoodsPrice">押金 ¥ {{goodsPrice}}</span><i id="GoodsStockQuentity">&nbsp;&nbsp;库存：{{totalStockQuentity}}件</i></div>
           </div>
           <div style="clear:both"></div>
@@ -85,18 +85,18 @@
           <div class="goodsnum clearfix" v-if="SaleType===1">
             <div class="left">购买数量</div>
             <div class="right">
-              <a class="sign-decrease">－</a>
-              <input type="tel">
-              <a class="sign-plus">＋</a>
+              <a href="javascript:;" class="sign-decrease">－</a>
+              <input type="tel" value="1">
+              <a href="javascript:;" class="sign-plus">＋</a>
             </div>
           </div>
           <div class="buybtnwrap">
-            <router-link :to='"/Order/ZulinConfirm/" + skubaseid' v-if="SaleType!==1" @click.native="closesku">立即租赁</router-link>
+            <a href="javascript:;" v-if="SaleType!==1" @click="gotozulinorder">立即租赁</a>
             <router-link to="" v-else @click.native="closesku">我想要</router-link>
           </div>
       </div>
   </section>
-    <v-footer :footdata="footdata" @getGoodspro="getGoodsApiData"></v-footer>
+    <v-footer :footdata="footdata" @getGoodspro="getGoodsApiData" @clickpraise="ProductPraise"></v-footer>
   </div>
 </template>
 
@@ -130,10 +130,14 @@ export default {
       totalStockQuentity: 0,
       goodsPrice: 0.00,
       skubaseid: '',
+      skugoodsimg: '',
+      skugoodstitle: '',
       sellpointsline: false,
       isshowmoreline: true,
       arrow: '&#xe609',
-      periodindex: 0
+      periodindex: 0,
+      IsCurrentUserPraise: false,
+      Praisecount: 0
     }
   },
   computed: {
@@ -144,7 +148,7 @@ export default {
       return '座椅租赁'
     },
     footdata: function () {
-      return {'SaleType': this.SaleType}
+      return {'SaleType': this.SaleType, 'IsCurrentUserPraise': this.IsCurrentUserPraise, 'Praisecount': this.Praisecount}
     },
     isopensku: function () {
       return this.$store.state.opensku
@@ -178,6 +182,10 @@ export default {
         this.DetailContent = data.DetailContent
         this.ListOtherProducts = data.ListOtherProducts
         this.RentDetailList = data.RentDetailList
+        this.skugoodsimg = data.ImgList[0].Path
+        this.skugoodstitle = data.Title
+        this.IsCurrentUserPraise = data.IsCurrentUserPraise
+        this.Praisecount = Math.round(this.Sales / 9) + 2 + data.PraiseCount
         this.$nextTick(function () {
           this.judgemoreline()
         })
@@ -209,7 +217,6 @@ export default {
         console.log('商品属性', res.data)
         this.GoodsBaseList = res.data.GoodsBaseList
         this.goodsPrice = this.GoodsBaseList[0].Price
-        this.skubaseid = this.GoodsBaseList[0].GoodsBaseId
         // 给每个销售属性价格状态0：未选 1：选中 2：不能选
         for (let i = 0; i < res.data.SalePropertyList.length; i++) {
           for (let j = 0; j < res.data.SalePropertyList[i].ItemList.length; j++) {
@@ -281,6 +288,30 @@ export default {
             }
           })
         })
+        // 所有属性值选择完成，切换商品图片和标题等相关数据
+        if (document.querySelectorAll('#SalePropertyList li.checked').length === this.SalePropertyList.length) {
+          _that.GoodsBaseList.forEach(function (item, index) {
+            let IsCurrenType = true
+            item.GoodsTypeItemList.forEach(function (item1, index1) {
+              document.querySelectorAll('#SalePropertyList li.checked').forEach(function (ele, index2) {
+                let chkPropertyId = parseInt(ele.dataset.propertyid)
+                let chkPropertyItemId = parseInt(ele.dataset.propertyitemid)
+                if (item1.PropertyId === chkPropertyId && item1.PropertyItemId !== chkPropertyItemId) {
+                  IsCurrenType = false
+                  return true
+                }
+              })
+            })
+            if (IsCurrenType) {
+              _that.skugoodsimg = item.ImgPath
+              _that.skugoodstitle = item.Title
+              _that.totalStockQuentity = item.StockQuentity
+              _that.skubaseid = item.GoodsBaseId
+              console.log('dijigesku', index)
+            }
+          })
+          console.log('已选长度')
+        }
       })
     },
     judgemoreline () {
@@ -306,6 +337,32 @@ export default {
         this.periodindex = ''
       } else {
         this.periodindex = index
+      }
+    },
+    ProductPraise () {
+      let model = {
+        ProductBaseId: this.$route.params.id,
+        Token: this.$store.state.UserToken
+      }
+      this.$http({
+        url: apiport.Product_BasePraise,
+        method: 'post',
+        data: qs.stringify({ reqJson: JSON.stringify(model) })
+      }).then((res) => {
+        console.log('商品点赞', res.data)
+        this.Praisecount = Math.round(this.Sales / 9) + 2 + res.data.PraiseCount
+        this.IsCurrentUserPraise = res.data.IsAdd
+      }).catch((error) => {
+        console.log(2)
+        console.log(error)
+      })
+    },
+    gotozulinorder () {
+      if (document.querySelectorAll('#SalePropertyList li.checked').length === this.SalePropertyList.length) {
+        this.closesku()
+        this.$router.push('/Order/ZulinConfirm/' + this.skubaseid)
+      } else {
+        alert('请选择合适的规格')
       }
     }
   },
@@ -480,6 +537,7 @@ export default {
   background-color: #fff;
   word-wrap: break-word;
   font-size: 16px;
+  overflow: hidden;
   .specialefth88{
     line-height: .88rem;
     padding-left: .2rem;
@@ -498,6 +556,9 @@ export default {
       height: .3rem;
       background-color: #E62327;
     }
+  }
+  /deep/ video{
+    width: 100%;
   }
 }
 .headimg{
@@ -711,6 +772,50 @@ export default {
       text-align: center;
       background-color: #f1bc19;
       color: #fff;
+    }
+  }
+  .goodsnum{
+    width: 100%;
+    padding-left: .2rem;
+    box-sizing: border-box;
+    border-top: 1px solid #ededed;
+    .left{
+      width: 30%;
+      float: left;
+      line-height: 1rem;
+      font-size: 13px;
+      color: #666;
+    }
+    .right{
+      float: right;
+      input,a{
+        display: inline-block;
+        width: .6rem;
+        height: .6rem;
+        line-height: .6rem;
+        background-color: #E5E5E5;
+        text-align: center;
+        vertical-align: -webkit-baseline-middle;
+        border-radius: 4px;
+        margin: .2rem 0;
+        font-size: 15px;
+        color: #ccc;
+      }
+      .sign-decrease,.sign-plus{
+        font-size: 24px;
+        font-weight: 200;
+      }
+      .sign-plus{
+        margin-right: .2rem;
+        color: #999;
+      }
+      input{
+        background-color: #fff;
+        color: #666;
+        border: none;
+        outline: none;
+        width: .6rem;
+      }
     }
   }
 }

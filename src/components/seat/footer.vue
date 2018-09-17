@@ -4,13 +4,13 @@
     <a class="act-item share">
       <i class="iconfont">&#xe61f;</i><span class="like-num">分享</span>
     </a>
-    <a id="aPraise" class="act-item like-btn" data-id="6160" >
-      <i class="ProductDetailPraiseIcon collect unlikeicon"></i><span class="like-num ProductDetailPraise" id="spanThumbUp">7</span>
+    <a id="aPraise" class="act-item like-btn" @click="productpraise" >
+      <i class="collect" :class="footdata.IsCurrentUserPraise ? 'likeicon' : 'unlikeicon'"></i><span class="like-num" v-html="footdata.Praisecount < 1 ? '收藏' : footdata.Praisecount"></span>
     </a>
     <a href="javascript:;" @click="isopensku" class="act-item buybtn" v-if="footdata.SaleType!==1">立即租赁</a>
     <template v-else>
-      <a class="act-item cartbtn">加入购物车</a>
-      <a class="act-item buybtn">立即购买</a>
+      <a @click="isopensku" class="act-item cartbtn">加入购物车</a>
+      <a @click="isopensku" class="act-item buybtn">立即购买</a>
     </template>
 </div>
 </template>
@@ -24,6 +24,9 @@ export default {
       let isopen = !this.$store.state.opensku
       this.$store.commit('OPEN_SKU', isopen)
       this.$emit('getGoodspro')
+    },
+    productpraise: function () {
+      this.$emit('clickpraise')
     }
   }
 }
@@ -65,6 +68,13 @@ export default {
     &.comment-btn,&.share{
       border-right: 1px solid #dcdddd;
       border-radius: 0;
+    }
+    .likeicon{
+      background: url(http://cdn.sys.img.95laibei.com/Content/Images/collect_1.png) no-repeat center;
+      background-size: 16px;
+      width: 16px;
+      height: 16px;
+      margin-right: 2px;
     }
     .unlikeicon{
       background: url(https://cdn.sys.img.95laibei.com/Content/Images/uncollect.png) no-repeat center;
