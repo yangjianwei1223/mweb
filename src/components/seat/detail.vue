@@ -4,6 +4,7 @@
       <div><a class="iconfont back" @click="back">&#xe651;</a></div>
       <div>{{title}}</div>
       <div>
+        <router-link to="/Home/Cart" class="iconfont cart" data-msg="1" style="font-size: 16px">&#xe67c;</router-link>
       </div>
     </header>
     <swiper :swiperdata="swiper"></swiper>
@@ -85,14 +86,14 @@
           <div class="goodsnum clearfix" v-if="SaleType===1">
             <div class="left">购买数量</div>
             <div class="right">
-              <a href="javascript:;" class="sign-decrease">－</a>
-              <input type="tel" value="1">
-              <a href="javascript:;" class="sign-plus">＋</a>
+              <a href="javascript:;" class="sign-decrease" @click="signdecrease">－</a>
+              <input id="quantity" type="tel" value="1" @blur="quantityinput">
+              <a href="javascript:;" class="sign-plus" @click="signplus">＋</a>
             </div>
           </div>
           <div class="buybtnwrap">
-            <a href="javascript:;" v-if="SaleType!==1" @click="gotozulinorder">立即租赁</a>
-            <router-link to="" v-else @click.native="closesku">我想要</router-link>
+            <a href="javascript:;" v-if="SaleType!==1" @click="gotoorder">立即租赁</a>
+            <a href="javascript:;" id="cartorbuybtn" v-else @click="gotoorder">我想要</a>
           </div>
       </div>
   </section>
@@ -202,7 +203,14 @@ export default {
         this.closesku()
       }
     },
-    getGoodsApiData () {
+    getGoodsApiData (type) {
+      if (this.SaleType === 1) {
+        if (type.params === 'cart') {
+          document.getElementById('cartorbuybtn').innerHTML = '加入购物车'
+        } else {
+          document.getElementById('cartorbuybtn').innerHTML = '我想要'
+        }
+      }
       if (this.GoodsBaseList.length > 0) return
       let model1 = {
         ProductBaseId: this.$route.params.id,
@@ -230,6 +238,9 @@ export default {
           this.totalStockQuentity += this.GoodsBaseList[i].StockQuentity
           this.goodsPrice = this.goodsPrice > this.GoodsBaseList[i].Price ? this.GoodsBaseList[i].Price : this.goodsPrice
         }
+        this.$nextTick(function () {
+          this.propertvalueInit()
+        })
       }).catch((error) => {
         console.log(error)
       })
@@ -289,29 +300,7 @@ export default {
           })
         })
         // 所有属性值选择完成，切换商品图片和标题等相关数据
-        if (document.querySelectorAll('#SalePropertyList li.checked').length === this.SalePropertyList.length) {
-          _that.GoodsBaseList.forEach(function (item, index) {
-            let IsCurrenType = true
-            item.GoodsTypeItemList.forEach(function (item1, index1) {
-              document.querySelectorAll('#SalePropertyList li.checked').forEach(function (ele, index2) {
-                let chkPropertyId = parseInt(ele.dataset.propertyid)
-                let chkPropertyItemId = parseInt(ele.dataset.propertyitemid)
-                if (item1.PropertyId === chkPropertyId && item1.PropertyItemId !== chkPropertyItemId) {
-                  IsCurrenType = false
-                  return true
-                }
-              })
-            })
-            if (IsCurrenType) {
-              _that.skugoodsimg = item.ImgPath
-              _that.skugoodstitle = item.Title
-              _that.totalStockQuentity = item.StockQuentity
-              _that.skubaseid = item.GoodsBaseId
-              console.log('dijigesku', index)
-            }
-          })
-          console.log('已选长度')
-        }
+        this.propertvalueInit()
       })
     },
     judgemoreline () {
@@ -357,12 +346,86 @@ export default {
         console.log(error)
       })
     },
-    gotozulinorder () {
+    gotoorder () {
       if (document.querySelectorAll('#SalePropertyList li.checked').length === this.SalePropertyList.length) {
         this.closesku()
-        this.$router.push('/Order/ZulinConfirm/' + this.skubaseid)
+        if (this.SaleType === 1) {
+          if (document.getElementById('cartorbuybtn').innerHTML === '我想要') {
+            this.$router.push('/Order/confirm/' + this.skubaseid)
+          } else {
+            // 加入购物车
+            let model = {
+              Token: this.$store.state.UserToken,
+              ProductBaseId: this.$route.params.id,
+              GoodsBaseId: this.skubaseid,
+              GoodsQuantity: parseInt(document.getElementById('quantity').value)
+            }
+            this.$http({
+              url: apiport.ShoppingCart_Add,
+              method: 'post',
+              data: qs.stringify({ reqJson: JSON.stringify(model) })
+            }).then((res) => {
+              console.log('加入购物车', res.data)
+              alert('加购物车成功')
+            }).catch((error) => {
+              console.log(2)
+              console.log(error)
+            })
+          }
+        } else {
+          this.$router.push('/Order/ZulinConfirm/' + this.skubaseid)
+        }
       } else {
         alert('请选择合适的规格')
+      }
+    },
+    signplus () {
+      let currentquantity = parseInt(document.getElementById('quantity').value)
+      if (currentquantity < this.totalStockQuentity) {
+        document.getElementById('quantity').value = currentquantity + 1
+      }
+    },
+    signdecrease () {
+      let currentquantity = parseInt(document.getElementById('quantity').value)
+      if (currentquantity > 1) {
+        document.getElementById('quantity').value = currentquantity - 1
+      }
+    },
+    quantityinput () {
+      let currentquantity = parseInt(document.getElementById('quantity').value)
+      currentquantity = currentquantity === undefined ? 0 : currentquantity
+      if (currentquantity > this.totalStockQuentity) {
+        document.getElementById('quantity').value = this.totalStockQuentity
+      } else if (currentquantity < 0) {
+        document.getElementById('quantity').value = 1
+      }
+    },
+    propertvalueInit () {
+      // 所有属性值选择完成，切换商品图片和标题等相关数据
+      let _that = this
+      if (document.querySelectorAll('#SalePropertyList li.checked').length === this.SalePropertyList.length) {
+        _that.GoodsBaseList.forEach(function (item, index) {
+          let IsCurrenType = true
+          item.GoodsTypeItemList.forEach(function (item1, index1) {
+            document.querySelectorAll('#SalePropertyList li.checked').forEach(function (ele, index2) {
+              let chkPropertyId = parseInt(ele.dataset.propertyid)
+              let chkPropertyItemId = parseInt(ele.dataset.propertyitemid)
+              if (item1.PropertyId === chkPropertyId && item1.PropertyItemId !== chkPropertyItemId) {
+                IsCurrenType = false
+                return true
+              }
+            })
+          })
+          if (IsCurrenType) {
+            console.log(item.ImgPath)
+            _that.skugoodsimg = item.ImgPath
+            _that.skugoodstitle = item.Title
+            _that.totalStockQuentity = item.StockQuentity
+            _that.skubaseid = item.GoodsBaseId
+            console.log('dijigesku', index)
+          }
+        })
+        console.log('已选长度')
       }
     }
   },

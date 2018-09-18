@@ -9,7 +9,7 @@
     </a>
     <a href="javascript:;" @click="isopensku" class="act-item buybtn" v-if="footdata.SaleType!==1">立即租赁</a>
     <template v-else>
-      <a @click="isopensku" class="act-item cartbtn">加入购物车</a>
+      <a @click="isopensku('cart')" class="act-item cartbtn">加入购物车</a>
       <a @click="isopensku" class="act-item buybtn">立即购买</a>
     </template>
 </div>
@@ -20,10 +20,10 @@ export default {
   name: 'detailfooter',
   props: ['footdata'],
   methods: {
-    isopensku: function () {
+    isopensku: function (type) {
       let isopen = !this.$store.state.opensku
       this.$store.commit('OPEN_SKU', isopen)
-      this.$emit('getGoodspro')
+      this.$emit('getGoodspro', {params: type})
     },
     productpraise: function () {
       this.$emit('clickpraise')

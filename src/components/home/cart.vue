@@ -4,10 +4,8 @@
     <section class="order-cont">
       <ul class="order-list">
         <li class="item" v-for="(item, index) in ShoppingCartListIn" :key="index">
-          <input type="hidden" class="ProductBaseId" :value="item.ProductBaseId">
-          <input type="hidden" class="GoodsId" :value="item.GoodsId" valuenew="8051">
           <div class="line">
-            <div class="mleft iconfont">&#xe66e;</div>
+            <div class="mleft iconfont" @click="choosegoods($event, index)" :data-goodsid='item.GoodsId'>&#xe66e;</div>
             <div class="left">
               <router-link :to='"/Optimization/Detail/"+item.GoodsId'>
                 <img :src='item.GoodsImgPath + "@!standard_square_m"'>
@@ -17,19 +15,23 @@
               <router-link  :to='"/Optimization/Detail/" + item.GoodsId'>
                 <p class="title">{{item.GoodsTitle}}</p>
                 <p class="style">{{item.PropertyValue}}</p>
-                <p><span class="price">¥{{item.GoodsPrice}}</span><span class="quantity">×{{item.GoodsQuantity}}</span></p>
+                <p>
+                  <span class="price">¥{{item.GoodsPrice}}</span>
+                  <span class="buylimit-cart" v-if="item.LimitedCount>0">限购{{item.LimitedCount}}件</span>
+                  <span class="quantity">×{{item.GoodsQuantity}}</span>
+                </p>
               </router-link>
             </div>
             <div class="center edit" v-show="editstatus === 1">
               <div class="edit-quantity">
                 <p class="minus">
-                  <a class="sign-decrease ui-link">-</a>
+                  <a href="javascript:;" class="sign-decrease" @click="signdecrease">-</a>
                 </p>
                 <p class="edit-input">
-                  <input oninput="Global_CommonHelper.CheckOnlyNumber(this, 10)" type="tel" data-role="none" value="1" data-max="15">
+                  <input type="tel" :value="item.GoodsQuantity" :data-max="item.StockQuentity">
                 </p>
                 <p class="plus">
-                  <a class="sign-plus ui-link">+</a>
+                  <a href="javascript:;" class="sign-plus" @click="signplus">+</a>
                 </p>
               </div>
               <div class="edit-sku">
@@ -45,22 +47,20 @@
       <div class="topxl">已失效商品</div>
       <ul class="order-list">
         <li class="item" v-for="(item, index) in ShoppingCartListOut" :key="index">
-          <input type="hidden" class="ProductBaseId" value="6170">
-          <input type="hidden" class="cleargoods" value="7839">
           <div>
-            <a data-action-url="/Optimization/Detail/6170" data-role="none" class="line cart-redirect-invalid" href="">
+            <router-link :to='"/Optimization/Detail/" + item.GoodsId' class="line cart-redirect-invalid" href="">
               <div class="mleft">
                 <span>失效</span>
               </div>
               <div class="left">
-                <img src="https://cdn.product.img.95laibei.com/171121112043156913.jpg@!standard_square_m">
+                <img :src='item.GoodsImgPath + "@!standard_square_m"'>
               </div>
               <div class="center">
-                <p class="title">大红嫁衣凤冠霞帔</p>
-                <p class="style">测试：aaa；规格：103；</p>
-                <p><span class="price">¥0.01</span><span class="quantity">×4</span></p>
+                <p class="title">{{item.GoodsTitle}}</p>
+                <p class="style">{{item.PropertyValue}}</p>
+                <p><span class="price">¥{{item.GoodsPrice}}</span><span class="quantity">×{{item.GoodsQuantity}}</span></p>
               </div>
-            </a>
+            </router-link>
           </div>
         </li>
       </ul>
@@ -70,12 +70,12 @@
     </section>
     <div class="cutpay">
       <section class="pay">
-        <div id="js_as" class="mlf"><span class="iconfont">&#xe66e;</span>全选</div>
+        <div id="js_as" class="mlf" @click="chooseallgoods($event)"><span class="iconfont">&#xe66e;</span>全选</div>
         <div v-show="editstatus === 0" class="lf">
-            合计：<span>¥12.00</span>
+            合计：<span>¥{{SumOrderMoney}}</span>
             <i>(不含运费)</i>
         </div>
-        <div v-show="editstatus === 0" class="rt">结算(0)</div>
+        <div v-show="editstatus === 0" class="rt" @click="MergePayment">结算({{SumOrderNum}})</div>
         <div class="addfav" v-show="editstatus === 1">移入收藏夹</div>
         <div class="todelete" v-show="editstatus === 1">删除商品</div>
       </section>
@@ -89,6 +89,7 @@ import qs from 'qs'
 import apiport from '../../util/api'
 import head from '@/components/common/header'
 import goTop from '@/components/common/scrolltop'
+import storage from '../../util/storage'
 export default {
   name: 'Cart',
   components: {
@@ -100,7 +101,9 @@ export default {
       headinfo: {title: '购物车', rightbtntext1: '编辑'},
       editstatus: 0,
       ShoppingCartListIn: [],
-      ShoppingCartListOut: []
+      ShoppingCartListOut: [],
+      SumOrderMoney: 0.00,
+      SumOrderNum: 0
     }
   },
   mounted: function () {
@@ -151,6 +154,66 @@ export default {
           console.log(2)
           console.log(error)
         })
+    },
+    choosegoods (ele, index) {
+      if (ele.target.getAttribute('class') === 'mleft iconfont') {
+        ele.target.setAttribute('class', 'mleft iconfont textcolorr')
+        ele.target.innerHTML = '&#xe605;'
+        this.SumOrderNum += this.ShoppingCartListIn[index].GoodsQuantity
+        this.SumOrderMoney = (parseFloat(this.SumOrderMoney) + this.ShoppingCartListIn[index].GoodsPrice * this.ShoppingCartListIn[index].GoodsQuantity).toFixed(2)
+      } else {
+        ele.target.setAttribute('class', 'mleft iconfont')
+        ele.target.innerHTML = '&#xe66e;'
+        this.SumOrderNum -= this.ShoppingCartListIn[index].GoodsQuantity
+        this.SumOrderMoney = (parseFloat(this.SumOrderMoney) - this.ShoppingCartListIn[index].GoodsPrice * this.ShoppingCartListIn[index].GoodsQuantity).toFixed(2)
+      }
+    },
+    chooseallgoods (ele) {
+      let checkallarrow = ele.currentTarget.children[0]
+      let _that = this
+      if (checkallarrow.getAttribute('class') === 'iconfont') {
+        checkallarrow.setAttribute('class', 'iconfont textcolorr')
+        checkallarrow.innerHTML = '&#xe605;'
+        document.querySelectorAll('.order-list .mleft.iconfont').forEach(function (ele, index) {
+          ele.setAttribute('class', 'mleft iconfont textcolorr')
+          ele.innerHTML = '&#xe605;'
+        })
+        _that.SumOrderNum = 0
+        _that.SumOrderMoney = 0
+        _that.ShoppingCartListIn.forEach(function (ele1, index1) {
+          _that.SumOrderNum += ele1.GoodsQuantity
+          _that.SumOrderMoney += ele1.GoodsPrice * ele1.GoodsQuantity
+        })
+        _that.SumOrderMoney = _that.SumOrderMoney.toFixed(2)
+      } else {
+        checkallarrow.setAttribute('class', 'iconfont')
+        checkallarrow.innerHTML = '&#xe66e;'
+        document.querySelectorAll('.order-list .mleft.iconfont').forEach(function (ele, index) {
+          ele.setAttribute('class', 'mleft iconfont')
+          ele.innerHTML = '&#xe66e;'
+        })
+        _that.SumOrderNum = 0
+        _that.SumOrderMoney = 0
+      }
+    },
+    MergePayment () {
+      if (this.SumOrderNum === 0) {
+        return true
+      } else {
+        let goodslist = ''
+        debugger
+        document.querySelectorAll('.order-list .mleft.textcolorr').forEach(function (ele, index) {
+          goodslist += ele.dataset.goodsid + ','
+        })
+        storage.setSession(goodslist, 'ShoppingCartGoodsIds')
+        this.$router.push('/Order/Confirm')
+      }
+    },
+    signdecrease () {
+      console.log(-21)
+    },
+    signplus () {
+      console.log(-1)
     }
   }
 }
@@ -174,6 +237,9 @@ export default {
           line-height: 1.6rem;
           margin-left: .2rem;
           color: #c9caca;
+          &.textcolorr{
+            color: @base-ycolor3;
+          }
         }
         .left{
           width: 1.6rem;
@@ -199,6 +265,14 @@ export default {
             font-size: 16px;
             line-height: .4rem;
             color: @base-ycolor3;
+          }
+          .buylimit-cart{
+            margin-left: .2rem;
+            font-size: 9px;
+            color: #fff;
+            background: #f1bc19;
+            border-radius: 15px;
+            padding: 0px 6px;
           }
           .quantity{
             float: right;
@@ -336,6 +410,9 @@ export default {
         font-size: 18px;
         margin-right: 6px;
         vertical-align: middle;
+      }
+      .textcolorr{
+        color: @base-ycolor3;
       }
     }
     .lf{

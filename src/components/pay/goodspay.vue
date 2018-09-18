@@ -15,17 +15,17 @@
     <section class="sectc" style="margin-top:0">
       <div class="title">使用第三方支付</div>
       <div class="pf">
-          <div class="rpay OrderPaySelect" id="zfbPay" style="display:none" >
+          <div class="rpay OrderPaySelect" id="zfbPay" @click="payselect(0)">
               <label id="zfbOrderPaySelect" class="selectpays"></label>
               <i class="iconfont zfbicon">&#xe619;</i> 支付宝支付
-              <span id="zfbPricePartOrderPay" class="cprice">¥ {{thirdPayPoint}}</span>
+              <span id="zfbPricePartOrderPay" class="cprice" style="display:none;">¥ {{thirdPayPoint}}</span>
           </div>
-          <div class="rpay OrderPaySelect" id="wxPay">
-              <label id="wxOrderPaySelect" class="selectpays selected"></label>
+          <div class="rpay OrderPaySelect" id="wxPay" @click="payselect(1)">
+              <label id="wxOrderPaySelect" class="selectpays"></label>
               <i class="iconfont wxicon">&#xe615;</i> 微信支付
-              <span id="wxPricePartOrderPay" class="cprice">¥ {{thirdPayPoint}}</span>
+              <span id="wxPricePartOrderPay" class="cprice" style="display:none;">¥ {{thirdPayPoint}}</span>
           </div>
-          <div class="rpay OrderPaySelect" id="zmxyPay" style="display:none;">
+          <div class="rpay OrderPaySelect" id="zmxyPay" style="display:none;" @click="payselect">
               <label id="zmxyOrderPaySelect" class="selectpays"></label>
               <i class="alipayicon"></i> 芝麻信用借还
               <span id="zmxyPayPricePartOrderPay" class="cprice">¥ {{thirdPayPoint}}</span>
@@ -35,7 +35,7 @@
     <section class="secsl">
       <div class="paytotal">支付总额：<span class="price"><span id="OrderPayGoodsPay">¥ {{PointsQuantity}}</span></span><span id="OrderPayTotalPoint" class="gstotal"></span></div>
     </section>
-    <button class="btnabb" @click="wxpay">确认支付</button>
+    <button class="btnabb" @click="confirmpay">确认支付</button>
     <section class="payingtips" v-show="paying">
       <div class="pcontent">
         <div>
@@ -50,7 +50,6 @@
 <script>
 import qs from 'qs'
 import apiport from '../../util/api'
-
 import head from '@/components/common/header'
 export default {
   name: 'goodspay',
@@ -94,38 +93,64 @@ export default {
       })
   },
   methods: {
-    wxpay () {
+    confirmpay () {
       let _that = this
-      let model = {
-        IsMixPay: 0,
-        PaymentMethod: 2,
-        Remark: '商品购买',
-        Token: this.$store.state.UserToken,
-        type: 1,
-        relationId: this.$route.query.id,
-        openId: window.sessionStorage.getItem('MainOpenId'),
-        IsWeChatBrowser: false
+      if (document.getElementsByClassName('selected')[0].getAttribute('id') === 'zfbOrderPaySelect') {
+        // 支付宝支付
+        let model = {
+          IsMixPay: 0,
+          PaymentMethod: 1,
+          Remark: '商品购买',
+          Token: this.$store.state.UserToken,
+          showUrl: 'https://mweb.95laibei.com/Pay/GoodsPay?id=' + this.$route.query.id,
+          type: 1,
+          relationId: this.$route.query.id,
+          hasPointPay: false,
+          hasTimesCardPay: false
+        }
+        this.$http({
+          url: apiport.Alipay_Pay,
+          method: 'post',
+          data: qs.stringify({reqJson: JSON.stringify(model)})
+        })
+          .then(res => {
+            console.log(11111)
+          })
+          .catch(error => {
+            console.log(error)
+          })
+      } else if (document.getElementsByClassName('selected')[0].getAttribute('id') === 'wxOrderPaySelect') {
+        // 微信支付
+        let model = {
+          IsMixPay: 0,
+          PaymentMethod: 2,
+          Remark: '商品购买',
+          Token: this.$store.state.UserToken,
+          type: 1,
+          relationId: this.$route.query.id,
+          openId: window.sessionStorage.getItem('MainOpenId'),
+          IsWeChatBrowser: false
+        }
+        this.$http({
+          url: apiport.WeiXin_GetJsApiParam,
+          method: 'post',
+          data: qs.stringify({ reqJson: JSON.stringify(model) })
+        })
+          .then(res => {
+            console.log('获取微信的参数appid等', res)
+            if (model.IsWeChatBrowser) {
+              _that.callpay(JSON.parse(res.data.jsApiParamJson), res.data.payDetailId, _that.sucFun, _that.errFun)
+            } else {
+              window.location.href = res.data.jsApiParamJson + '&redirect_url=' + encodeURIComponent('https%3a%2f%2ft-mweb.95laibei.com%2f/Pay/GoodsPay?id=' + model.relationId + '&paydetailId=' + res.data.payDetailId + '&paymentmethod=6')
+            }
+          })
+          .catch(error => {
+            console.log(2)
+            console.log(error)
+          })
       }
-      this.$http({
-        url: apiport.WeiXin_GetJsApiParam,
-        method: 'post',
-        data: qs.stringify({ reqJson: JSON.stringify(model) })
-      })
-        .then(res => {
-          console.log('获取微信的参数appid等', res)
-          if (model.IsWeChatBrowser) {
-            _that.callpay(JSON.parse(res.data.jsApiParamJson), res.data.payDetailId, _that.sucFun, _that.errFun)
-          } else {
-            window.location.href = res.data.jsApiParamJson + '&redirect_url=' + encodeURIComponent('https%3a%2f%2ft-mweb.95laibei.com%2f/Pay/GoodsPay?id=' + model.relationId + '&paydetailId=' + res.data.payDetailId + '&paymentmethod=6')
-          }
-        })
-        .catch(error => {
-          console.log(2)
-          console.log(error)
-        })
     },
     callpay (wxJsApiParam, payDetailId, sucFun, errFun) {
-      alert(wxJsApiParam)
       if (typeof WeixinJSBridge === 'undefined') {
         if (document.addEventListener) {
           document.addEventListener('WeixinJSBridgeReady', this.jsApiCall, false)
@@ -157,6 +182,19 @@ export default {
     },
     errFun () {
       alert('支付失败')
+    },
+    payselect (i) {
+      if (i === 0) {
+        document.getElementById('zfbOrderPaySelect').setAttribute('class', 'selectpays selected')
+        document.getElementById('wxOrderPaySelect').setAttribute('class', 'selectpays')
+        document.getElementById('zfbPricePartOrderPay').style.display = 'inline'
+        document.getElementById('wxPricePartOrderPay').style.display = 'none'
+      } else if (i === 1) {
+        document.getElementById('zfbOrderPaySelect').setAttribute('class', 'selectpays')
+        document.getElementById('wxOrderPaySelect').setAttribute('class', 'selectpays selected')
+        document.getElementById('zfbPricePartOrderPay').style.display = 'none'
+        document.getElementById('wxPricePartOrderPay').style.display = 'inline'
+      }
     }
   }
 }
