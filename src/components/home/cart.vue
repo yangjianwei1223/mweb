@@ -5,14 +5,14 @@
       <ul class="order-list">
         <li class="item" v-for="(item, index) in ShoppingCartListIn" :key="index">
           <div class="line">
-            <div class="mleft iconfont" @click="choosegoods($event, index)" :data-goodsid='item.GoodsId'>&#xe66e;</div>
+            <div class="mleft iconfont" @click="choosegoods($event, index)" :data-goodsid='item.GoodsId' :data-productid='item.ProductBaseId'>&#xe66e;</div>
             <div class="left">
-              <router-link :to='"/Optimization/Detail/"+item.GoodsId'>
+              <router-link :to='"/Optimization/Detail/"+item.ProductBaseId'>
                 <img :src='item.GoodsImgPath + "@!standard_square_m"'>
               </router-link>
             </div>
             <div class="center" v-show="editstatus === 0">
-              <router-link  :to='"/Optimization/Detail/" + item.GoodsId'>
+              <router-link  :to='"/Optimization/Detail/" + item.ProductBaseId'>
                 <p class="title">{{item.GoodsTitle}}</p>
                 <p class="style">{{item.PropertyValue}}</p>
                 <p>
@@ -25,18 +25,18 @@
             <div class="center edit" v-show="editstatus === 1">
               <div class="edit-quantity">
                 <p class="minus">
-                  <a href="javascript:;" class="sign-decrease" @click="signdecrease">-</a>
+                  <a href="javascript:;" class="sign-decrease" @click='signdecrease("gt" + item.GoodsId)'>-</a>
                 </p>
                 <p class="edit-input">
-                  <input type="tel" :value="item.GoodsQuantity" :data-max="item.StockQuentity">
+                  <input type="tel" :value="item.GoodsQuantity" :data-max="item.StockQuentity" :ref='"gt" + item.GoodsId' @input='quantityinput("gt" + item.GoodsId)'>
                 </p>
                 <p class="plus">
-                  <a href="javascript:;" class="sign-plus" @click="signplus">+</a>
+                  <a href="javascript:;" class="sign-plus" @click='signplus("gt" + item.GoodsId)'>+</a>
                 </p>
               </div>
               <div class="edit-sku">
                 <p>{{item.PropertyValue}}</p>
-                <div class="cart-del iconfont">&#xe68a;</div>
+                <div class="cart-del iconfont" @click="Deletecartgoods(item.GoodsId)">&#xe68a;</div>
               </div>
             </div>
           </div>
@@ -48,7 +48,7 @@
       <ul class="order-list">
         <li class="item" v-for="(item, index) in ShoppingCartListOut" :key="index">
           <div>
-            <router-link :to='"/Optimization/Detail/" + item.GoodsId' class="line cart-redirect-invalid" href="">
+            <router-link :to='"/Optimization/Detail/" + item.GoodsId' class="line cart-redirect-invalid">
               <div class="mleft">
                 <span>失效</span>
               </div>
@@ -76,8 +76,8 @@
             <i>(不含运费)</i>
         </div>
         <div v-show="editstatus === 0" class="rt" @click="MergePayment">结算({{SumOrderNum}})</div>
-        <div class="addfav" v-show="editstatus === 1">移入收藏夹</div>
-        <div class="todelete" v-show="editstatus === 1">删除商品</div>
+        <div class="addfav" v-show="editstatus === 1" @click="batchcollect">移入收藏夹</div>
+        <div class="todelete" v-show="editstatus === 1" @click="batchdeletegoods">删除商品</div>
       </section>
     </div>
     <go-top></go-top>
@@ -209,11 +209,97 @@ export default {
         this.$router.push('/Order/Confirm')
       }
     },
-    signdecrease () {
-      console.log(-21)
+    signdecrease (ele) {
+      let amountele = this.$refs[ele][0]
+      let currentval = parseInt(amountele.value)
+      if (currentval > 1) {
+        amountele.value--
+      }
     },
-    signplus () {
-      console.log(-1)
+    signplus (ele) {
+      let amountele = this.$refs[ele][0]
+      let maxamount = parseInt(amountele.dataset.max)
+      let currentval = parseInt(amountele.value)
+      if (currentval < maxamount) {
+        amountele.value++
+      }
+    },
+    quantityinput (ele) {
+      let amountele = this.$refs[ele][0]
+      let maxamount = parseInt(amountele.dataset.max)
+      let currentval = parseInt(amountele.value)
+      if (currentval > maxamount) {
+        amountele.value = maxamount
+      } else if (currentval < 1) {
+        amountele.value = 1
+      }
+    },
+    Deletecartgoods (goodsids) {
+      let model = {
+        Token: this.$store.state.UserToken,
+        Type: 1,
+        GoodBaseList: goodsids
+      }
+      this.$http({
+        url: apiport.ShoppingCart_Update,
+        method: 'post',
+        data: qs.stringify({reqJson: JSON.stringify(model)})
+      })
+        .then(res => {
+          if (res.data.ResultNo === '00000000') {
+            let goodsidArr = goodsids.toString().split(';')
+            let _that = this
+            for (let i = 0; i < goodsidArr.length; i++) {
+              for (let j = _that.ShoppingCartListIn.length - 1; j >= 0; j--) {
+                if (parseInt(goodsidArr[i]) === _that.ShoppingCartListIn[j].GoodsId) {
+                  _that.ShoppingCartListIn.splice(j, 1)
+                }
+              }
+            }
+            let checkedgoods = document.querySelectorAll('.mleft.iconfont.textcolorr')
+            checkedgoods.forEach(function (item) {
+              item.setAttribute('class', 'mleft iconfont')
+              item.innerHTML = '&#xe66e'
+            })
+          }
+        })
+        .catch(error => {
+          console.log(error)
+        })
+    },
+    batchdeletegoods () {
+      let checkedgoods = document.querySelectorAll('.mleft.iconfont.textcolorr')
+      let goodsArr = ''
+      checkedgoods.forEach(function (item) {
+        goodsArr += item.dataset.goodsid + ';'
+      })
+      this.Deletecartgoods(goodsArr)
+    },
+    batchcollect () {
+      let checkedgoods = document.querySelectorAll('.mleft.iconfont.textcolorr')
+      let goodsArr = ''
+      let productArr = ''
+      checkedgoods.forEach(function (item) {
+        goodsArr += item.dataset.goodsid + ';'
+        productArr += item.dataset.productid + ','
+      })
+      let model = {
+        Token: this.$store.state.UserToken,
+        productIds: productArr
+      }
+      this.$http({
+        url: apiport.Product_BatchPraise,
+        method: 'post',
+        data: qs.stringify({reqJson: JSON.stringify(model)})
+      })
+        .then(res => {
+          if (res.data.ResultNo === '00000000') {
+            this.Deletecartgoods(goodsArr)
+          }
+        })
+        .catch(error => {
+          console.log(error)
+        })
     }
   }
 }
@@ -222,6 +308,9 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style lang="less" scoped>
 @import "../../assets/less/variable";
+.cart{
+  padding-bottom: 1rem;
+}
 .order-cont{
   padding-top: 1rem;
   .order-list{

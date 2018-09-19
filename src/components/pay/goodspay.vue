@@ -102,7 +102,7 @@ export default {
           PaymentMethod: 1,
           Remark: '商品购买',
           Token: this.$store.state.UserToken,
-          showUrl: 'https://mweb.95laibei.com/Pay/GoodsPay?id=' + this.$route.query.id,
+          showUrl: document.location.origin + '/Pay/GoodsPay?id=' + this.$route.query.id,
           type: 1,
           relationId: this.$route.query.id,
           hasPointPay: false,
@@ -114,7 +114,9 @@ export default {
           data: qs.stringify({reqJson: JSON.stringify(model)})
         })
           .then(res => {
-            console.log(11111)
+            let result = this.Alipayform(JSON.parse(res.data.AlipayHtml))
+            document.getElementsByTagName('body')[0].insertAdjacentHTML('afterBegin', result)
+            document.getElementById('alipaysubmit').submit()
           })
           .catch(error => {
             console.log(error)
@@ -195,6 +197,25 @@ export default {
         document.getElementById('zfbPricePartOrderPay').style.display = 'none'
         document.getElementById('wxPricePartOrderPay').style.display = 'inline'
       }
+    },
+    Alipayform (slt) {
+      let result = '<form id="alipaysubmit" name="alipaysubmit" action="' + slt.action + '" method="get">'
+      result += ' <input type="hidden" name="_input_charset" value="' + slt._input_charset + '"/>'
+      result += ' <input type="hidden" name="body" value="' + slt.body + '"/>'
+      result += ' <input type="hidden" name="notify_url" value="' + slt.notify_url + '"/>'
+      result += ' <input type="hidden" name="out_trade_no" value="' + slt.out_trade_no + '"/>'
+      result += ' <input type="hidden" name="partner" value="' + slt.partner + '"/>'
+      result += ' <input type="hidden" name="payment_type" value="' + slt.payment_type + '"/>'
+      result += ' <input type="hidden" name="return_url" value="' + slt.return_url + '"/>'
+      result += ' <input type="hidden" name="seller_id" value="' + slt.seller_id + '"/>'
+      result += ' <input type="hidden" name="service" value="' + slt.service + '"/>'
+      result += ' <input type="hidden" name="show_url" value="' + slt.show_url + '"/>'
+      result += ' <input type="hidden" name="subject" value="' + slt.subject + '"/>'
+      result += ' <input type="hidden" name="total_fee" value="' + slt.total_fee + '"/>'
+      result += ' <input type="hidden" name="sign" value="' + slt.sign + '"/>'
+      result += ' <input type="hidden" name="sign_type" value="' + slt.sign_type + '"/>'
+      result += ' <input type="submit" value="确认" style="display:none" /></form>'
+      return result
     }
   }
 }

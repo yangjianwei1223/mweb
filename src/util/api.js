@@ -28,6 +28,7 @@ export default{
   Product_GetZulinList: APIDomain + '/MWeb/Product/GetZulinList',
   Product_GetSeatList: APIDomain + '/MWeb/Product/GetSeatList',
   Product_GetMoreList: APIDomain + '/MWeb/Product/GetMoreList',
+  Product_BatchPraise: APIDomain + '/MWeb/Product/BatchPraise',
 
   ProductTrailReport_GetListById: APIDomain + '/MWeb/ProductTrailReport/GetListById',
   // 用户信息接口
