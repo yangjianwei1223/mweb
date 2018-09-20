@@ -49,7 +49,7 @@
         <router-link :to='"/Seat/Detail/"+item.ProductBaseId' class="clearfix">
           <img class="lazyDetail" v-lazy='item.ImgPath+"@!standard_square_m"' :key="item.ProductBaseId">
           <p class="ptitle onelinetext">{{item.Title}}</p>
-          <p class="rent">押金  <span>¥{{item.Price}}</span></p><p class="sum">已领用<span>{{item.Sales}}</span>台</p>
+          <p class="rent">{{SaleType===1 ? '' : '押金'}}  <span>¥{{item.Price}}</span></p><p class="sum" v-if="SaleType!==1">已领用<span>{{item.Sales}}</span>台</p>
         </router-link>
       </li>
     </ul>
@@ -63,7 +63,7 @@
           <div class="left"><img :src='skugoodsimg + "@!standard_square_m"'></div>
           <div class="right">
             <div class="top">{{skugoodstitle}}</div>
-            <div class="bottom price"><span id="ProductGoodsPrice">押金 ¥ {{goodsPrice}}</span><i id="GoodsStockQuentity">&nbsp;&nbsp;库存：{{totalStockQuentity}}件</i></div>
+            <div class="bottom price"><span id="ProductGoodsPrice">{{SaleType===1 ? '' : '押金'}} ¥ {{goodsPrice}}</span><i id="GoodsStockQuentity">&nbsp;&nbsp;库存：{{totalStockQuentity}}件</i></div>
           </div>
           <div style="clear:both"></div>
           <div id="RentListDiv" v-if="RentDetailList.length>0">

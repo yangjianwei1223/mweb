@@ -80,6 +80,30 @@
         <div class="todelete" v-show="editstatus === 1" @click="batchdeletegoods">删除商品</div>
       </section>
     </div>
+    <section class="popupmask" v-show="isopensku" @click="maskclosesku">
+      <div class="goodstype">
+        <div class="back iconfont" @click="closesku">&#xe665;</div>
+        <div class="title clearfix">
+          <div class="left"><img :src='skugoodsimg + "@!standard_square_m"'></div>
+          <div class="right">
+            <div class="top">{{skugoodstitle}}</div>
+            <div class="bottom price"><span id="ProductGoodsPrice">¥ {{goodsPrice}}</span><i id="GoodsStockQuentity">&nbsp;&nbsp;库存：{{totalStockQuentity}}件</i></div>
+          </div>
+          <div style="clear:both"></div>
+          </div>
+          <div id="SalePropertyList" class="SalePropertyList">
+            <div class="type" v-for="(item, index) in SalePropertyList" :key="index">
+              <h1>{{item.DisplayName}}</h1>
+              <ul>
+                <li v-for="(item1, index1) in item.ItemList" :key="index1" v-if="item1.Status" @click="checkprops(item,item1,index1)" :class="{checked:item.ItemList.length===1 || item1.state===1,styledisabled:item1.state === 2}" :data-propertyid="item1.PropertyId" :data-propertyitemid="item1.PropertyItemId">{{item1.PropertyValue}}</li>
+              </ul>
+            </div>
+          </div>
+          <div class="buybtnwrap">
+            <a href="javascript:;" @click="gotoorder">确定</a>
+          </div>
+      </div>
+  </section>
     <go-top></go-top>
   </div>
 </template>
@@ -103,7 +127,12 @@ export default {
       ShoppingCartListIn: [],
       ShoppingCartListOut: [],
       SumOrderMoney: 0.00,
-      SumOrderNum: 0
+      SumOrderNum: 0,
+      isopensku: false,
+      skugoodsimg: '',
+      skugoodstitle: '',
+      goodsPrice: 0,
+      totalStockQuentity: 0
     }
   },
   mounted: function () {
@@ -300,6 +329,14 @@ export default {
         .catch(error => {
           console.log(error)
         })
+    },
+    maskclosesku (e) {
+      if (e.target.tagName === 'SECTION') {
+        this.isopensku = false
+      }
+    },
+    closesku () {
+      this.isopensku = false
     }
   }
 }
