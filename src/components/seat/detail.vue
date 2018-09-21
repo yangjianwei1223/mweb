@@ -351,7 +351,7 @@ export default {
         this.closesku()
         if (this.SaleType === 1) {
           if (document.getElementById('cartorbuybtn').innerHTML === '我想要') {
-            this.$router.push('/Order/confirm/' + this.skubaseid)
+            this.$router.push('/Order/confirm/' + this.skubaseid + '?Quantity=' + document.getElementById('quantity').value)
           } else {
             // 加入购物车
             let model = {
@@ -373,7 +373,11 @@ export default {
             })
           }
         } else {
-          this.$router.push('/Order/ZulinConfirm/' + this.skubaseid)
+          let rentid = ''
+          if (this.RentDetailList.length > 0) {
+            rentid = '?rentid=' + this.RentDetailList[this.periodindex].Id
+          }
+          this.$router.push('/Order/ZulinConfirm/' + this.skubaseid + rentid)
         }
       } else {
         alert('请选择合适的规格')

@@ -131,7 +131,8 @@ export default {
           type: 1,
           relationId: this.$route.query.id,
           openId: window.sessionStorage.getItem('MainOpenId'),
-          IsWeChatBrowser: false
+          // eslint-disable-next-line
+          IsWeChatBrowser: navigator.userAgent.toLowerCase().match(/MicroMessenger/i) == 'micromessenger'
         }
         this.$http({
           url: apiport.WeiXin_GetJsApiParam,
@@ -181,6 +182,7 @@ export default {
     },
     sucFun () {
       alert('支付成功')
+      this.$router.push('/My/ZulinBuyIn')
     },
     errFun () {
       alert('支付失败')

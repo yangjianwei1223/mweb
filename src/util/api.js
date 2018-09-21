@@ -1,6 +1,6 @@
 ﻿//  let  APIDomain='http://v2base.api.95laibei.com';
-// let APIDomain = 'https://base-api.95laibei.com'
-let APIDomain = 'https://t-base-api.95laibei.com'
+let APIDomain = 'https://base-api.95laibei.com'
+// let APIDomain = 'https://t-base-api.95laibei.com'
 // let APIDomain = '/api'
 
 export default{

@@ -35,7 +35,7 @@
                 </p>
               </div>
               <div class="edit-sku">
-                <p>{{item.PropertyValue}}</p>
+                <p @click="opensku(item.ProductBaseId, item.GoodsId)">{{item.PropertyValue}}</p>
                 <div class="cart-del iconfont" @click="Deletecartgoods(item.GoodsId)">&#xe68a;</div>
               </div>
             </div>
@@ -90,20 +90,20 @@
             <div class="bottom price"><span id="ProductGoodsPrice">¥ {{goodsPrice}}</span><i id="GoodsStockQuentity">&nbsp;&nbsp;库存：{{totalStockQuentity}}件</i></div>
           </div>
           <div style="clear:both"></div>
+        </div>
+        <div id="SalePropertyList" class="SalePropertyList">
+          <div class="type" v-for="(item, index) in SalePropertyList" :key="index">
+            <h1>{{item.DisplayName}}</h1>
+            <ul>
+              <li v-for="(item1, index1) in item.ItemList" :key="index1" v-if="item1.Status" @click="checkprops(item,item1,index1)" :class="{checked:item.ItemList.length===1 || item1.state===1,styledisabled:item1.state === 2}" :data-propertyid="item1.PropertyId" :data-propertyitemid="item1.PropertyItemId">{{item1.PropertyValue}}</li>
+            </ul>
           </div>
-          <div id="SalePropertyList" class="SalePropertyList">
-            <div class="type" v-for="(item, index) in SalePropertyList" :key="index">
-              <h1>{{item.DisplayName}}</h1>
-              <ul>
-                <li v-for="(item1, index1) in item.ItemList" :key="index1" v-if="item1.Status" @click="checkprops(item,item1,index1)" :class="{checked:item.ItemList.length===1 || item1.state===1,styledisabled:item1.state === 2}" :data-propertyid="item1.PropertyId" :data-propertyitemid="item1.PropertyItemId">{{item1.PropertyValue}}</li>
-              </ul>
-            </div>
-          </div>
-          <div class="buybtnwrap">
-            <a href="javascript:;" @click="gotoorder">确定</a>
-          </div>
+        </div>
+        <div class="buybtnwrap">
+          <a href="javascript:;" @click="gotoorder">确定</a>
+        </div>
       </div>
-  </section>
+    </section>
     <go-top></go-top>
   </div>
 </template>
@@ -132,7 +132,9 @@ export default {
       skugoodsimg: '',
       skugoodstitle: '',
       goodsPrice: 0,
-      totalStockQuentity: 0
+      totalStockQuentity: 0,
+      SalePropertyList: [],
+      currentskugoodsid: 0
     }
   },
   mounted: function () {
@@ -230,7 +232,6 @@ export default {
         return true
       } else {
         let goodslist = ''
-        debugger
         document.querySelectorAll('.order-list .mleft.textcolorr').forEach(function (ele, index) {
           goodslist += ele.dataset.goodsid + ','
         })
@@ -337,6 +338,150 @@ export default {
     },
     closesku () {
       this.isopensku = false
+    },
+    checkprops (pitem, item, index) {
+      console.log(pitem)
+      if (item.state === 2) {
+        return true
+      } else if (item.state === 1) {
+        item.state = 0
+      } else {
+        let checkCode = pitem.Code
+        for (let i = 0; i < this.SalePropertyList.length; i++) {
+          // 同一属性值单选
+          if (this.SalePropertyList[i].Code === checkCode) {
+            for (let j = 0; j < this.SalePropertyList[i].ItemList.length; j++) {
+              this.SalePropertyList[i].ItemList[j].state = 0
+            }
+            item.state = 1
+          }
+          // 同一属性值单选 end
+        }
+      }
+      // 库存为0 的sku不让点
+      this.$nextTick(function () {
+        let _that = this
+        _that.SalePropertyList.forEach(function (item, index) {
+          item.ItemList.forEach(function (item1, index1) {
+            let totalItemStockQuentity = 0
+            _that.GoodsBaseList.forEach(function (item2, index2) {
+              let IsCurrenType = true
+              item2.GoodsTypeItemList.forEach(function (item3, index3) {
+                if (item1.PropertyId === item3.PropertyId) {
+                  if (item1.PropertyItemId !== item3.PropertyItemId) {
+                    IsCurrenType = false
+                    return true
+                  }
+                } else {
+                  let checkEle = document.querySelectorAll('#SalePropertyList li.checked')
+                  checkEle.forEach(function (ele, index4) {
+                    let chkPropertyId = parseInt(ele.dataset.propertyid)
+                    let chkPropertyItemId = parseInt(ele.dataset.propertyitemid)
+                    if (item3.PropertyId === chkPropertyId && item3.PropertyItemId !== chkPropertyItemId) {
+                      IsCurrenType = false
+                      return true
+                    }
+                  })
+                }
+              })
+              IsCurrenType && (totalItemStockQuentity += item2.StockQuentity)
+            })
+            if (totalItemStockQuentity === 0) {
+              item1.state = 2
+            } else {
+              item1.state === 1 || (item1.state = 0)
+            }
+          })
+        })
+        // 所有属性值选择完成，切换商品图片和标题等相关数据
+        this.propertvalueInit()
+      })
+    },
+    propertvalueInit () {
+      // 所有属性值选择完成，切换商品图片和标题等相关数据
+      let _that = this
+      if (document.querySelectorAll('#SalePropertyList li.checked').length === this.SalePropertyList.length) {
+        _that.GoodsBaseList.forEach(function (item, index) {
+          let IsCurrenType = true
+          item.GoodsTypeItemList.forEach(function (item1, index1) {
+            document.querySelectorAll('#SalePropertyList li.checked').forEach(function (ele, index2) {
+              let chkPropertyId = parseInt(ele.dataset.propertyid)
+              let chkPropertyItemId = parseInt(ele.dataset.propertyitemid)
+              if (item1.PropertyId === chkPropertyId && item1.PropertyItemId !== chkPropertyItemId) {
+                IsCurrenType = false
+                return true
+              }
+            })
+          })
+          if (IsCurrenType) {
+            console.log(item.ImgPath)
+            _that.skugoodsimg = item.ImgPath
+            _that.skugoodstitle = item.Title
+            _that.totalStockQuentity = item.StockQuentity
+            _that.skubaseid = item.GoodsBaseId
+            console.log('dijigesku', index)
+          }
+        })
+        console.log('已选长度')
+      }
+    },
+    gotoorder () {
+      if (document.querySelectorAll('#SalePropertyList li.checked').length === this.SalePropertyList.length) {
+        this.closesku()
+        if (this.SaleType === 1) {
+          if (document.getElementById('cartorbuybtn').innerHTML === '我想要') {
+            this.$router.push('/Order/confirm/' + this.skubaseid)
+          }
+        } else {
+          this.$router.push('/Order/ZulinConfirm/' + this.skubaseid)
+        }
+      } else {
+        alert('请选择合适的规格')
+      }
+    },
+    opensku (id, skuid) {
+      this.isopensku = true
+      if (this.currentskugoodsid === id) {
+        return true
+      }
+      this.skugoodstitle = ''
+      this.goodsPrice = 0
+      this.totalStockQuentity = 0
+      this.SalePropertyList = []
+      this.currentskugoodsid = id
+      let model = {
+        ProductBaseId: id
+      }
+      this.$http({
+        url: apiport.Goods_GetBaseListByProductId,
+        method: 'post',
+        data: qs.stringify({reqJson: JSON.stringify(model)})
+      })
+        .then(res => {
+          console.log('购物车商品sku', res.data)
+          let checksku = res.data.GoodsBaseList.filter(function (item) {
+            return item.GoodsBaseId === skuid
+          })
+          for (let i = 0; i < res.data.SalePropertyList.length; i++) {
+            for (let j = 0; j < res.data.SalePropertyList[i].ItemList.length; j++) {
+              for (let k = 0; k < checksku[0].GoodsTypeItemList.length; k++) {
+                if (checksku[0].GoodsTypeItemList[k].PropertyId === res.data.SalePropertyList[i].ItemList[j].PropertyId && checksku[0].GoodsTypeItemList[k].PropertyItemId === res.data.SalePropertyList[i].ItemList[j].PropertyItemId) {
+                  res.data.SalePropertyList[i].ItemList[j].state = 1
+                } else {
+                  res.data.SalePropertyList[i].ItemList[j].state = 0
+                }
+              }
+            }
+          }
+          this.skugoodsimg = checksku[0].ImgPath
+          this.skugoodstitle = checksku[0].Title
+          this.goodsPrice = checksku[0].Price
+          this.totalStockQuentity = checksku[0].StockQuentity
+          this.SalePropertyList = res.data.SalePropertyList
+        })
+        .catch(error => {
+          console.log(error)
+        })
     }
   }
 }
@@ -587,6 +732,128 @@ export default {
       padding: 0;
       color: #fff;
       background-color: #ff9c00;
+    }
+  }
+}
+// poppup sku style
+.popupmask{
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: rgba(122,122,122,0.3);
+  z-index: 1001;
+}
+.goodstype {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: #fff;
+  padding-top: .2rem;
+  box-sizing: border-box;
+  .back{
+    position: absolute;
+    right: .1rem;
+    top: .1rem;
+    font-size: 24px;
+    color: #ccc;
+    font-weight: 700;
+    z-index: 22;
+  }
+  .title{
+    padding-bottom: .2rem;
+    border-bottom: 1px solid #ededed;
+    .type{
+      padding-bottom: 0;
+    }
+    .left{
+      float: left;
+      width: 1.5rem;
+      margin-left: .2rem;
+      font-size: 0;
+    }
+    .right{
+      margin-left: 2rem;
+      height: 1.5rem;
+      position: relative;
+      .top{
+        font-size: 16px;
+        line-height: 1.4;
+        height: 44px;
+        width: 5.1rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        display: -webkit-box;
+        color: #333;
+      }
+      .bottom{
+        position: absolute;
+        bottom: 0;
+        vertical-align: bottom;
+        line-height: 1;
+        font-weight: 600;
+        font-size: 18px;
+        color: #ff9c00;
+        i{
+          font-style: normal;
+          font-weight: 500;
+          font-size: 10px;
+          color: #999;
+        }
+      }
+    }
+  }
+}
+.goodstype{
+  .type{
+    margin-left: .2rem;
+    padding-bottom: .2rem;
+    h1{
+      line-height: .8rem;
+      font-size: 13px;
+      color: #666;
+    }
+    li{
+      display: inline-block;
+      background-color: #fff;
+      color: #666;
+      font-size: 12px;
+      padding: 6px 10px;
+      text-align: center;
+      border: 1px solid #CCC;
+      border-radius: 4px;
+      margin-right: .2rem;
+      margin-bottom: 6px;
+      &.checked{
+        background-color: #f1bc19;
+        border: 1px solid #f1bc19;
+        color: #fff;
+      }
+      &.styledisabled{
+        opacity: .4;
+      }
+    }
+  }
+  .SalePropertyList{
+    max-height: 200px;
+    overflow: auto;
+  }
+  .buybtnwrap{
+    border-top: 1px solid #E5E5E5;
+    padding: 30px 0 15px;
+    text-align: center;
+    a{
+      display: inline-block;
+      width: 90%;
+      border-radius: 4px;
+      line-height: 44px;
+      text-align: center;
+      background-color: #f1bc19;
+      color: #fff;
     }
   }
 }

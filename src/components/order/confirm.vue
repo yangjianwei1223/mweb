@@ -2,7 +2,7 @@
   <div>
     <v-header :headinfo="headinfo"></v-header>
     <section class="confirmadd">
-      <router-link class="clearfix" :to='{path:"/My/AddressManage",query:{returnUrl:"/Order/ZulinConfirm/" + orderid}}'>
+      <router-link class="clearfix" :to='{path:"/My/AddressManage",query:{returnUrl:"/Order/Confirm/" + orderid}}'>
         <div class="iconfont dwlogo">&#xe61a;</div>
         <div class="title">
           <p>{{ContactName}}&nbsp;&nbsp; {{ContactPhone}}</p>
@@ -20,38 +20,26 @@
             <div class="center">
               <p class="title twolinetext">{{GoodsTitle}}</p>
               <p class="style">{{PropertyValue}}</p>
-              <p class="style c1" v-if="rentid">租用期限：{{RentName + '-' + RentAmount + '元'}}</p>
             </div>
             <div class="right">
               <p>¥ {{GoodsPrice}}</p>
-              <p class="thirdtext">×1</p>
+              <p class="thirdtext">×{{Quantity}}</p>
             </div>
           </router-link>
         </div>
-    </section>
-    <section class="lr_form">
-        <div class="title">宝宝信息</div>
-        <div class="linput">
-            <label>出生日期/预产期</label>
-            <input disabled="" type="text" :value="BirthDay" style="color:#9fa0a0;">
-            <input type="date" class="dateinput" data-role="none" value="" placeholder="请选择出生日期/预产期">
+        <div class="tag-wrap delivery" id="Distribution_0" data-tid="0" data-money="0" data-chooseid="28">
+          <div class="tag">
+            <a class="ui-link">
+              <div class="tag-core">配送方式</div>
+              <div class="tag-arrow iconfont"><span id="DistributionTitle_0">免邮</span>&#xe60b;</div>
+            </a>
+          </div>
         </div>
-        <div class="lradio">
-            <label>宝宝性别</label>
-            <div class="group">
-                <div class="ilwrap">
-                    <input type="radio" id="InsuredPersonSex0" data-role="none" name="InsuredPersonSex" value="0" :checked="InsuredPersonSex === 0">
-                    <label for="InsuredPersonSex0">男孩&nbsp;&nbsp;</label>
-                </div>
-                <div class="ilwrap">
-                    <input type="radio" id="InsuredPersonSex1" data-role="none" name="InsuredPersonSex" value="1" :checked="InsuredPersonSex === 1">
-                    <label for="InsuredPersonSex1">女孩&nbsp;&nbsp;</label>
-                </div>
-                <div class="ilwrap">
-                    <input type="radio" id="InsuredPersonSex2" data-role="none" name="InsuredPersonSex" value="2" :checked="InsuredPersonSex === 2">
-                    <label for="InsuredPersonSex2">未知&nbsp;&nbsp;</label>
-                </div>
-            </div>
+        <div class="sld clearfix note">
+          <label>备注:</label>
+          <div class="con mline">
+            <input id="OrderComfirmRemark_0" class="inp" placeholder="选填:对本交易的说明,建议填写已和卖家协商的信息">
+          </div>
         </div>
     </section>
     <section class="lr_form">
@@ -64,14 +52,9 @@
         <a class="tr ui-link" id="availableCount">0张可用</a>
       </div>
     </section>
-    <section class="paydetail">
-      <div class="line"><div class="left">领用押金</div><span>¥ {{GoodsPrice}}</span></div>
-      <div class="line"><div class="left">优惠券金额</div><span>¥ 0.00</span></div>
-      <div class="line"><div class="left">运费</div><span>¥ {{FreightMoney}}</span></div>
-    </section>
     <div class="zcfoot">
-      <p class="left price">需支付 :&nbsp;&nbsp;<span>¥ {{parseFloat(GoodsPrice).toFixed(2)}}</span></p>
-      <a href="javascript:;"  @click="AddZulinBase" class="right">提交订单</a>
+      <p class="left price">合计 :&nbsp;&nbsp;<span>¥ {{parseFloat(GoodsPrice + FreightMoney).toFixed(2)}}</span><i>(含运费&yen;{{FreightMoney}})</i></p>
+      <a href="javascript:;"  @click="OrderConfirmSubmit" class="right">提交订单</a>
     </div>
   </div>
 </template>
@@ -88,7 +71,7 @@ export default {
   },
   data () {
     return {
-      headinfo: {'title': '领用确认'},
+      headinfo: {'title': '确认购买'},
       ConsigneeId: 0,
       ContactName: '',
       ContactPhone: '',
@@ -101,21 +84,18 @@ export default {
       BirthDay: '',
       InsuredPersonSex: 0,
       orderid: '',
-      rentid: '',
-      RentName: '',
-      RentAmount: '',
+      Quantity: 1,
       PromotionCode: 99010
     }
   },
   mounted: function () {
     this.ConsigneeId = window.sessionStorage.getItem('ChooseConsigneeId') || 0
     this.orderid = this.$route.params.id
-    this.rentid = this.$route.query.rentid ? this.$route.query.rentid : ''
+    this.Quantity = this.$route.query.Quantity
     let model = {
       Token: this.$store.state.UserToken,
       GoodsBaseId: this.orderid,
-      ConsigneeId: this.ConsigneeId,
-      RentId: this.rentid
+      ConsigneeId: this.ConsigneeId
     }
     this.$http({
       url: apiport.Goods_GetZulinByGoodsId,
@@ -127,7 +107,7 @@ export default {
     })
       .then(res => {
         let data = res.data
-        console.log('领用信息', data)
+        console.log('购买信息', data)
         this.ConsigneeId = data.ConsigneeId
         this.ContactName = data.ContactName
         this.ContactPhone = data.ContactPhone
@@ -137,10 +117,6 @@ export default {
         this.PropertyValue = data.PropertyValue
         this.GoodsPrice = data.GoodsPrice
         this.FreightMoney = data.FreightMoney
-        this.BirthDay = data.SeatPolicyModel.BirthDay
-        this.InsuredPersonSex = data.SeatPolicyModel.InsuredPersonSex
-        this.RentName = data.RentName
-        this.RentAmount = data.RentAmount
       })
       .catch(error => {
         console.log(2)
@@ -148,26 +124,21 @@ export default {
       })
   },
   methods: {
-    AddZulinBase () {
+    OrderConfirmSubmit () {
       // let _that = this
       let model = {
         Token: this.$store.state.UserToken,
-        BirthDay: this.BirthDay,
         ConsigneeId: this.ConsigneeId,
-        DiscountCouponId: '0',
-        GoodsId: this.$route.params.id,
+        OrderList: this.$route.params.id,
+        BuyType: '',
         IdentityCard: '',
-        InsuredPersonSex: this.InsuredPersonSex,
-        IsChangeDeposit: 0,
-        PromotionCode: this.PromotionCode,
-        RentId: 0
+        IdCardFrontImgId: '',
+        IdCardOppositeImgId: '',
+        PromotionCode: ''
       }
       this.$http({
-        url: apiport.Order_AddZulinBase,
+        url: apiport.Order_AddBase,
         method: 'post',
-        header: {
-          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-        },
         data: qs.stringify({ reqJson: JSON.stringify(model) })
       })
         .then(res => {
@@ -176,11 +147,11 @@ export default {
           let openid = window.sessionStorage.getItem('MainOpenId')
           // eslint-disable-next-line
           if (!openid && navigator.userAgent.toLowerCase().match(/MicroMessenger/i) == 'micromessenger') {
-            window.location.href = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx7ff0669994ee3210&redirect_uri=https%3a%2f%2ft-mweb.95laibei.com%2fpay%2fWxCode&response_type=code&scope=snsapi_userinfo&state=GoodsPay|' + res.data.Data + '#wechat_redirect'
+            window.location.href = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx7ff0669994ee3210&redirect_uri=https%3a%2f%2ft-mweb.95laibei.com%2fpay%2fWxCode&response_type=code&scope=snsapi_userinfo&state=GoodsPay|' + res.data.ParentOrderId + '#wechat_redirect'
             return true
           }
           // _that.$router.push({path: '/Pay/GoodsPay', query: {id: res.data.Data}})
-          window.location.href = '/Pay/GoodsPay?id=' + res.data.Data
+          window.location.href = '/Pay/GoodsPay?id=' + res.data.ParentOrderId
         })
         .catch(error => {
           console.log(2)
@@ -422,6 +393,11 @@ export default {
     margin-right: .2rem;
     span{
       color: @base-ycolor3;
+    }
+    i{
+      font-style: normal;
+      font-size: 12px;
+      color: #9fa0a0;
     }
   }
   .right{

@@ -20,6 +20,8 @@ const SeatDetail = resolve => require(['@/components/seat/detail'], resolve)
 const RentKnowledge = resolve => require(['@/components/seat/rentknowledge'], resolve)
 const ServiceAssurance = resolve => require(['@/components/seat/serviceassurance'], resolve)
 const ZulinConfirm = resolve => require(['@/components/order/zulinconfirm'], resolve)
+const Confirm = resolve => require(['@/components/order/confirm'], resolve)
+const OptimizationList = resolve => require(['@/components/optimization/list'], resolve)
 const CommentList = resolve => require(['@/components/optimization/commentlist'], resolve)
 const GoodsPay = resolve => require(['@/components/pay/goodspay'], resolve)
 const Wxcode = resolve => require(['@/components/pay/wxcode'], resolve)
@@ -164,6 +166,13 @@ export default new Router({
       index: 2
     }
   }, {
+    path: '/Optimization/List',
+    name: 'optimization',
+    component: OptimizationList,
+    meta: {
+      index: 2
+    }
+  }, {
     path: '/Optimization/CommentList/:id',
     name: 'commentlist',
     component: CommentList,
@@ -174,6 +183,14 @@ export default new Router({
     path: '/Order/ZulinConfirm/:id',
     name: 'zulinconfirm',
     component: ZulinConfirm,
+    meta: {
+      requireAuth: true,
+      index: 2
+    }
+  }, {
+    path: '/Order/Confirm/:id',
+    name: 'confirm',
+    component: Confirm,
     meta: {
       requireAuth: true,
       index: 2
