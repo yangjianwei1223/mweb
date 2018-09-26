@@ -41,6 +41,7 @@ const ShareQRCode = resolve => require(['@/components/my/shareqrcode'], resolve)
 const LoginCenter = resolve => require(['@/components/wechat/logincenter'], resolve)
 const SeatInstallVideo = resolve => require(['@/components/activitys/seatinstallvideo'], resolve)
 const FreeInstall = resolve => require(['@/components/zulin/freeinstall'], resolve)
+const IM = resolve => require(['@/components/wechat/im'], resolve)
 
 Vue.use(Router)
 
@@ -188,7 +189,7 @@ export default new Router({
       index: 2
     }
   }, {
-    path: '/Order/Confirm/:id',
+    path: '/Order/Confirm/:id?',
     name: 'confirm',
     component: Confirm,
     meta: {
@@ -317,6 +318,14 @@ export default new Router({
     name: 'FreeInstall',
     component: FreeInstall,
     meta: {
+      index: 2
+    }
+  }, {
+    path: '/wechat/im',
+    name: 'im',
+    component: IM,
+    meta: {
+      requireAuth: true,
       index: 2
     }
   }

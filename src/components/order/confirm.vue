@@ -90,8 +90,8 @@ export default {
   },
   mounted: function () {
     this.ConsigneeId = window.sessionStorage.getItem('ChooseConsigneeId') || 0
-    this.orderid = this.$route.params.id
-    this.Quantity = this.$route.query.Quantity
+    this.orderid = this.$route.params.id ? this.$route.params.id : 0
+    this.Quantity = this.$route.query.Quantity || 1
     let model = {
       Token: this.$store.state.UserToken,
       GoodsBaseId: this.orderid,

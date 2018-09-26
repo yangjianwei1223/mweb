@@ -3,7 +3,7 @@
     <v-header :headinfo="headinfo" @rightbtn1click="editgoods"></v-header>
     <section class="order-cont">
       <ul class="order-list">
-        <li class="item" v-for="(item, index) in ShoppingCartListIn" :key="index">
+        <li class="item" v-for="(item, index) in ShoppingCartListIn" :key="index" :data-goodsid='item.GoodsId'>
           <div class="line">
             <div class="mleft iconfont" @click="choosegoods($event, index)" :data-goodsid='item.GoodsId' :data-productid='item.ProductBaseId'>&#xe66e;</div>
             <div class="left">
@@ -35,7 +35,7 @@
                 </p>
               </div>
               <div class="edit-sku">
-                <p @click="opensku(item.ProductBaseId, item.GoodsId)">{{item.PropertyValue}}</p>
+                <p @click="opensku(item.ProductBaseId, item.GoodsId, index)">{{item.PropertyValue}}</p>
                 <div class="cart-del iconfont" @click="Deletecartgoods(item.GoodsId)">&#xe68a;</div>
               </div>
             </div>
@@ -43,7 +43,7 @@
         </li>
       </ul>
     </section>
-    <section class="order-cont invalid">
+    <section class="order-cont invalid" v-if="ShoppingCartListOut.length>0">
       <div class="topxl">已失效商品</div>
       <ul class="order-list">
         <li class="item" v-for="(item, index) in ShoppingCartListOut" :key="index">
@@ -134,7 +134,10 @@ export default {
       goodsPrice: 0,
       totalStockQuentity: 0,
       SalePropertyList: [],
-      currentskugoodsid: 0
+      GoodsBaseList: [],
+      currentskugoodsid: 0,
+      currentskugoodsidnew: 0,
+      currentitem: 0
     }
   },
   mounted: function () {
@@ -148,6 +151,9 @@ export default {
     })
       .then(res => {
         console.log('购物车', res.data)
+        res.data.ShoppingCartListIn.forEach(function (item, index) {
+          res.data.ShoppingCartListIn[index].OldGoodsId = item.GoodsId
+        })
         this.ShoppingCartListIn = res.data.ShoppingCartListIn
         this.ShoppingCartListOut = res.data.ShoppingCartListOut
       })
@@ -164,6 +170,11 @@ export default {
       } else {
         this.editstatus = 0
         this.headinfo.rightbtntext1 = '编辑'
+        let list = ''
+        this.ShoppingCartListIn.forEach(function (item, index) {
+          list += item.OldGoodsId + ',' + item.GoodsId + ',' + item.GoodsQuantity + ',' + item.ProductBaseId + ';'
+        })
+        this.update(2, list)
       }
     },
     // 购物车删除失效
@@ -263,6 +274,24 @@ export default {
       } else if (currentval < 1) {
         amountele.value = 1
       }
+    },
+    Deletecartonegoods (list) {
+      let model = {
+        Token: this.$store.state.UserToken,
+        GoodBaseList: list
+      }
+      this.$http({
+        url: apiport.ShoppingCart_Delete,
+        method: 'post',
+        data: qs.stringify({ reqJson: JSON.stringify(model) })
+      })
+        .then(res => {
+          console.log('购物车删除', res.data)
+        })
+        .catch(error => {
+          console.log(2)
+          console.log(error)
+        })
     },
     Deletecartgoods (goodsids) {
       let model = {
@@ -417,8 +446,9 @@ export default {
             console.log(item.ImgPath)
             _that.skugoodsimg = item.ImgPath
             _that.skugoodstitle = item.Title
+            _that.goodsPrice = item.Price
             _that.totalStockQuentity = item.StockQuentity
-            _that.skubaseid = item.GoodsBaseId
+            _that.currentskugoodsidnew = item.GoodsBaseId
             console.log('dijigesku', index)
           }
         })
@@ -428,18 +458,40 @@ export default {
     gotoorder () {
       if (document.querySelectorAll('#SalePropertyList li.checked').length === this.SalePropertyList.length) {
         this.closesku()
-        if (this.SaleType === 1) {
-          if (document.getElementById('cartorbuybtn').innerHTML === '我想要') {
-            this.$router.push('/Order/confirm/' + this.skubaseid)
-          }
+        this.ShoppingCartListIn[this.currentitem].GoodsId = this.currentskugoodsidnew
+        if (document.querySelectorAll('li[data-goodsid="' + this.currentskugoodsidnew + '"]').length > 0) {
+          // 更换的sku已经存在删除原来的并把库存加到已存在的sku上面
+          let list = ''
+          list += this.ShoppingCartListIn[this.currentitem].OldGoodsId + ',' + this.ShoppingCartListIn[this.currentitem].GoodsId + ',' + this.ShoppingCartListIn[this.currentitem].GoodsQuantity + ';'
+          this.Deletecartonegoods(list)
+          let oldquanty = this.ShoppingCartListIn[this.currentitem].GoodsQuantity
+          this.ShoppingCartListIn.splice(this.currentitem, 1)
+          let _that = this
+          this.ShoppingCartListIn.forEach(function (item, index) {
+            if (item.GoodsId === _that.currentskugoodsidnew) {
+              _that.ShoppingCartListIn[index].GoodsQuantity += oldquanty
+            }
+          })
         } else {
-          this.$router.push('/Order/ZulinConfirm/' + this.skubaseid)
+          // 更改的sku不存在需拼个商品规格出来并且贴上新旧的goodsid
+          let newStyle = ''
+          this.SalePropertyList.forEach(function (item, index) {
+            newStyle += item.DisplayName + '：'
+            item.ItemList.forEach(function (item1, index1) {
+              if (item1.state === 1) {
+                newStyle += item1.PropertyValue + '；'
+              }
+            })
+          })
+          this.ShoppingCartListIn[this.currentitem].PropertyValue = newStyle
+          this.ShoppingCartListIn[this.currentitem].GoodsImgPath = this.skugoodsimg
+          this.ShoppingCartListIn[this.currentitem].GoodsPrice = this.goodsPrice
         }
       } else {
         alert('请选择合适的规格')
       }
     },
-    opensku (id, skuid) {
+    opensku (id, skuid, item) {
       this.isopensku = true
       if (this.currentskugoodsid === id) {
         return true
@@ -449,6 +501,7 @@ export default {
       this.totalStockQuentity = 0
       this.SalePropertyList = []
       this.currentskugoodsid = id
+      this.currentitem = item
       let model = {
         ProductBaseId: id
       }
@@ -478,6 +531,7 @@ export default {
           this.goodsPrice = checksku[0].Price
           this.totalStockQuentity = checksku[0].StockQuentity
           this.SalePropertyList = res.data.SalePropertyList
+          this.GoodsBaseList = res.data.GoodsBaseList
         })
         .catch(error => {
           console.log(error)
