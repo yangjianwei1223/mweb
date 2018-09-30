@@ -5,7 +5,7 @@
       <div>{{headtitle}}</div>
       <div></div>
     </header>
-    <div class="msglist" v-infinite-scroll="getMessageList" infinite-scroll-disabled="busy" infinite-scroll-distance="10">
+    <div class="msglist" :class="{mt50: !isTwain}" v-infinite-scroll="getMessageList" infinite-scroll-disabled="busy" infinite-scroll-distance="10">
       <!-- 聊天列表 -->
       <template v-if="!openwindow">
         <section v-for="(item, index) in MsgPreviewList" :key="index" :data-groupid="item.GroupPreview.GroupID" class="meslist" @click="openchat(index)">
@@ -17,11 +17,11 @@
               <div class="name">{{item.GroupPreview.GroupTitle}}</div>
               <div class="cont">{{item.Group.LastMessage.Content}}</div>
             </div>
-            <div class="time">{{item.Group.LastMessage.SendTimeFormate}}</div>
+            <div class="time">{{item.Group.LastMessage.SendTimeFormat}}</div>
           </div>
         </section>
         <section v-for="(item1) in MsgPushList" :key="item1._id" class="sysmessage">
-          <p class="time">{{item1.SendTimeFormate}}</p>
+          <p class="time">{{item1.SendTimeFormat}}</p>
           <a class="blocka" href="javascript:;" @click="pushskipfun(item1.MessageDetail.Link)">
             <p class="content">{{item1.Content.Title}}</p>
             <div class="blockpic" v-if="item1.MessageDetail.ImageID">
@@ -37,7 +37,7 @@
         <!-- 系统提醒 -->
         <template v-if="!isTwain">
           <section class="sysmessage remind" v-for="item in MsgList" :key="item._id" @click="skiporder(item.Content.OrderID, item.Content.OrderClassify)">
-            <p class="time">{{item.SendTimeFormate}}</p>
+            <p class="time">{{item.SendTimeFormat}}</p>
             <p class="content">{{item.Content.MessageContent}}</p>
             <div class="smgoodsinfo clearfix">
               <div class="left"><img :src="item.Content.GoodsImage"></div>
@@ -45,10 +45,43 @@
             </div>
           </section>
         </template>
-        <!-- 对聊 -->
-        <template v-else>
-          <div>sfsfd</div>
-          <div class="dialog-bottom-send" style="height: 233px;">
+        <!-- 对聊 包括图片表情文字链接等 -->
+        <div class="dialog-wrap" v-else>
+          <div class="dialog-content">
+            <div class="dialog-content-real">
+              <template v-for="item3 in MsgList">
+                <section class="msg-list" :key='item3._id + "time"'>
+                  <span class="showtime">{{new Date(item3.SendTime).format('yyyy年MM月dd日 HH:mm:ss')}}</span>
+                </section>
+                <section  class="goodsviewed clearfix" v-if="item3.ObjectType === 4" :key='item3._id + "pro"' @click="msgproductlink(item3.Content.ProductClassify, item3.Content.ProductID)">
+                  <div class="left clearfix">
+                    <img :src="item3.Content.Image">
+                  </div>
+                  <div class="right">
+                    <p class="price"><span>¥ {{item3.Content.Price}}</span></p>
+                    <p>{{item3.Content.Title}}</p>
+                  </div>
+                </section>
+                <section class="msg-list" v-else-if="selfclientid == item3.SenderClientID" :key='item3._id + "umsg"'>
+                  <div class="umsg">
+                    <img class="px40" :src="currentGroupIcon">
+                    <p>
+                      <span class="bubbles content">23</span>
+                    </p>
+                  </div>
+                </section>
+                <section class="msg-list" v-else :key='item3._id + "imsg"'>
+                  <div class="imsg">
+                    <p>
+                      <span class="bubbles content"><i class="refreshicon"></i><i class="beforerefresh"></i>123123</span>
+                    </p>
+                    <img class="px40" :src="FaceImage">
+                  </div>
+                </section>
+              </template>
+            </div>
+          </div>
+          <div class="dialog-bottom-send">
             <div class="dialog-input clearfix">
               <span class="dialog-upload">
                 <img src="https://cdn.sys.img.95laibei.com/Content/Images/upload.png" alt="上传图片" style="width:100%;">
@@ -60,7 +93,7 @@
               </div>
               <button id="im-keyboard" class="keyboard-btn"></button>
               <button id="im-blow" class="brow-btn" style="display: none;"></button>
-              <button id="im-sendMsg" class="sendbtn disabled" disabled="disabled" style="margin-top:10px;width:52px;">发送</button>
+              <button id="im-sendMsg" class="sendbtn disabled" disabled="disabled">发送</button>
             </div>
             <div class="dialog-brow">
               <section>
@@ -79,7 +112,7 @@
               </section>
             </div>
           </div>
-        </template>
+        </div>
       </template>
     </div>
     <div tip="正在加载" v-if="showLoading" class="tips">{{tips}}</div>
@@ -91,7 +124,7 @@
 import Vue from 'vue'
 import apiport from '../../util/api'
 import infiniteScroll from 'vue-infinite-scroll'
-// import qs from 'qs'
+import qs from 'qs'
 // import head from '@/components/common/header'
 import goTop from '@/components/common/scrolltop'
 import { hubConnection } from 'signalr-no-jquery'
@@ -111,9 +144,12 @@ export default {
       busy: true,
       showLoading: true,
       tips: '正在加载',
+      selfclientid: '',
+      FaceImage: '',
       pushGroupID: '',
       systemGroupID: '',
       currentGroupID: '',
+      currentGroupIcon: '',
       // 拿第一条消息的添加时间做获取聊天记录的过滤条件,防止分页拉取聊天记录数据重复
       MsgEndTime: '',
       isTwain: false,
@@ -148,6 +184,8 @@ export default {
     let options = {
       qs: {MbrToken: this.$store.state.UserToken}
     }
+    _that.selfclientid = JSON.parse(window.localStorage.getItem('UserToken')).ObjectData.BaseId
+    console.log(_that.selfclientid)
     const connection = hubConnection(apiport.IMServiceUrl, options)
     const hubProxy = connection.createHubProxy('Chatmessagehub')
     window.hubProxy = hubProxy
@@ -156,16 +194,16 @@ export default {
       console.log(message)
       // 判断是否系统推送消息
       if (message.ObjectType === _that.ChatMessage.SystemPushMsg) {
-        message.SendTimeFormate = _that.getTimeMark(message.SendTime)
+        message.SendTimeFormat = _that.getTimeMark(message.SendTime)
         _that.MsgPushList.unshift(message)
         _that.MsgPushList.pop()
       } else {
-        message.SendTimeFormate = _that.getTimeMark(message.SendTime)
+        message.SendTimeFormat = _that.getTimeMark(message.SendTime)
         message.Content = _that.getMsgContent(message)
         let isExistence = false
         _that.MsgPreviewList.forEach(ele => {
           if (ele.Group.GroupID === message.GroupID) {
-            ele.Group.LastMessage.SendTimeFormate = message.SendTimeFormate
+            ele.Group.LastMessage.SendTimeFormat = message.SendTimeFormat
             ele.Group.LastMessage.Content = message.Content
             ele.UnReadTotal += 1
             isExistence = true
@@ -187,6 +225,8 @@ export default {
         _that.getGroupList(1)
       })
       .fail(function () { console.log('Could not connect') })
+    this.getMyface()
+    this.dateformat()
   },
   beforeDestroy () {
     window.hubProxy.connection.stop()
@@ -200,6 +240,8 @@ export default {
         this.currentGroupID = this.pushGroupID
         this.tips = '正在加载中...'
         this.busy = false
+        this.isTwain = false
+        this.showLoading = true
       } else {
         this.$router.back()
       }
@@ -227,7 +269,7 @@ export default {
               _that.systemGroupID = item.Group.GroupID
               item.GroupPreview.GroupIcon = 'https://cdn.sys.img.95laibei.com/Content/Images/mes-sys.png'
             }
-            item.Group.LastMessage.SendTimeFormate = _that.getTimeMark(item.Group.LastMessage.SendTime)
+            item.Group.LastMessage.SendTimeFormat = _that.getTimeMark(item.Group.LastMessage.SendTime)
             item.Group.LastMessage.Content = _that.getMsgContent(item.Group.LastMessage)
             msglist.push(item)
           }
@@ -248,7 +290,7 @@ export default {
           console.log('获取系统推送消息', data)
           if (data.Data && data.Data.length > 0) {
             data.Data.forEach(item => {
-              item.SendTimeFormate = _that.getTimeMark(item.SendTime)
+              item.SendTimeFormat = _that.getTimeMark(item.SendTime)
             })
             _that.MsgPushList = _that.MsgPushList.concat(data.Data)
             _that.busy = false
@@ -260,7 +302,7 @@ export default {
           _that.isTwain = false
           if (data.Data && data.Data.length > 0) {
             data.Data.forEach(item => {
-              item.SendTimeFormate = _that.getTimeMark(item.SendTime)
+              item.SendTimeFormat = _that.getTimeMark(item.SendTime)
             })
             _that.MsgList = _that.MsgList.concat(data.Data)
             _that.busy = false
@@ -270,11 +312,12 @@ export default {
         } else {
           console.log('获取对聊消息', data)
           _that.isTwain = true
+          _that.showLoading = false
           if (data.Data && data.Data.length > 0) {
             data.Data.forEach(item => {
-              item.SendTimeFormate = _that.getTimeMark(item.SendTime)
+              item.SendTimeFormat = _that.getTimeMark(item.SendTime)
             })
-            _that.MsgList = _that.MsgList.concat(data.Data)
+            _that.MsgList = data.Data.reverse().concat(_that.MsgList)
             _that.busy = false
           } else {
             _that.tips = '已经到底了...'
@@ -350,7 +393,7 @@ export default {
         ClientID: clientid
       }
       window.hubProxy.invoke('GetGroupPreview', model).done(function (data) {
-        data.Group.LastMessage.SendTimeFormate = _that.getTimeMark(data.Group.LastMessage.SendTime)
+        data.Group.LastMessage.SendTimeFormat = _that.getTimeMark(data.Group.LastMessage.SendTime)
         data.Group.LastMessage.Content = _that.getMsgContent(data.Group.LastMessage)
         _that.MsgPreviewList.unshift(data)
       }).fail()
@@ -359,7 +402,8 @@ export default {
       this.openwindow = true
       this.headtitle = this.MsgPreviewList[index].GroupPreview.GroupTitle
       this.currentGroupID = this.MsgPreviewList[index].Group.GroupID
-      this.MsgEndTime = this.MsgPreviewList[index].GroupPreview.SendTimeFormate
+      this.MsgEndTime = this.MsgPreviewList[index].GroupPreview.SendTimeFormat
+      this.currentGroupIcon = this.MsgPreviewList[index].GroupPreview.GroupIcon
       this.pushPageIndex = this.currentPageIndex
       this.currentPageIndex = 0
       this.MsgList = []
@@ -371,6 +415,70 @@ export default {
         this.$router.push({path: '/Order/zulindetail/' + orderid})
       } else {
         this.$router.push({path: '/Order/buydetail/' + orderid})
+      }
+    },
+    // get自己的头像
+    getMyface () {
+      let model = {
+        Token: this.$store.state.UserToken
+      }
+      this.$http({
+        url: apiport.Account_GetBaseByToken,
+        method: 'post',
+        data: qs.stringify({ reqJson: JSON.stringify(model) })
+      })
+        .then(res => {
+          let data = res.data
+          this.FaceImage = data.FaceImage
+        })
+        .catch(error => {
+          console.log(error)
+        })
+    },
+    // 日期格式化
+    dateformat () {
+      // eslint-disable-next-line
+      Date.prototype.format = function (fmt) {
+        var o = {
+          'M+': this.getMonth() + 1, // 月份
+          'd+': this.getDate(), // 日
+          'h+': this.getHours() % 12 === 0 ? 12 : this.getHours() % 12, // 小时
+          'H+': this.getHours(), // 小时
+          'm+': this.getMinutes(), // 分
+          's+': this.getSeconds(), // 秒
+          'q+': Math.floor((this.getMonth() + 3) / 3), // 季度
+          'S': this.getMilliseconds() // 毫秒
+        }
+        var week = {
+          '0': '/u65e5',
+          '1': '/u4e00',
+          '2': '/u4e8c',
+          '3': '/u4e09',
+          '4': '/u56db',
+          '5': '/u4e94',
+          '6': '/u516d'
+        }
+        if (/(y+)/.test(fmt)) {
+          fmt = fmt.replace(RegExp.$1, (this.getFullYear() + '').substr(4 - RegExp.$1.length))
+        }
+        if (/(E+)/.test(fmt)) {
+          fmt = fmt.replace(RegExp.$1, ((RegExp.$1.length > 1) ? (RegExp.$1.length > 2 ? '/u661f/u671f' : '/u5468') : '') + week[this.getDay() + ''])
+        }
+        for (var k in o) {
+          if (new RegExp('(' + k + ')').test(fmt)) {
+            fmt = fmt.replace(RegExp.$1, (RegExp.$1.length === 1) ? (o[k]) : (('00' + o[k]).substr(('' + o[k]).length)))
+          }
+        }
+        return fmt
+      }
+    },
+    msgproductlink (type, id) {
+      if (type === 1) {
+        this.$router.push({path: '/Seat/Detail/' + id})
+      } else if (data.ProductClassify == 2) {
+        this.$router.push({path: '/Optimization/SecKill/' + id})
+      } else {
+        this.$router.push({path: '/Optimization/Detail/' + id})
       }
     }
   }
@@ -384,7 +492,7 @@ export default {
   top: 0;
   left: 0;
   width: 100%;
-  z-index: 22;
+  z-index: 1003;
   background: @base-ycolor;
   display: -webkit-box;
   height: 1rem;
@@ -420,8 +528,10 @@ export default {
     font-size: 22px;
   }
 }
-.msglist{
+.mt50{
   margin-top: 1rem;
+}
+.msglist{
   .meslist{
     position: relative;
     padding: .2rem 0 0 .2rem;
@@ -725,6 +835,122 @@ export default {
           background: transparent url(https://cdn.sys.img.95laibei.com/Content/Images/blowlist.png) no-repeat -13.5rem 0px;
           background-size: 15rem 1.3333rem;
         }
+      }
+    }
+  }
+}
+// 对聊窗口
+.dialog-wrap{
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+  left: 0;
+  background-color: #efefef;
+  z-index: 1002;
+  overflow-y: hidden;
+}
+.dialog-content {
+  position: absolute;
+  top: 1rem;
+  bottom: 50px;
+  left: 0;
+  right: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  .dialog-content-real{
+    .msg-list {
+      margin: 10px auto;
+      text-align: center;
+      .showtime {
+        background-color: #dcdddd;
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        color: #9fa0a0;
+        display: inline-block;
+        margin-top: 5px;
+      }
+      .umsg {
+        display: -webkit-box;
+        -webkit-box-pack: start;
+        -webkit-box-align: start;
+        padding-right: 50px;
+        .px40 {
+          margin-left: .2rem;
+        }
+        p{
+          -webkit-box-flex: 1;
+          -moz-box-flex: 1;
+          display: block;
+          text-align: left;
+          margin-left: 10px;
+          word-spacing: normal;
+          word-break: break-all;
+          white-space: pre-wrap;
+          span.bubbles {
+            display: inline-block;
+            background-color: #fff;
+            border: 1px solid transparent;
+            color: #000;
+            font-size: 14px;
+            padding: 10px;
+            text-align: left;
+            border-radius: 0 14px 14px 14px;
+          }
+        }
+      }
+      .imsg {
+        display: -webkit-box;
+        -webkit-box-pack: end;
+        -webkit-box-align: start;
+        padding-left: 50px;
+        .px40 {
+          margin-right: .2rem;
+        }
+        p {
+          -webkit-box-flex: 1;
+          display: block;
+          text-align: right;
+          margin-right: 10px;
+          word-spacing: normal;
+          word-break: break-all;
+          white-space: pre-wrap;
+          span.bubbles {
+            position: relative;
+            display: inline-block;
+            background-color: #ff4965;
+            border: 1px solid transparent;
+            color: #fff;
+            font-size: 14px;
+            padding: 10px;
+            text-align: left;
+            border-radius: 14px 0 14px 14px;
+          }
+          .refreshicon, .beforerefresh {
+            width: 20px;
+            height: 20px;
+            margin: 0 5px;
+            vertical-align: middle;
+            background: url(https://cdn.sys.img.95laibei.com/Content/Images/refresh.png) no-repeat;
+            background-size: 20px;
+            cursor: pointer;
+            position: absolute;
+            top: 50%;
+            right: 100%;
+            margin-top: -10px;
+            margin-right: 10px;
+            display: none;
+          }
+          .beforerefresh {
+            background-image: url(https://cdn.sys.img.95laibei.com/Content/Images/sending.gif);
+          }
+        }
+      }
+      .px40 {
+        width: 40px;
+        height: 40px;
+        border-radius: 20px;
       }
     }
   }
