@@ -15,7 +15,7 @@
             </div>
             <div class="right">
               <div class="name">{{item.GroupPreview.GroupTitle}}</div>
-              <div class="cont">{{item.Group.LastMessage.Content}}</div>
+              <div class="cont" v-html="item.Group.LastMessage.Content"></div>
             </div>
             <div class="time">{{item.Group.LastMessage.SendTimeFormat}}</div>
           </div>
@@ -47,41 +47,49 @@
         </template>
         <!-- 对聊 包括图片表情文字链接等 -->
         <div class="dialog-wrap" v-else>
-          <div class="dialog-content">
+          <div class="dialog-content" :style='{bottom: showbrow ? "230px" : "50px"}'  @click="showbroworboard(2)">
             <div class="dialog-content-real">
-              <template v-for="item3 in MsgList">
-                <section class="msg-list" :key='item3._id + "time"'>
+              <template v-for="(item3, index3) in MsgList">
+                <section class="msg-list" :key='item3._id + "time"' v-if="index3 === 0 || new Date(item3.SendTime).getTime()-new Date(MsgList[index3-1].SendTime).getTime()> 5*60*1000">
                   <span class="showtime">{{new Date(item3.SendTime).format('yyyy年MM月dd日 HH:mm:ss')}}</span>
                 </section>
-                <section  class="goodsviewed clearfix" v-if="item3.ObjectType === 4" :key='item3._id + "pro"' @click="msgproductlink(item3.Content.ProductClassify, item3.Content.ProductID)">
+                <section  class="goodsviewed clearfix" v-if="item3.ObjectType === 4" :key='item3._id + "pro"' @click.stop="msgproductlink(item3.Content.ProductClassify, item3.Content.ProductID)">
                   <div class="left clearfix">
                     <img :src="item3.Content.Image">
                   </div>
                   <div class="right">
                     <p class="price"><span>¥ {{item3.Content.Price}}</span></p>
-                    <p>{{item3.Content.Title}}</p>
+                    <p class="title">{{item3.Content.Title}}</p>
                   </div>
                 </section>
-                <section class="msg-list" v-else-if="selfclientid == item3.SenderClientID" :key='item3._id + "umsg"'>
+                <section class="msg-list" v-else-if="selfclientid == item3.SenderClientID" :key='item3._id + "imsg"'>
+                  <div class="imsg">
+                    <p>
+                      <span class="content" :class="{bubbles: item3.ObjectType === 1}"><i class="refreshicon"></i><i class="beforerefresh"></i>
+                        <span v-if="item3.ObjectType === 2" :class='["brow-theme"+ item3.Content.Theme +"-thumbnail", "brow-theme"+ item3.Content.Theme + "-" + item3.Content.Item]'></span>
+                        <img v-else-if="item3.ObjectType === 3" :src='"https://cdn.im.img.95laibei.com/"+ item3.Content.ImageName +"@!standard_src_M"' class="dialog-image">
+                        <span v-else v-html="item3.Content"></span>
+                      </span>
+                    </p>
+                    <img class="px40" :src="FaceImage">
+                  </div>
+                </section>
+                <section class="msg-list" v-else :key='item3._id + "umsg"'>
                   <div class="umsg">
                     <img class="px40" :src="currentGroupIcon">
                     <p>
-                      <span class="bubbles content">23</span>
+                      <span class="content" :class="{bubbles: item3.ObjectType === 1}">
+                        <span v-if="item3.ObjectType === 2" :class='["brow-theme"+ item3.Content.Theme +"-thumbnail", "brow-theme"+ item3.Content.Theme + "-" + item3.Content.Item]'></span>
+                        <img v-else-if="item3.ObjectType === 3" :src='"https://cdn.im.img.95laibei.com/"+ item3.Content.ImageName +"@!standard_src_M"' class="dialog-image">
+                        <span v-else v-html="item3.Content"></span>
+                      </span>
                     </p>
-                  </div>
-                </section>
-                <section class="msg-list" v-else :key='item3._id + "imsg"'>
-                  <div class="imsg">
-                    <p>
-                      <span class="bubbles content"><i class="refreshicon"></i><i class="beforerefresh"></i>123123</span>
-                    </p>
-                    <img class="px40" :src="FaceImage">
                   </div>
                 </section>
               </template>
             </div>
           </div>
-          <div class="dialog-bottom-send">
+          <div class="dialog-bottom-send" :style='{height: showbrow ? "233px" : "53px"}'>
             <div class="dialog-input clearfix">
               <span class="dialog-upload">
                 <img src="https://cdn.sys.img.95laibei.com/Content/Images/upload.png" alt="上传图片" style="width:100%;">
@@ -89,13 +97,13 @@
               </span>
               <div class="dialog-textarea">
                   <label id="for_imContent" for="im-content" style="display:none;"></label>
-                  <textarea id="im-content" maxlength="100" type="text" class="msgcontent" placeholder="想对他说点什么"></textarea>
+                  <textarea id="im-content" maxlength="100" type="text" class="msgcontent" placeholder="想对他说点什么" @click="showbroworboard(1)" @input="chatinput" v-model.trim="chattextcontent"></textarea>
               </div>
-              <button id="im-keyboard" class="keyboard-btn"></button>
-              <button id="im-blow" class="brow-btn" style="display: none;"></button>
-              <button id="im-sendMsg" class="sendbtn disabled" disabled="disabled">发送</button>
+              <button id="im-keyboard" class="keyboard-btn" v-show="showbrow" @click="showbroworboard(1)"></button>
+              <button id="im-blow" class="brow-btn" v-show="!showbrow" @click="showbroworboard"></button>
+              <button id="im-sendMsg" class="sendbtn" :class="{disabled: !issend}" @click="sendmsg">发送</button>
             </div>
-            <div class="dialog-brow">
+            <div class="dialog-brow" v-show="showbrow">
               <section>
                 <ul class="brow-theme1">
                   <li><span class="brow-item brow-theme1-1"></span></li>
@@ -176,7 +184,11 @@ export default {
         SystemPushMsg: 10,
         ActivityLocalLife: 11
       },
-      openwindow: false
+      openwindow: false,
+      showbrow: false,
+      chattextcontent: '',
+      issend: false,
+      increaseId: 0
     }
   },
   mounted () {
@@ -212,6 +224,14 @@ export default {
         if (!isExistence) {
           // 不存在的聊天组需要重新去请求一次
           _that.getGroupPreviewFromServer(message.SenderClientID)
+        }
+        // 如果是当前聊天，内容直接加进去
+        if (_that.openwindow && _that.currentGroupID === message.GroupID) {
+          _that.MsgList.push(message)
+          _that.$nextTick(function () {
+            let chatdialog = document.getElementsByClassName('dialog-content')[0]
+            chatdialog.scrollTop = chatdialog.scrollHeight
+          })
         }
       }
     })
@@ -314,11 +334,14 @@ export default {
           _that.isTwain = true
           _that.showLoading = false
           if (data.Data && data.Data.length > 0) {
-            data.Data.forEach(item => {
-              item.SendTimeFormat = _that.getTimeMark(item.SendTime)
-            })
+            // data.Data.forEach(item => {
+            //   item.SendTimeFormat = _that.getTimeMark(item.SendTime)
+            // })
             _that.MsgList = data.Data.reverse().concat(_that.MsgList)
-            _that.busy = false
+            _that.$nextTick(function () {
+              let chatdialog = document.getElementsByClassName('dialog-content')[0]
+              chatdialog.scrollTop = chatdialog.scrollHeight
+            })
           } else {
             _that.tips = '已经到底了...'
           }
@@ -407,6 +430,7 @@ export default {
       this.pushPageIndex = this.currentPageIndex
       this.currentPageIndex = 0
       this.MsgList = []
+      this.busy = true
       this.getMessageList()
     },
     // 系统提醒跳转订单详情页
@@ -475,10 +499,59 @@ export default {
     msgproductlink (type, id) {
       if (type === 1) {
         this.$router.push({path: '/Seat/Detail/' + id})
-      } else if (data.ProductClassify == 2) {
+      } else if (type === 2) {
         this.$router.push({path: '/Optimization/SecKill/' + id})
       } else {
         this.$router.push({path: '/Optimization/Detail/' + id})
+      }
+    },
+    // 表情键盘切换 2：关表情 1：关表情回到底部 其他：开表情回到底部
+    showbroworboard (type) {
+      if (type === 2) {
+        this.showbrow = false
+      } else if (type === 1) {
+        this.showbrow = false
+        this.$nextTick(function () {
+          let chatdialog = document.getElementsByClassName('dialog-content')[0]
+          chatdialog.scrollTop = chatdialog.scrollHeight
+        })
+      } else {
+        this.showbrow = true
+        this.$nextTick(function () {
+          let chatdialog = document.getElementsByClassName('dialog-content')[0]
+          chatdialog.scrollTop = chatdialog.scrollHeight
+        })
+      }
+    },
+    chatscrolltobottom () {
+      let chatdialog = document.getElementsByClassName('dialog-content')[0]
+      chatdialog.scrollTop = chatdialog.scrollHeight
+    },
+    chatinput () {
+      if (this.chattextcontent !== '') {
+        this.issend = true
+      } else {
+        this.issend = false
+      }
+    },
+    // 发送文本消息
+    sendmsg () {
+      if (this.issend) {
+        let _that = this
+        let msg = {
+          Content: this.chattextcontent,
+          SenderClientID: this.selfclientid,
+          GroupID: this.currentGroupID,
+          MessageID: this.increaseId++,
+          SendTime: new Date(),
+          MsgContent: this.chattextcontent,
+          ObjectType: this.ChatMessage.Text
+        }
+        window.hubProxy.invoke('sendMessage', msg).done(function (msg) {
+          console.log(msg)
+          _that.chattextcontent = ''
+          _that.issend = false
+        })
       }
     }
   }
@@ -696,7 +769,6 @@ export default {
 .dialog-bottom-send {
   position: absolute;
   bottom: 0;
-  height: 53px;
   left: 0;
   right: 0;
   background-color: #fff;
@@ -776,10 +848,13 @@ export default {
       right: 10px;
       margin-top: 10px;
       width: 52px;
+      &.disabled{
+        background-color: #d6d8d7;
+        color: #f6f9f8;
+      }
     }
   }
   .dialog-brow {
-    display: none;
     width: 100%;
     background-color: #ffffff;
     margin-top: 2px;
@@ -853,7 +928,6 @@ export default {
 .dialog-content {
   position: absolute;
   top: 1rem;
-  bottom: 50px;
   left: 0;
   right: 0;
   overflow-y: auto;
@@ -952,8 +1026,88 @@ export default {
         height: 40px;
         border-radius: 20px;
       }
+      .dialog-image{
+        max-width: 4rem;
+        max-height: 4rem;
+        border: 1px solid transparent;
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+        border-bottom-left-radius: 12px;
+        border-bottom-right-radius: 12px;
+      }
+      .imsg .dialog-image{
+        border-top-left-radius: 12px;
+      }
+      .umsg .dialog-image{
+        border-top-right-radius: 12px;
+      }
     }
   }
+}
+.goodsviewed{
+  width: 90%;
+  margin: 10px auto;
+  background-color: #fff;
+  box-shadow: 1px 1px 1px #ebebec, -1px -1px 1px #ebebec;
+  .left{
+    float: left;
+    width: 1.2rem;
+    height: 1.2rem;
+    text-align: center;
+    margin: .2rem;
+  }
+  .right{
+    padding-top: .3rem;
+    .price{
+      font-size: 16px;
+      color: #ff4965;
+    }
+    .title{
+      width: 5rem;
+      margin-left: 1.6rem;
+      font-size: 12px;
+      line-height: .5rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      word-break: break-all;
+      white-space: nowrap;
+    }
+  }
+}
+.brow-theme1-thumbnail {
+  display: inline-block;
+  width: 1.4rem;
+  height: 1.3333rem;
+}
+.brow-theme1-1 {
+  background: ~'transparent url(https://cdn.sys.img.95laibei.com/Content/Images/blowlist.png) no-repeat -0rem 0px/15rem 1.3333rem';
+}
+.brow-theme1-2 {
+  background: ~'transparent url(https://cdn.sys.img.95laibei.com/Content/Images/blowlist.png) no-repeat -1.5rem 0px/15rem 1.3333rem';
+}
+.brow-theme1-3 {
+  background: ~'transparent url(https://cdn.sys.img.95laibei.com/Content/Images/blowlist.png) no-repeat -3rem 0px/15rem 1.3333rem';
+}
+.brow-theme1-4 {
+  background: ~'transparent url(https://cdn.sys.img.95laibei.com/Content/Images/blowlist.png) no-repeat -4.5rem 0px/15rem 1.3333rem';
+}
+.brow-theme1-5 {
+  background: ~'transparent url(https://cdn.sys.img.95laibei.com/Content/Images/blowlist.png) no-repeat -6rem 0px/15rem 1.3333rem';
+}
+.brow-theme1-6 {
+  background: ~'transparent url(https://cdn.sys.img.95laibei.com/Content/Images/blowlist.png) no-repeat -7.5rem 0px/15rem 1.3333rem';
+}
+.brow-theme1-7 {
+  background: ~'transparent url(https://cdn.sys.img.95laibei.com/Content/Images/blowlist.png) no-repeat -9rem 0px/15rem 1.3333rem';
+}
+.brow-theme1-8 {
+  background: ~'transparent url(https://cdn.sys.img.95laibei.com/Content/Images/blowlist.png) no-repeat -10.5rem 0px/15rem 1.3333rem';
+}
+.brow-theme1-9 {
+  background: ~'transparent url(https://cdn.sys.img.95laibei.com/Content/Images/blowlist.png) no-repeat -12rem 0px/15rem 1.3333rem';
+}
+.brow-theme1-10 {
+  background: ~'transparent url(https://cdn.sys.img.95laibei.com/Content/Images/blowlist.png) no-repeat -13.5rem 0px/15rem 1.3333rem';
 }
 .tips{
   text-align:center;
