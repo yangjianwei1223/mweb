@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "axios": "^0.18.0",
+    "exif-js": "^2.3.0",
     "jquery-deferred": "^0.3.1",
     "jquery-param": "^1.0.1",
     "qs": "^6.5.2",

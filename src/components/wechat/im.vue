@@ -49,6 +49,7 @@
         <div class="dialog-wrap" v-else>
           <div class="dialog-content" :style='{bottom: showbrow ? "230px" : "50px"}'  @click="showbroworboard(2)">
             <div class="dialog-content-real">
+              <a href="javascript:;" class="earlymsg" @click="getMessageList">{{earlymsgtips}}</a>
               <template v-for="(item3, index3) in MsgList">
                 <section class="msg-list" :key='item3._id + "time"' v-if="index3 === 0 || new Date(item3.SendTime).getTime()-new Date(MsgList[index3-1].SendTime).getTime()> 5*60*1000">
                   <span class="showtime">{{new Date(item3.SendTime).format('yyyy年MM月dd日 HH:mm:ss')}}</span>
@@ -62,10 +63,10 @@
                     <p class="title">{{item3.Content.Title}}</p>
                   </div>
                 </section>
-                <section class="msg-list" v-else-if="selfclientid == item3.SenderClientID" :key='item3._id + "imsg"'>
+                <section class="msg-list" v-else-if="selfclientid == item3.SenderClientID" :key='item3.MessageID + "imsg"'>
                   <div class="imsg">
                     <p>
-                      <span class="content" :class="{bubbles: item3.ObjectType === 1}"><i class="refreshicon"></i><i class="beforerefresh"></i>
+                      <span class="content" :class="{bubbles: item3.ObjectType === 1}"><i class="refreshicon" v-if="item3.sendStatus && item3.sendStatus === 2" @click="resendmsg(item3, index3)"></i><i class="beforerefresh" v-if="item3.sendStatus && item3.sendStatus === 1"></i>
                         <span v-if="item3.ObjectType === 2" :class='["brow-theme"+ item3.Content.Theme +"-thumbnail", "brow-theme"+ item3.Content.Theme + "-" + item3.Content.Item]'></span>
                         <img v-else-if="item3.ObjectType === 3" :src='"https://cdn.im.img.95laibei.com/"+ item3.Content.ImageName +"@!standard_src_M"' class="dialog-image">
                         <span v-else v-html="item3.Content"></span>
@@ -79,7 +80,7 @@
                     <img class="px40" :src="currentGroupIcon">
                     <p>
                       <span class="content" :class="{bubbles: item3.ObjectType === 1}">
-                        <span v-if="item3.ObjectType === 2" :class='["brow-theme"+ item3.Content.Theme +"-thumbnail", "brow-theme"+ item3.Content.Theme + "-" + item3.Content.Item]'></span>
+                        <span v-if="item3.ObjectType === 2" :class='["brow-theme"+ item3.Content.Theme +"-thumbnail", "brow-theme"+ item3.BrowContent.Theme + "-" + item3.BrowContent.Item]'></span>
                         <img v-else-if="item3.ObjectType === 3" :src='"https://cdn.im.img.95laibei.com/"+ item3.Content.ImageName +"@!standard_src_M"' class="dialog-image">
                         <span v-else v-html="item3.Content"></span>
                       </span>
@@ -93,7 +94,7 @@
             <div class="dialog-input clearfix">
               <span class="dialog-upload">
                 <img src="https://cdn.sys.img.95laibei.com/Content/Images/upload.png" alt="上传图片" style="width:100%;">
-                <input type="file" class="upload-btn" accept="image/*">
+                <input type="file" class="upload-btn" accept="image/*" @change="sendimgmsg">
               </span>
               <div class="dialog-textarea">
                   <label id="for_imContent" for="im-content" style="display:none;"></label>
@@ -101,21 +102,12 @@
               </div>
               <button id="im-keyboard" class="keyboard-btn" v-show="showbrow" @click="showbroworboard(1)"></button>
               <button id="im-blow" class="brow-btn" v-show="!showbrow" @click="showbroworboard"></button>
-              <button id="im-sendMsg" class="sendbtn" :class="{disabled: !issend}" @click="sendmsg">发送</button>
+              <button id="im-sendMsg" class="sendbtn" :class="{disabled: !issend}" @click="sendtextmsg">发送</button>
             </div>
             <div class="dialog-brow" v-show="showbrow">
               <section>
                 <ul class="brow-theme1">
-                  <li><span class="brow-item brow-theme1-1"></span></li>
-                  <li><span class="brow-item brow-theme1-2"></span></li>
-                  <li><span class="brow-item brow-theme1-3"></span></li>
-                  <li><span class="brow-item brow-theme1-4"></span></li>
-                  <li><span class="brow-item brow-theme1-5"></span></li>
-                  <li><span class="brow-item brow-theme1-6"></span></li>
-                  <li><span class="brow-item brow-theme1-7"></span></li>
-                  <li><span class="brow-item brow-theme1-8"></span></li>
-                  <li><span class="brow-item brow-theme1-9"></span></li>
-                  <li><span class="brow-item brow-theme1-10"></span></li>
+                  <li v-for="(item4, index4) in 10" :key="index4 + 'brow'"><span class="brow-item" :class='["brow-theme1-" + item4]' @click="sendbrowmsg(item4)"></span></li>
                 </ul>
               </section>
             </div>
@@ -136,6 +128,7 @@ import qs from 'qs'
 // import head from '@/components/common/header'
 import goTop from '@/components/common/scrolltop'
 import { hubConnection } from 'signalr-no-jquery'
+import { Exif } from 'exif-js'
 
 Vue.use(infiniteScroll)
 export default {
@@ -188,7 +181,9 @@ export default {
       showbrow: false,
       chattextcontent: '',
       issend: false,
-      increaseId: 0
+      increaseId: 0,
+      earlymsgtips: '查看更早的消息',
+      SendTimesLimit: true
     }
   },
   mounted () {
@@ -225,8 +220,9 @@ export default {
           // 不存在的聊天组需要重新去请求一次
           _that.getGroupPreviewFromServer(message.SenderClientID)
         }
-        // 如果是当前聊天，内容直接加进去
-        if (_that.openwindow && _that.currentGroupID === message.GroupID) {
+        // 如果是当前聊天且是对方发来的，内容直接加进去
+        // eslint-disable-next-line
+        if (_that.openwindow && _that.currentGroupID === message.GroupID && _that.selfclientid != message.SenderClientID) {
           _that.MsgList.push(message)
           _that.$nextTick(function () {
             let chatdialog = document.getElementsByClassName('dialog-content')[0]
@@ -262,6 +258,7 @@ export default {
         this.busy = false
         this.isTwain = false
         this.showLoading = true
+        this.earlymsgtips = '查看更早的消息'
       } else {
         this.$router.back()
       }
@@ -338,11 +335,14 @@ export default {
             //   item.SendTimeFormat = _that.getTimeMark(item.SendTime)
             // })
             _that.MsgList = data.Data.reverse().concat(_that.MsgList)
-            _that.$nextTick(function () {
-              let chatdialog = document.getElementsByClassName('dialog-content')[0]
-              chatdialog.scrollTop = chatdialog.scrollHeight
-            })
+            if (_that.currentPageIndex === 1) {
+              _that.$nextTick(function () {
+                let chatdialog = document.getElementsByClassName('dialog-content')[0]
+                chatdialog.scrollTop = chatdialog.scrollHeight
+              })
+            }
           } else {
+            _that.earlymsgtips = '无更多消息'
             _that.tips = '已经到底了...'
           }
         }
@@ -535,7 +535,7 @@ export default {
       }
     },
     // 发送文本消息
-    sendmsg () {
+    sendtextmsg () {
       if (this.issend) {
         let _that = this
         let msg = {
@@ -545,14 +545,90 @@ export default {
           MessageID: this.increaseId++,
           SendTime: new Date(),
           MsgContent: this.chattextcontent,
-          ObjectType: this.ChatMessage.Text
+          ObjectType: this.ChatMessage.Text,
+          sendStatus: 1 // 1:已发送 2：发送失败 0：发送成功
         }
-        window.hubProxy.invoke('sendMessage', msg).done(function (msg) {
-          console.log(msg)
+        window.hubProxy.invoke('sendMessage', msg).done(function (msg1) {
+          console.log('消息发送成功', msg1)
           _that.chattextcontent = ''
           _that.issend = false
+          _that.changeSendStatus(msg.MessageID, 0)
+        }).fail(function (err) {
+          console.log('消息发送失败', err)
+          _that.changeSendStatus(msg.MessageID, 2)
+        })
+        // 自己发送到消息直接显示并滚动下去
+        _that.MsgList.push(msg)
+        _that.$nextTick(function () {
+          let chatdialog = document.getElementsByClassName('dialog-content')[0]
+          chatdialog.scrollTop = chatdialog.scrollHeight
         })
       }
+    },
+    changeSendStatus (messageID, status) {
+      this.MsgList.forEach(function (val, index) {
+        if (val.MessageID === messageID) {
+          val.sendStatus = status
+        }
+      })
+    },
+    resendmsg (msg, index) {
+      this.chattextcontent = msg.Content
+      this.MsgList.splice(index, 1)
+      this.issend = true
+      this.sendtextmsg()
+    },
+    // 发送表情
+    sendbrowmsg (num) {
+      console.log('发表情')
+      let _that = this
+      if (this.SendTimesLimit) {
+        this.SendTimesLimit = false
+        document.getElementById('im-sendMsg').innerHTML = '1s'
+        setTimeout(function () {
+          _that.SendTimesLimit = true
+          document.getElementById('im-sendMsg').innerHTML = '发送'
+        }, 1000)
+        let msg = {
+          Content: {Theme: 1, Item: num},
+          SenderClientID: this.selfclientid,
+          GroupID: this.currentGroupID,
+          MessageID: this.increaseId++,
+          SendTime: new Date(),
+          BrowContent: {Theme: 1, Item: num},
+          ObjectType: this.ChatMessage.Brow
+        }
+        window.hubProxy.invoke('sendMessage', msg).done(function (msg1) {
+          console.log('消息发送成功', msg1)
+        }).fail(function (err) {
+          console.log('消息发送失败', err)
+        })
+        // 自己发送到消息直接显示并滚动下去
+        _that.MsgList.push(msg)
+        _that.$nextTick(function () {
+          let chatdialog = document.getElementsByClassName('dialog-content')[0]
+          chatdialog.scrollTop = chatdialog.scrollHeight
+        })
+      } else {
+        console.log('发送消息太频繁了')
+      }
+    },
+    // 发送图片
+    sendimgmsg (ele) {
+      console.log(ele)
+      let imgfiles = ele.target.files || ele.dataTransfer.files
+      let rFilter = /^(image\/jpeg|image\/png)$/i // 检查图片格式
+      let Orientation
+      let filevalue = imgfiles[0]
+      if (!imgfiles.length) return false
+      if (!rFilter.test(filevalue.type)) {
+        return false
+      }
+      Exif.getData(filevalue, function () {
+        Orientation = Exif.getTag(this, 'Orientation')
+      })
+      // 看支持不支持FileReader
+      if (!filevalue || !window.FileReader) return false
     }
   }
 }
@@ -1014,7 +1090,6 @@ export default {
             right: 100%;
             margin-top: -10px;
             margin-right: 10px;
-            display: none;
           }
           .beforerefresh {
             background-image: url(https://cdn.sys.img.95laibei.com/Content/Images/sending.gif);
@@ -1108,6 +1183,13 @@ export default {
 }
 .brow-theme1-10 {
   background: ~'transparent url(https://cdn.sys.img.95laibei.com/Content/Images/blowlist.png) no-repeat -13.5rem 0px/15rem 1.3333rem';
+}
+.earlymsg{
+  display: block;
+  text-align: center;
+  margin-top: 10px;
+  text-decoration: underline;
+  color: #ff4965;
 }
 .tips{
   text-align:center;
