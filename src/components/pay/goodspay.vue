@@ -12,20 +12,20 @@
       </div>
       <p class="get-voice-validate get" style="display: none;">收不到短信？使用<span data-id="1" class="SendTTSValidCode SendValidCode">语音验证码</span></p>
     </section>
-    <section class="sectc" style="margin-top:0">
+    <section class="sectc" style="padding-top:0">
       <div class="title">使用第三方支付</div>
       <div class="pf">
-          <div class="rpay OrderPaySelect" id="zfbPay" @click="payselect(0)">
+          <div class="rpay OrderPaySelect" id="zfbPay" v-if="!isWx" @click="payselect(0)">
               <label id="zfbOrderPaySelect" class="selectpays"></label>
               <i class="iconfont zfbicon">&#xe619;</i> 支付宝支付
               <span id="zfbPricePartOrderPay" class="cprice" style="display:none;">¥ {{thirdPayPoint}}</span>
           </div>
-          <div class="rpay OrderPaySelect" id="wxPay" @click="payselect(1)">
+          <div class="rpay OrderPaySelect" id="wxPay" v-if="!isZfb" @click="payselect(1)">
               <label id="wxOrderPaySelect" class="selectpays"></label>
               <i class="iconfont wxicon">&#xe615;</i> 微信支付
               <span id="wxPricePartOrderPay" class="cprice" style="display:none;">¥ {{thirdPayPoint}}</span>
           </div>
-          <div class="rpay OrderPaySelect" id="zmxyPay" style="display:none;" @click="payselect">
+          <div class="rpay OrderPaySelect" id="zmxyPay" v-if="isZfb && isZMXYOrder && OrderType === 2" @click="payselect">
               <label id="zmxyOrderPaySelect" class="selectpays"></label>
               <i class="alipayicon"></i> 芝麻信用借还
               <span id="zmxyPayPricePartOrderPay" class="cprice">¥ {{thirdPayPoint}}</span>
@@ -63,10 +63,21 @@ export default {
       OrderType: 1,
       PointsUsable: 0,
       PointsQuantity: 0,
-      thirdPayPoint: 0
+      thirdPayPoint: 0,
+      isWx: false,
+      isZfb: false,
+      isZMXYOrder: false
     }
   },
   mounted: function () {
+    // eslint-disable-next-line
+    this.isWx = navigator.userAgent.toLowerCase().match(/MicroMessenger/i) == 'micromessenger'
+    this.isZfb = navigator.userAgent.toLowerCase().indexOf('alipayclient') !== -1
+    if (this.isWx) {
+      this.payselect(1)
+    } else if (this.isZfb) {
+      this.payselect(0)
+    }
     let model = {
       ParentOrderId: this.$route.query.id,
       Token: this.$store.state.UserToken
@@ -82,6 +93,7 @@ export default {
       .then(res => {
         console.log('订单支付信息', res.data)
         let data = res.data
+        this.isZMXYOrder = data.IsZMXYOrder
         this.OrderType = data.OrderType
         this.PointsUsable = data.PointsUsable
         this.PointsQuantity = data.PointsQuantity
@@ -95,63 +107,87 @@ export default {
   methods: {
     confirmpay () {
       let _that = this
-      if (document.getElementsByClassName('selected')[0].getAttribute('id') === 'zfbOrderPaySelect') {
-        // 支付宝支付
-        let model = {
-          IsMixPay: 0,
-          PaymentMethod: 1,
-          Remark: '商品购买',
-          Token: this.$store.state.UserToken,
-          showUrl: document.location.origin + '/Pay/GoodsPay?id=' + this.$route.query.id,
-          type: 1,
-          relationId: this.$route.query.id,
-          hasPointPay: false,
-          hasTimesCardPay: false
-        }
-        this.$http({
-          url: apiport.Alipay_Pay,
-          method: 'post',
-          data: qs.stringify({reqJson: JSON.stringify(model)})
-        })
-          .then(res => {
-            let result = this.Alipayform(JSON.parse(res.data.AlipayHtml))
-            document.getElementsByTagName('body')[0].insertAdjacentHTML('afterBegin', result)
-            document.getElementById('alipaysubmit').submit()
-          })
-          .catch(error => {
-            console.log(error)
-          })
-      } else if (document.getElementsByClassName('selected')[0].getAttribute('id') === 'wxOrderPaySelect') {
-        // 微信支付
-        let model = {
-          IsMixPay: 0,
-          PaymentMethod: 2,
-          Remark: '商品购买',
-          Token: this.$store.state.UserToken,
-          type: 1,
-          relationId: this.$route.query.id,
-          openId: window.sessionStorage.getItem('MainOpenId'),
-          // eslint-disable-next-line
-          IsWeChatBrowser: navigator.userAgent.toLowerCase().match(/MicroMessenger/i) == 'micromessenger'
-        }
-        this.$http({
-          url: apiport.WeiXin_GetJsApiParam,
-          method: 'post',
-          data: qs.stringify({ reqJson: JSON.stringify(model) })
-        })
-          .then(res => {
-            console.log('获取微信的参数appid等', res)
-            if (model.IsWeChatBrowser) {
-              _that.callpay(JSON.parse(res.data.jsApiParamJson), res.data.payDetailId, _that.sucFun, _that.errFun)
-            } else {
-              window.location.href = res.data.jsApiParamJson + '&redirect_url=' + encodeURIComponent('https%3a%2f%2ft-mweb.95laibei.com%2f/Pay/GoodsPay?id=' + model.relationId + '&paydetailId=' + res.data.payDetailId + '&paymentmethod=6')
-            }
-          })
-          .catch(error => {
-            console.log(2)
-            console.log(error)
-          })
+      // 支付前检测
+      let chkmodel = {
+        ValidCode: 'undefined',
+        ParentOrderId: this.$route.query.id,
+        PayPoints: 0,
+        IsMixPay: 0,
+        hasPointPay: false,
+        hasTimesCardPay: false,
+        Token: this.$store.state.UserToken
       }
+      this.$http({
+        url: apiport.Order_CheckPayment,
+        method: 'post',
+        data: qs.stringify({reqJson: JSON.stringify(chkmodel)})
+      })
+        .then(res => {
+          if (res.data.ResultNo === '00000000') {
+            if (document.getElementsByClassName('selected')[0].getAttribute('id') === 'zfbOrderPaySelect') {
+              // 支付宝支付
+              let model = {
+                IsMixPay: 0,
+                PaymentMethod: 1,
+                Remark: '商品购买',
+                Token: this.$store.state.UserToken,
+                showUrl: document.location.origin + '/Pay/GoodsPay?id=' + this.$route.query.id,
+                type: 1,
+                relationId: this.$route.query.id,
+                hasPointPay: false,
+                hasTimesCardPay: false
+              }
+              this.$http({
+                url: apiport.Alipay_Pay,
+                method: 'post',
+                data: qs.stringify({reqJson: JSON.stringify(model)})
+              })
+                .then(res => {
+                  let result = this.Alipayform(JSON.parse(res.data.AlipayHtml))
+                  document.getElementsByTagName('body')[0].insertAdjacentHTML('afterBegin', result)
+                  document.getElementById('alipaysubmit').submit()
+                })
+                .catch(error => {
+                  console.log(error)
+                })
+            } else if (document.getElementsByClassName('selected')[0].getAttribute('id') === 'wxOrderPaySelect') {
+              // 微信支付
+              let model = {
+                IsMixPay: 0,
+                PaymentMethod: 2,
+                Remark: '商品购买',
+                Token: this.$store.state.UserToken,
+                type: 1,
+                relationId: this.$route.query.id,
+                openId: JSON.parse(window.sessionStorage.getItem('MainOpenId')),
+                // eslint-disable-next-line
+                IsWeChatBrowser: navigator.userAgent.toLowerCase().match(/MicroMessenger/i) == 'micromessenger',
+                hasPointPay: false,
+                hasTimesCardPay: false
+              }
+              this.$http({
+                url: apiport.WeiXin_GetJsApiParam,
+                method: 'post',
+                data: qs.stringify({ reqJson: JSON.stringify(model) })
+              })
+                .then(res => {
+                  console.log('获取微信的参数appid等', res)
+                  if (model.IsWeChatBrowser) {
+                    _that.callpay(JSON.parse(res.data.jsApiParamJson), res.data.payDetailId, _that.sucFun, _that.errFun)
+                  } else {
+                    window.location.href = res.data.jsApiParamJson + '&redirect_url=' + encodeURIComponent('https%3a%2f%2ft-mweb.95laibei.com%2f/Pay/GoodsPay?id=' + model.relationId + '&paydetailId=' + res.data.payDetailId + '&paymentmethod=6')
+                  }
+                })
+                .catch(error => {
+                  console.log(2)
+                  console.log(error)
+                })
+            }
+          }
+        })
+        .catch(error => {
+          console.log(error)
+        })
     },
     callpay (wxJsApiParam, payDetailId, sucFun, errFun) {
       if (typeof WeixinJSBridge === 'undefined') {
@@ -171,7 +207,6 @@ export default {
         'getBrandWCPayRequest',
         wxJsApiParam, // json串
         function (res) {
-          alert(JSON.stringify(res))
           if (res.err_msg === 'get_brand_wcpay_request:ok') {
             sucFun(payDetailId)
           } else {
@@ -180,9 +215,8 @@ export default {
         }
       )
     },
-    sucFun () {
-      alert('支付成功')
-      this.$router.push('/My/ZulinBuyIn')
+    sucFun (payDetailId) {
+      this.$router.push('/Order/PaySucess/' + this.$route.query.id)
     },
     errFun () {
       alert('支付失败')
@@ -228,7 +262,7 @@ export default {
 .sectc{
   box-shadow: 0 -1px 1px #ebebec, 0 1px 1px #ebebec;
   background-color: #fff;
-  margin-top: 1rem;
+  padding-top: 1rem;
   font-size: 16px;
   .title{
     line-height: .8rem;

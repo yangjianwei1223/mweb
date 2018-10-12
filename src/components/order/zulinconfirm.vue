@@ -70,7 +70,7 @@
       <div class="line"><div class="left">运费</div><span>¥ {{FreightMoney}}</span></div>
     </section>
     <div class="zcfoot">
-      <p class="left price">需支付 :&nbsp;&nbsp;<span>¥ {{parseFloat(GoodsPrice).toFixed(2)}}</span></p>
+      <p class="left price">需支付 :&nbsp;&nbsp;<span>¥ {{parseFloat(GoodsPrice + FreightMoney).toFixed(2)}}</span></p>
       <a href="javascript:;"  @click="AddZulinBase" class="right">提交订单</a>
     </div>
   </div>
@@ -173,7 +173,7 @@ export default {
         .then(res => {
           let data = res.data
           console.log('提交订单', data)
-          let openid = window.sessionStorage.getItem('MainOpenId')
+          let openid = JSON.parse(window.sessionStorage.getItem('MainOpenId'))
           // eslint-disable-next-line
           if (!openid && navigator.userAgent.toLowerCase().match(/MicroMessenger/i) == 'micromessenger') {
             window.location.href = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx7ff0669994ee3210&redirect_uri=https%3a%2f%2ft-mweb.95laibei.com%2fpay%2fWxCode&response_type=code&scope=snsapi_userinfo&state=GoodsPay|' + res.data.Data + '#wechat_redirect'

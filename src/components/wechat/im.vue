@@ -15,9 +15,9 @@
             </div>
             <div class="right">
               <div class="name">{{item.GroupPreview.GroupTitle}}</div>
-              <div class="cont" v-html="item.Group.LastMessage.Content"></div>
+              <div class="cont" v-if="item.Group.LastMessage" v-html="item.Group.LastMessage.Content"></div>
             </div>
-            <div class="time">{{item.Group.LastMessage.SendTimeFormat}}</div>
+            <div class="time" v-if="item.Group.LastMessage">{{item.Group.LastMessage.SendTimeFormat}}</div>
           </div>
         </section>
         <section v-for="(item1) in MsgPushList" :key="item1._id" class="sysmessage">
@@ -68,7 +68,7 @@
                     <p>
                       <span class="content" :class="{bubbles: item3.ObjectType === 1}"><i class="refreshicon" v-if="item3.sendStatus && item3.sendStatus === 2" @click="resendmsg(item3, index3)"></i><i class="beforerefresh" v-if="item3.sendStatus && item3.sendStatus === 1"></i>
                         <span v-if="item3.ObjectType === 2" :class='["brow-theme"+ item3.Content.Theme +"-thumbnail", "brow-theme"+ item3.Content.Theme + "-" + item3.Content.Item]'></span>
-                        <img v-else-if="item3.ObjectType === 3" :src='"https://cdn.im.img.95laibei.com/"+ item3.Content.ImageName +"@!standard_src_M"' class="dialog-image">
+                        <img v-else-if="item3.ObjectType === 3" :src='item3.ImageContent.ImageName ? "https://cdn.im.img.95laibei.com/"+ item3.ImageContent.ImageName +"@!standard_src_M" : "https://cdn.other.img.95laibei.com/Content/Images/loading.gif"' class="dialog-image">
                         <span v-else v-html="item3.Content"></span>
                       </span>
                     </p>
@@ -80,8 +80,8 @@
                     <img class="px40" :src="currentGroupIcon">
                     <p>
                       <span class="content" :class="{bubbles: item3.ObjectType === 1}">
-                        <span v-if="item3.ObjectType === 2" :class='["brow-theme"+ item3.Content.Theme +"-thumbnail", "brow-theme"+ item3.BrowContent.Theme + "-" + item3.BrowContent.Item]'></span>
-                        <img v-else-if="item3.ObjectType === 3" :src='"https://cdn.im.img.95laibei.com/"+ item3.Content.ImageName +"@!standard_src_M"' class="dialog-image">
+                        <span v-if="item3.ObjectType === 2" :class='["brow-theme"+ item3.BrowContent.Theme +"-thumbnail", "brow-theme"+ item3.BrowContent.Theme + "-" + item3.BrowContent.Item]'></span>
+                        <img v-else-if="item3.ObjectType === 3" :src='item3.ImageContent.ImageName ? "https://cdn.im.img.95laibei.com/"+ item3.ImageContent.ImageName +"@!standard_src_M" : "https://cdn.other.img.95laibei.com/Content/Images/loading.gif"' class="dialog-image">
                         <span v-else v-html="item3.Content"></span>
                       </span>
                     </p>
@@ -128,7 +128,7 @@ import qs from 'qs'
 // import head from '@/components/common/header'
 import goTop from '@/components/common/scrolltop'
 import { hubConnection } from 'signalr-no-jquery'
-import { Exif } from 'exif-js'
+import Exif from 'exif-js'
 
 Vue.use(infiniteScroll)
 export default {
@@ -416,8 +416,11 @@ export default {
         ClientID: clientid
       }
       window.hubProxy.invoke('GetGroupPreview', model).done(function (data) {
-        data.Group.LastMessage.SendTimeFormat = _that.getTimeMark(data.Group.LastMessage.SendTime)
-        data.Group.LastMessage.Content = _that.getMsgContent(data.Group.LastMessage)
+        // eslint-disable-next-line
+        if (!!data.Group.LastMessage) {
+          data.Group.LastMessage.SendTimeFormat = _that.getTimeMark(data.Group.LastMessage.SendTime)
+          data.Group.LastMessage.Content = _that.getMsgContent(data.Group.LastMessage)
+        }
         _that.MsgPreviewList.unshift(data)
       }).fail()
     },
@@ -425,7 +428,7 @@ export default {
       this.openwindow = true
       this.headtitle = this.MsgPreviewList[index].GroupPreview.GroupTitle
       this.currentGroupID = this.MsgPreviewList[index].Group.GroupID
-      this.MsgEndTime = this.MsgPreviewList[index].GroupPreview.SendTimeFormat
+      this.MsgEndTime = this.MsgPreviewList[index].Group.LastMessage ? this.MsgPreviewList[index].Group.LastMessage.AddTime : ''
       this.currentGroupIcon = this.MsgPreviewList[index].GroupPreview.GroupIcon
       this.pushPageIndex = this.currentPageIndex
       this.currentPageIndex = 0
@@ -616,8 +619,21 @@ export default {
     // 发送图片
     sendimgmsg (ele) {
       console.log(ele)
+      let _that = this
+      let msg = {
+        Content: {ImagePath: '', ImageName: '', ImageID: 0},
+        SenderClientID: this.selfclientid,
+        GroupID: this.currentGroupID,
+        MessageID: this.increaseId++,
+        SendTime: new Date(),
+        ImageContent: {ImagePath: '', ImageName: '', ImageID: 0},
+        ObjectType: this.ChatMessage.Image
+      }
+      // 自己发送到消息直接显示并滚动下去
+      _that.MsgList.push(msg)
       let imgfiles = ele.target.files || ele.dataTransfer.files
       let rFilter = /^(image\/jpeg|image\/png)$/i // 检查图片格式
+      let MaximgW = 1000
       let Orientation
       let filevalue = imgfiles[0]
       if (!imgfiles.length) return false
@@ -627,8 +643,80 @@ export default {
       Exif.getData(filevalue, function () {
         Orientation = Exif.getTag(this, 'Orientation')
       })
+      if (!Orientation) {
+        Orientation = 1
+      }
       // 看支持不支持FileReader
       if (!filevalue || !window.FileReader) return false
+      console.log('照片角度', Orientation)
+      ele.target.value = ''
+      let reader = new FileReader()
+      reader.readAsDataURL(filevalue)
+      reader.onloadend = function () {
+        let result = this.result
+        let img = new Image()
+        img.src = result
+        console.log(result, 'base64')
+        if (img.width > MaximgW) {
+          let canvas = document.createElement('canvas')
+          let ctx = canvas.getContext('2d')
+          canvas.width = MaximgW
+          canvas.height = MaximgW * (img.height / img.width)
+          ctx.clearRect(0, 0, canvas.width, canvas.height)
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+          result = canvas.toDataURL('image/jpeg', 0.8)
+        }
+        result = result.substr(23)
+        _that.uploadImg(result, 6, 1, Orientation, _that.imuploadimgsuc, _that.imuploadimgfail, msg.MessageID)
+      }
+    },
+    // 上传图片
+    uploadImg (base64str, imgPath, imgType, orientation, sucfun, failfun, msgid) {
+      let model = {
+        base64: base64str,
+        path: imgPath,
+        imgType: imgType,
+        Orientation: orientation
+      }
+      this.$http({
+        url: apiport.Common_PicFileSave,
+        method: 'post',
+        data: qs.stringify({ reqJson: JSON.stringify(model) })
+      }).then((res) => {
+        console.log('图片上传成功', res)
+        if (typeof sucfun === 'function') {
+          sucfun(res.data, msgid)
+        }
+      }).catch((error) => {
+        console.log(error)
+        if (typeof failfun === 'function') {
+          failfun(error, msgid)
+        }
+      })
+    },
+    imuploadimgsuc (imginfo, msgid) {
+      let msg
+      this.MsgList.forEach(function (val, index) {
+        if (val.MessageID === msgid) {
+          val.ImageContent.ImagePath = imginfo.ImgPath
+          val.ImageContent.ImageName = imginfo.ImgName
+          msg = val
+        }
+      })
+      let image = new Image()
+      image.src = 'https://cdn.im.img.95laibei.com/' + imginfo.ImgName + '@!standard_src_M'
+      image.onload = function () {
+        let chatdialog = document.getElementsByClassName('dialog-content')[0]
+        chatdialog.scrollTop = chatdialog.scrollHeight
+      }
+      window.hubProxy.invoke('sendMessage', msg).done(function (msg1) {
+        console.log('消息发送成功', msg1)
+      }).fail(function (err) {
+        console.log('消息发送失败', err)
+      })
+    },
+    imuploadimgfail () {
+      alert('失败了图片上传')
     }
   }
 }

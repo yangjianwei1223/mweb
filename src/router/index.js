@@ -25,6 +25,8 @@ const OptimizationList = resolve => require(['@/components/optimization/list'], 
 const CommentList = resolve => require(['@/components/optimization/commentlist'], resolve)
 const GoodsPay = resolve => require(['@/components/pay/goodspay'], resolve)
 const Wxcode = resolve => require(['@/components/pay/wxcode'], resolve)
+const PaySucess = resolve => require(['@/components/order/paysucess'], resolve)
+const ZulinDetail = resolve => require(['@/components/order/zulindetail'], resolve)
 const AddressManage = resolve => require(['@/components/my/addressmanage'], resolve)
 const AddAddress = resolve => require(['@/components/my/addaddress'], resolve)
 const Setting = resolve => require(['@/components/my/setting'], resolve)
@@ -297,6 +299,22 @@ export default new Router({
     name: 'wxcode',
     component: Wxcode,
     meta: {
+      index: 2
+    }
+  }, {
+    path: '/Order/PaySucess/:id',
+    name: 'paysucess',
+    component: PaySucess,
+    meta: {
+      requireAuth: true,
+      index: 2
+    }
+  }, {
+    path: '/Order/ZulinDetail/:id',
+    name: 'zulindetail',
+    component: ZulinDetail,
+    meta: {
+      requireAuth: true,
       index: 2
     }
   }, {

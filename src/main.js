@@ -30,7 +30,7 @@ router.beforeEach((to, from, next) => {
     if (currenttime > exptime) {
       localStorage.removeItem('UserToken')
     } else {
-      store.state.UserToken = tokenInfo.ObjectData.Token
+      store.state.UserToken = JSON.parse(tokenInfo.ObjectData).Token
     }
   }
   if (to.meta.requireAuth) {

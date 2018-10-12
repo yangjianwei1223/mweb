@@ -20,7 +20,7 @@ export default {
   setUserTokenToStorage (data, expTime) {
     let expTime1 = new Date()
     expTime1.setHours(new Date().getHours() + expTime)
-    let storagedata = {ExpTime: expTime1, ObjectData: data}
+    let storagedata = {ExpTime: expTime1, ObjectData: JSON.stringify(data)}
     return window.localStorage.setItem('UserToken', JSON.stringify(storagedata))
   },
   // 获取

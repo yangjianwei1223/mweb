@@ -5,7 +5,7 @@
       <ul class="navbar-ul">
         <li :class="{active:OrderState==0}" @click='changestate(0)'><span>全部</span></li>
         <li :class="{active:OrderState==1}" @click='changestate(1)'><span>待付款</span></li>
-        <li :class="{active:OrderState==2}" @click='changestate(2)'><span>代发货</span></li>
+        <li :class="{active:OrderState==2}" @click='changestate(2)'><span>待发货</span></li>
         <li :class="{active:OrderState==3}" @click='changestate(3)'><span>待收货</span></li>
         <li :class="{active:OrderState==5}" @click='changestate(5)'><span>待评价</span></li>
         <li :class="{active:OrderState==4}" @click='changestate(4)'><span>退款/退货</span></li>

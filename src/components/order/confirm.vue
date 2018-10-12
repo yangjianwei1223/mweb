@@ -1,7 +1,7 @@
 <template>
   <div>
-    <v-header :headinfo="headinfo"></v-header>
-    <section class="confirmadd">
+    <v-header :headinfo="headinfo" @hidediv="backordelivery"></v-header>
+    <section class="confirmadd" v-show="deliverypage === 0">
       <router-link class="clearfix" :to='{path:"/My/AddressManage",query:{returnUrl:"/Order/Confirm/" + orderid}}'>
         <div class="iconfont dwlogo">&#xe61a;</div>
         <div class="title">
@@ -11,7 +11,7 @@
         <div class="arrow iconfont">&#xe61e;</div>
       </router-link>
     </section>
-    <section class="order-cont">
+    <section class="order-cont" v-show="deliverypage === 0">
         <div class="item">
           <router-link to="">
             <div class="left">
@@ -27,11 +27,11 @@
             </div>
           </router-link>
         </div>
-        <div class="tag-wrap delivery" id="Distribution_0" data-tid="0" data-money="0" data-chooseid="28">
+        <div class="tag-wrap delivery" @click="checkdelivery">
           <div class="tag">
-            <a class="ui-link">
+            <a href="javascript:;">
               <div class="tag-core">配送方式</div>
-              <div class="tag-arrow iconfont"><span id="DistributionTitle_0">免邮</span>&#xe60b;</div>
+              <div class="tag-arrow iconfont"><span>免邮</span>&#xe60b;</div>
             </a>
           </div>
         </div>
@@ -42,20 +42,34 @@
           </div>
         </div>
     </section>
-    <section class="lr_form">
+    <section class="lr_form" v-show="deliverypage === 0">
       <div class="yqm">
         <label>邀请码</label>
         <div class="con"><span class="thirdtext" id="OldPromotionCodeMark" style="display:none;">(M为旧邀请码标识)</span><input type="text" :value="PromotionCode" placeholder="请输入邀请码"></div>
       </div>
       <div class="la">
-        <label>选择免邮券</label>
-        <a class="tr ui-link" id="availableCount">0张可用</a>
+        <label>优惠券</label>
+        <a href="javascript:;" class="tr iconfont" id="availableCount">0张可用 &#xe60b;</a>
       </div>
     </section>
-    <div class="zcfoot">
+    <div class="zcfoot" v-show="deliverypage === 0">
       <p class="left price">合计 :&nbsp;&nbsp;<span>¥ {{parseFloat(GoodsPrice + FreightMoney).toFixed(2)}}</span><i>(含运费&yen;{{FreightMoney}})</i></p>
       <a href="javascript:;"  @click="OrderConfirmSubmit" class="right">提交订单</a>
     </div>
+    <!-- 选择配送方式 -->
+    <section class="tag-wrap ps" v-show="deliverypage === 1">
+      <div class="tag borderbottom">
+        <a href="javascript:;">
+          <div class="tag-core">选择配送方式</div>
+        </a>
+      </div>
+      <ul class="courier">
+        <li class="freightLi0">
+          <span class="iconfont textcolorr"></span>免邮
+        </li>
+      </ul>
+    </section>
+    <button v-show="deliverypage === 1" class="btnabb">确定</button>
   </div>
 </template>
 
@@ -71,7 +85,7 @@ export default {
   },
   data () {
     return {
-      headinfo: {'title': '确认购买'},
+      headinfo: {'title': '确认购买', leftfun: 1},
       ConsigneeId: 0,
       ContactName: '',
       ContactPhone: '',
@@ -85,7 +99,8 @@ export default {
       InsuredPersonSex: 0,
       orderid: '',
       Quantity: 1,
-      PromotionCode: 99010
+      PromotionCode: 99010,
+      deliverypage: 0
     }
   },
   mounted: function () {
@@ -144,7 +159,7 @@ export default {
         .then(res => {
           let data = res.data
           console.log('提交订单', data)
-          let openid = window.sessionStorage.getItem('MainOpenId')
+          let openid = JSON.parse(window.sessionStorage.getItem('MainOpenId'))
           // eslint-disable-next-line
           if (!openid && navigator.userAgent.toLowerCase().match(/MicroMessenger/i) == 'micromessenger') {
             window.location.href = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx7ff0669994ee3210&redirect_uri=https%3a%2f%2ft-mweb.95laibei.com%2fpay%2fWxCode&response_type=code&scope=snsapi_userinfo&state=GoodsPay|' + res.data.ParentOrderId + '#wechat_redirect'
@@ -157,6 +172,16 @@ export default {
           console.log(2)
           console.log(error)
         })
+    },
+    checkdelivery () {
+      this.deliverypage = 1
+      this.headinfo.title = '选择配送方式'
+    },
+    backordelivery () {
+      if (this.deliverypage === 1) {
+        this.deliverypage = 0
+        this.headinfo.title = '确认购买'
+      }
     }
   }
 }
@@ -353,7 +378,6 @@ export default {
       .tr{
         -webkit-box-flex: 1;
         flex: 1;
-        color: #b5b5b6;
         text-align: right;
         padding-right: .2rem;
       }
@@ -407,5 +431,96 @@ export default {
     color: #fff;
     background-color: @base-ycolor3;
   }
+}
+.tag-wrap {
+  width: 100%;
+  box-sizing: border-box;
+  background-color: #fff;
+  .tag{
+    height: .88rem;
+    padding-left: .2rem;
+    display: -webkit-box;
+    a{
+      width: 100%;
+      display: -webkit-box;
+      display: box;
+      color: #3e3a39;
+      &>div{
+        -webkit-box-pack: start;
+        -moz-box-pack: start;
+        -ms-box-pack: start;
+        -o-box-pack: start;
+        -webkit-box-align: center;
+        -moz-box-align: center;
+        -ms-box-align: center;
+        display: -webkit-box;
+        display: -moz-box;
+        display: -ms-box;
+        display: -o-box;
+      }
+    }
+    .tag-core{
+      -moz-box-flex: 1;
+      -webkit-box-flex: 1;
+      line-height: .4rem;
+      font-size: 13px;
+      color: #666;
+    }
+    .tag-arrow{
+      padding-right: .2rem;
+      line-height: .1rem;
+      font-size: 13px;
+      color: #333;
+      span{
+        margin-right: .1rem;
+      }
+    }
+  }
+}
+.sld.note {
+  position: relative;
+  line-height: 1rem;
+  background-color: #fff;
+  margin: 0;
+  border-top: 1px solid #dcdddd;
+  padding-left: .2rem;
+  label{
+    float: left;
+    width: 1rem;
+    margin: 0;
+    font-size: 14px;
+  }
+  .con{
+    float: left;
+    width: 5.1rem;
+    font-size: 12px;
+    height: 1rem;
+    input{
+      width: 5.9rem;
+      height: .8rem;
+      line-height: .8rem;
+      padding: .1rem .2rem .1rem 0;
+      -webkit-appearance: none;
+      border: 0;
+      outline: 0;
+      font-size: 12px;
+      resize: none;
+    }
+  }
+}
+.tag-wrap.ps{
+  padding-top: 1rem;
+}
+.btnabb {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  background-color: #ff9c00;
+  font-size: 16px;
+  color: #fff;
+  padding: 12px;
+  border: none;
 }
 </style>
