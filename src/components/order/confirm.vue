@@ -2,35 +2,15 @@
   <div>
     <v-header :headinfo="headinfo" @hidediv="backordelivery"></v-header>
     <section class="confirmadd" v-show="deliverypage === 0">
-<<<<<<< HEAD
       <router-link class="clearfix" :to='{path:"/My/AddressManage",query:{returnUrl:orderid !== 0 ? "/Order/Confirm/" + orderid : "/Order/Confirm"}}'>
         <div class="iconfont dwlogo">&#xe61a;</div>
         <div class="title">
           <p>{{orderdata.ContactName}}&nbsp;&nbsp; {{orderdata.ContactPhone}}</p>
           <p>{{orderdata.FullAddress}}</p>
-=======
-<<<<<<< HEAD
-      <router-link class="clearfix" :to='{path:"/My/AddressManage",query:{returnUrl:orderid !== 0 ? "/Order/Confirm/" + orderid : "/Order/Confirm"}}'>
-        <div class="iconfont dwlogo">&#xe61a;</div>
-        <div class="title">
-          <p>{{orderdata.ContactName}}&nbsp;&nbsp; {{orderdata.ContactPhone}}</p>
-          <p>{{orderdata.FullAddress}}</p>
-=======
-      <router-link class="clearfix" :to='{path:"/My/AddressManage",query:{returnUrl:"/Order/Confirm/" + orderid}}'>
-        <div class="iconfont dwlogo">&#xe61a;</div>
-        <div class="title">
-          <p>{{ContactName}}&nbsp;&nbsp; {{ContactPhone}}</p>
-          <p>{{FullAddress}}</p>
->>>>>>> 9ced28722433260d05ae238a29f13617858bfd6c
->>>>>>> f00504a9fc8e841eb265bfbd6b3a2bf22d6047ed
         </div>
         <div class="arrow iconfont">&#xe61e;</div>
       </router-link>
     </section>
-<<<<<<< HEAD
-    <section class="order-cont" v-for="(item, index) in orderdata.OrderInfoList" :key="index" v-show="deliverypage === 0">
-=======
-<<<<<<< HEAD
     <section class="order-cont" v-for="(item, index) in orderdata.OrderInfoList" :key="index" v-show="deliverypage === 0">
         <div class="item">
           <router-link to="" v-for="(item1, index1) in item.GoodsList" :key="index1 + '_1'">
@@ -52,9 +32,6 @@
             <a href="javascript:;">
               <div class="tag-core">配送方式</div>
               <div class="tag-arrow iconfont"><span>{{item.FreightList[0].Title}}</span>&#xe60b;</div>
-=======
-    <section class="order-cont" v-show="deliverypage === 0">
->>>>>>> f00504a9fc8e841eb265bfbd6b3a2bf22d6047ed
         <div class="item">
           <router-link to="" v-for="(item1, index1) in item.GoodsList" :key="index1 + '_1'">
             <div class="left">
@@ -74,12 +51,7 @@
           <div class="tag">
             <a href="javascript:;">
               <div class="tag-core">配送方式</div>
-<<<<<<< HEAD
               <div class="tag-arrow iconfont"><span>{{item.FreightList[0].Title}}</span>&#xe60b;</div>
-=======
-              <div class="tag-arrow iconfont"><span>免邮</span>&#xe60b;</div>
->>>>>>> 9ced28722433260d05ae238a29f13617858bfd6c
->>>>>>> f00504a9fc8e841eb265bfbd6b3a2bf22d6047ed
             </a>
           </div>
         </div>
@@ -97,28 +69,12 @@
       </div>
       <div class="la">
         <label>优惠券</label>
-<<<<<<< HEAD
         <a href="javascript:;" class="tr iconfont" id="availableCount">{{orderdata.availableList.length}}张可用 &#xe60b;</a>
       </div>
     </section>
     <div class="zcfoot" v-show="deliverypage === 0">
       <p class="left price">合计 :&nbsp;&nbsp;<span>¥ {{parseFloat(orderdata.PayMoney + orderdata.FreightMoney).toFixed(2)}}</span><i>(含运费&yen;{{orderdata.FreightMoney}})</i></p>
-=======
-<<<<<<< HEAD
-        <a href="javascript:;" class="tr iconfont" id="availableCount">{{orderdata.availableList.length}}张可用 &#xe60b;</a>
-      </div>
-    </section>
-    <div class="zcfoot" v-show="deliverypage === 0">
-      <p class="left price">合计 :&nbsp;&nbsp;<span>¥ {{parseFloat(orderdata.PayMoney + orderdata.FreightMoney).toFixed(2)}}</span><i>(含运费&yen;{{orderdata.FreightMoney}})</i></p>
-=======
         <a href="javascript:;" class="tr iconfont" id="availableCount">0张可用 &#xe60b;</a>
-      </div>
-    </section>
-    <div class="zcfoot" v-show="deliverypage === 0">
-      <p class="left price">合计 :&nbsp;&nbsp;<span>¥ {{parseFloat(GoodsPrice + FreightMoney).toFixed(2)}}</span><i>(含运费&yen;{{FreightMoney}})</i></p>
->>>>>>> 9ced28722433260d05ae238a29f13617858bfd6c
->>>>>>> f00504a9fc8e841eb265bfbd6b3a2bf22d6047ed
-      <a href="javascript:;"  @click="OrderConfirmSubmit" class="right">提交订单</a>
     </div>
     <!-- 选择配送方式 -->
     <section class="tag-wrap ps" v-show="deliverypage === 1">
