@@ -20,6 +20,7 @@
         </div>
       </div>
     </section>
+<<<<<<< HEAD
     <section class="sectc">
       <div class="content">
         <div class="line">
@@ -33,6 +34,9 @@
       </div>
     </section>
     <section class="sectc">
+=======
+    <section class="sectc" style="padding-top:0">
+>>>>>>> 9ced28722433260d05ae238a29f13617858bfd6c
       <div class="title">使用第三方支付</div>
       <div class="pf">
           <div class="rpay OrderPaySelect" id="zfbPay" v-if="!isWx" @click="payselect(0)">
@@ -114,7 +118,10 @@ export default {
       .then(res => {
         console.log('订单支付信息', res.data)
         let data = res.data
+<<<<<<< HEAD
         this.paydata = data
+=======
+>>>>>>> 9ced28722433260d05ae238a29f13617858bfd6c
         this.isZMXYOrder = data.IsZMXYOrder
         this.OrderType = data.OrderType
         this.PointsUsable = data.PointsUsable
@@ -287,6 +294,10 @@ export default {
 .sectc{
   box-shadow: 0 -1px 1px #ebebec, 0 1px 1px #ebebec;
   background-color: #fff;
+<<<<<<< HEAD
+=======
+  padding-top: 1rem;
+>>>>>>> 9ced28722433260d05ae238a29f13617858bfd6c
   font-size: 16px;
   .title{
     line-height: .8rem;
