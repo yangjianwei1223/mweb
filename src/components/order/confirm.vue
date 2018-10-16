@@ -74,7 +74,7 @@
     </section>
     <div class="zcfoot" v-show="deliverypage === 0">
       <p class="left price">合计 :&nbsp;&nbsp;<span>¥ {{parseFloat(orderdata.PayMoney + orderdata.FreightMoney).toFixed(2)}}</span><i>(含运费&yen;{{orderdata.FreightMoney}})</i></p>
-        <a href="javascript:;" class="tr iconfont" id="availableCount">0张可用 &#xe60b;</a>
+      <a href="javascript:;"  @click="OrderConfirmSubmit" class="right">提交订单</a>
     </div>
     <!-- 选择配送方式 -->
     <section class="tag-wrap ps" v-show="deliverypage === 1">
