@@ -61,6 +61,37 @@
           <li v-if="(orderstatus === 1 || orderstatus === 2) && (item.Status === 5 || item.Status === 8) && PayType ===5">归还成功</li>
           <li v-if="(orderstatus === 1 || orderstatus === 2) && (item.Status === 5 || item.Status === 8) && PayType !==5">退租成功</li>
         </ul>
+        <div>
+          <router-link :to='PayType !== 5 ? "/Seat/Detail/"+item.ProductBaseId : "/AlipayZMXY/RentSeatDetail/"+item.ProductBaseId'>
+            <div class="left">
+              <img :src='item.GoodsImgPath + "@!standard_square_s"'>
+            </div>
+            <div class="center">
+              <p class="title">{{item.GoodsTitle}}</p>
+              <p class="style thirdtext">{{item.GoodsPropertyName}}</p>
+              <p v-if="RentDetailId > 0" class="thirdtext">租用期限：{{slt.RentName}}-{{RentAmount}}元</p>
+            </div>
+            <div class="right">
+              <p>¥ {{item.GoodsPrice}}</p>
+              <p class="thirdtext">×{{item.GoodsQuantity}}</p>
+            </div>
+          </router-link>
+        </div>
+        <ul class="menulist clearfix">
+          <li v-if="(orderstatus === 1 && (item.Status === 1 && paystatus !== 1 || item.Status === 6) || (orderstatus ===2 && (item.Status === 1 || item.Status === 6))) && PayType === 5">申请归还</li>
+          <li v-if="(orderstatus === 1 && (item.Status === 1 && paystatus !== 1 || item.Status === 6) || (orderstatus ===2 && (item.Status === 1 || item.Status === 6))) && PayType !== 5">申请退租</li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 2">退货中</li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 3">退货</li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 3">退租详情</li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 4">修改申请</li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 4 && item.RejectedType !== 2">撤销申请</li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 4 && item.RejectedType === 1">申请被拒绝</li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 4 && item.RejectedType === 2">退租被拒绝</li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 4 && item.RejectedType !== 1 && item.RejectedType !== 2 && PayType === 5">归还中</li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 4 && item.RejectedType !== 1 && item.RejectedType !== 2 && PayType !== 5">退租中</li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && (item.Status === 5 || item.Status === 8) && PayType ===5">归还成功</li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && (item.Status === 5 || item.Status === 8) && PayType !==5">退租成功</li>
+        </ul>
       </div>
     </section>
     <!-- 订单评价 -->
