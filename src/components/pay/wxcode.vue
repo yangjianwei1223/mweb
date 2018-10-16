@@ -31,7 +31,7 @@ export default {
         if (this.state.indexOf('GoodsPay|') > -1) {
           let stateArr = this.state.split('|')
           if (stateArr.length > 1) {
-            window.sessionStorage.setItem('MainOpenId', res.data.openId)
+            window.sessionStorage.setItem('MainOpenId', JSON.stringify(res.data.openId))
             // this.$router.push({path: '/Pay/GoodsPay', query: {id: stateArr[1], openId: res.data.openId}})
             window.location.href = '/Pay/GoodsPay?id=' + stateArr[1] + '&openId=' + res.data.openId
           } else {

@@ -8,7 +8,7 @@
             <div class="pic iconfont"></div>
             <p>呗圈</p>
         </router-link>
-        <router-link :to="{name:'about'}" class="service" :class="{active:urlRouter == '/My/About'}">
+        <router-link :to="{name:'about',query: {isback: 1}}" class="service" :class="{active:urlRouter == '/My/About'}">
             <div class="pic iconfont"></div>
             <p>客服中心</p>
         </router-link>

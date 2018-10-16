@@ -20,9 +20,13 @@ const SeatDetail = resolve => require(['@/components/seat/detail'], resolve)
 const RentKnowledge = resolve => require(['@/components/seat/rentknowledge'], resolve)
 const ServiceAssurance = resolve => require(['@/components/seat/serviceassurance'], resolve)
 const ZulinConfirm = resolve => require(['@/components/order/zulinconfirm'], resolve)
+const Confirm = resolve => require(['@/components/order/confirm'], resolve)
+const OptimizationList = resolve => require(['@/components/optimization/list'], resolve)
 const CommentList = resolve => require(['@/components/optimization/commentlist'], resolve)
 const GoodsPay = resolve => require(['@/components/pay/goodspay'], resolve)
 const Wxcode = resolve => require(['@/components/pay/wxcode'], resolve)
+const PaySucess = resolve => require(['@/components/order/paysucess'], resolve)
+const ZulinDetail = resolve => require(['@/components/order/zulindetail'], resolve)
 const AddressManage = resolve => require(['@/components/my/addressmanage'], resolve)
 const AddAddress = resolve => require(['@/components/my/addaddress'], resolve)
 const Setting = resolve => require(['@/components/my/setting'], resolve)
@@ -39,6 +43,7 @@ const ShareQRCode = resolve => require(['@/components/my/shareqrcode'], resolve)
 const LoginCenter = resolve => require(['@/components/wechat/logincenter'], resolve)
 const SeatInstallVideo = resolve => require(['@/components/activitys/seatinstallvideo'], resolve)
 const FreeInstall = resolve => require(['@/components/zulin/freeinstall'], resolve)
+const IM = resolve => require(['@/components/wechat/im'], resolve)
 
 Vue.use(Router)
 
@@ -164,6 +169,13 @@ export default new Router({
       index: 2
     }
   }, {
+    path: '/Optimization/List',
+    name: 'optimization',
+    component: OptimizationList,
+    meta: {
+      index: 2
+    }
+  }, {
     path: '/Optimization/CommentList/:id',
     name: 'commentlist',
     component: CommentList,
@@ -174,6 +186,14 @@ export default new Router({
     path: '/Order/ZulinConfirm/:id',
     name: 'zulinconfirm',
     component: ZulinConfirm,
+    meta: {
+      requireAuth: true,
+      index: 2
+    }
+  }, {
+    path: '/Order/Confirm/:id?',
+    name: 'confirm',
+    component: Confirm,
     meta: {
       requireAuth: true,
       index: 2
@@ -282,6 +302,22 @@ export default new Router({
       index: 2
     }
   }, {
+    path: '/Order/PaySucess/:id',
+    name: 'paysucess',
+    component: PaySucess,
+    meta: {
+      requireAuth: true,
+      index: 2
+    }
+  }, {
+    path: '/Order/ZulinDetail/:id',
+    name: 'zulindetail',
+    component: ZulinDetail,
+    meta: {
+      requireAuth: true,
+      index: 2
+    }
+  }, {
     path: '/Wechat/LoginCenter',
     name: 'logincenter',
     component: LoginCenter,
@@ -300,6 +336,14 @@ export default new Router({
     name: 'FreeInstall',
     component: FreeInstall,
     meta: {
+      index: 2
+    }
+  }, {
+    path: '/wechat/im',
+    name: 'im',
+    component: IM,
+    meta: {
+      requireAuth: true,
       index: 2
     }
   }

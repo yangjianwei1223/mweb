@@ -3,7 +3,7 @@
     <div class="header">
       <a href="javascript:;" id="AppScan" class="iconfont scan" v-show="aa" style="visibility: hidden;">&#xe69a;</a>
       <router-link :to="{name:'search'}" class="search">儿童安全座椅</router-link>
-      <a href="javascript:;" class="iconfont message">&#xe67a;</a>
+      <router-link to='/wechat/im' href="javascript:;" class="iconfont message">&#xe67a;</router-link>
     </div>
     <v-swiper :swiperdata="FirstBanner"></v-swiper>
     <!-- 四个icon -->

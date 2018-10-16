@@ -4,6 +4,8 @@ let APIDomain = 'https://t-base-api.95laibei.com'
 // let APIDomain = '/api'
 
 export default{
+  APIDomain: APIDomain,
+  IMServiceUrl: 'https://t-im-api.95laibei.com',
   // 通用方法类接口
   Common_PicFileSave: APIDomain + '/MWeb/Common/PicFileSave',
   Common_GetGeoCoder: APIDomain + '/MWeb/Common/GetGeoCoder',

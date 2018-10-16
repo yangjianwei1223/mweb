@@ -1,6 +1,6 @@
 <template>
    <header class="header">
-      <div><a class="iconfont back" @click="back">&#xe651;</a></div>
+      <div><a v-show="showbackbtn" class="iconfont back" @click="back">&#xe651;</a></div>
       <div>{{headinfo.title}}</div>
       <div>
         <a v-if="headinfo.rightbtntext1" href="javascript:;" class="rightbtn1" @click.stop="rightbtnfun1" v-html="headinfo.rightbtntext1"></a>
@@ -11,7 +11,16 @@
 <script>
 export default {
   name: 'head1',
+  data () {
+    return {
+      showbackbtn: true
+    }
+  },
   props: ['headinfo'],
+  beforeMount () {
+    // 帮助页面从订单详情过去要返回按钮
+    this.showbackbtn = this.$route.query.isback !== 1
+  },
   methods: {
     back () {
       if (this.headinfo.leftfun === 1) {
@@ -66,6 +75,7 @@ export default {
     min-width: 20%;
     font-size: 16px;
     .rightbtn1{
+      font-family: 'iconfont';
       display: inline-block;
       min-width: .6rem;
       /deep/ img{

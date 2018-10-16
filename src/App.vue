@@ -9,6 +9,7 @@
 <script>
 import '../static/js/rem.js'
 import goTop from './components/common/scrolltop'
+import SiteAccessLogHelper from './util/Global_SiteAccessLogHelper'
 export default {
   name: 'App',
   data () {
@@ -26,6 +27,12 @@ export default {
       } else {
         this.transitionName = 'slide-left'
       }
+      setTimeout(() => {
+      // 获取站点访问信息
+      SiteAccessLogHelper.GetSiteAccessInfo();
+      }, 3000);
+      SiteAccessLogHelper.PageVisit()
+      SiteAccessLogHelper.SetAppQueryString()
     }
   },
   created: function () {

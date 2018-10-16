@@ -15,3 +15,9 @@ selenium-debug.log
 *.ntvs*
 *.njsproj
 *.sln
+BY.LaiBei.Frontend.MWeb.csproj
+BY.LaiBei.Frontend.MWeb.csproj.user
+Global.asax
+Global.asax.cs
+Properties/AssemblyInfo.cs
+favicon.ico

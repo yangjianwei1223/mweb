@@ -2,7 +2,7 @@
   <div>
     <v-header :headinfo="headinfo"></v-header>
     <section class="confirmadd">
-      <router-link class="clearfix" :to='{path:"/My/AddressManage",query:{returnUrl:"/Order/ZulinConfirm/8099"}}'>
+      <router-link class="clearfix" :to='{path:"/My/AddressManage",query:{returnUrl:"/Order/ZulinConfirm/" + orderid}}'>
         <div class="iconfont dwlogo">&#xe61a;</div>
         <div class="title">
           <p>{{ContactName}}&nbsp;&nbsp; {{ContactPhone}}</p>
@@ -20,10 +20,10 @@
             <div class="center">
               <p class="title twolinetext">{{GoodsTitle}}</p>
               <p class="style">{{PropertyValue}}</p>
-              <p class="style c1">租用期限：一月-5元</p>
+              <p class="style c1" v-if="rentid">租用期限：{{RentName + '-' + RentAmount + '元'}}</p>
             </div>
             <div class="right">
-              <p>¥ 140</p>
+              <p>¥ {{GoodsPrice}}</p>
               <p class="thirdtext">×1</p>
             </div>
           </router-link>
@@ -57,7 +57,7 @@
     <section class="lr_form">
       <div class="yqm">
         <label>邀请码</label>
-        <div class="con"><span class="thirdtext" id="OldPromotionCodeMark" style="display:none;">(M为旧邀请码标识)</span><input type="text" id="PromotionCode" data-role="none" value="" placeholder="请输入邀请码"></div>
+        <div class="con"><span class="thirdtext" id="OldPromotionCodeMark" style="display:none;">(M为旧邀请码标识)</span><input type="text" :value="PromotionCode" placeholder="请输入邀请码"></div>
       </div>
       <div class="la">
         <label>选择免邮券</label>
@@ -65,12 +65,12 @@
       </div>
     </section>
     <section class="paydetail">
-      <div class="line"><div class="left">领用押金</div><span>¥ 140</span></div>
+      <div class="line"><div class="left">领用押金</div><span>¥ {{GoodsPrice}}</span></div>
       <div class="line"><div class="left">优惠券金额</div><span>¥ 0.00</span></div>
-      <div class="line"><div class="left">运费</div><span>¥ 0.01</span></div>
+      <div class="line"><div class="left">运费</div><span>¥ {{FreightMoney}}</span></div>
     </section>
     <div class="zcfoot">
-      <p class="left price">需支付 :&nbsp;&nbsp;<span>¥ 140.01</span></p>
+      <p class="left price">需支付 :&nbsp;&nbsp;<span>¥ {{parseFloat(GoodsPrice + FreightMoney).toFixed(2)}}</span></p>
       <a href="javascript:;"  @click="AddZulinBase" class="right">提交订单</a>
     </div>
   </div>
@@ -97,18 +97,25 @@ export default {
       GoodsTitle: '',
       PropertyValue: '',
       GoodsPrice: '',
+      FreightMoney: '',
       BirthDay: '',
       InsuredPersonSex: 0,
-      orderid: ''
+      orderid: '',
+      rentid: '',
+      RentName: '',
+      RentAmount: '',
+      PromotionCode: 99010
     }
   },
   mounted: function () {
     this.ConsigneeId = window.sessionStorage.getItem('ChooseConsigneeId') || 0
+    this.orderid = this.$route.params.id
+    this.rentid = this.$route.query.rentid ? this.$route.query.rentid : ''
     let model = {
       Token: this.$store.state.UserToken,
-      GoodsBaseId: this.$route.params.id,
+      GoodsBaseId: this.orderid,
       ConsigneeId: this.ConsigneeId,
-      RentId: ''
+      RentId: this.rentid
     }
     this.$http({
       url: apiport.Goods_GetZulinByGoodsId,
@@ -129,8 +136,11 @@ export default {
         this.GoodsTitle = data.GoodsTitle
         this.PropertyValue = data.PropertyValue
         this.GoodsPrice = data.GoodsPrice
+        this.FreightMoney = data.FreightMoney
         this.BirthDay = data.SeatPolicyModel.BirthDay
         this.InsuredPersonSex = data.SeatPolicyModel.InsuredPersonSex
+        this.RentName = data.RentName
+        this.RentAmount = data.RentAmount
       })
       .catch(error => {
         console.log(2)
@@ -149,7 +159,7 @@ export default {
         IdentityCard: '',
         InsuredPersonSex: this.InsuredPersonSex,
         IsChangeDeposit: 0,
-        PromotionCode: '17',
+        PromotionCode: this.PromotionCode,
         RentId: 0
       }
       this.$http({
@@ -163,7 +173,7 @@ export default {
         .then(res => {
           let data = res.data
           console.log('提交订单', data)
-          let openid = window.sessionStorage.getItem('MainOpenId')
+          let openid = JSON.parse(window.sessionStorage.getItem('MainOpenId'))
           // eslint-disable-next-line
           if (!openid && navigator.userAgent.toLowerCase().match(/MicroMessenger/i) == 'micromessenger') {
             window.location.href = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx7ff0669994ee3210&redirect_uri=https%3a%2f%2ft-mweb.95laibei.com%2fpay%2fWxCode&response_type=code&scope=snsapi_userinfo&state=GoodsPay|' + res.data.Data + '#wechat_redirect'
