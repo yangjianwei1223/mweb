@@ -1,8 +1,17 @@
 <template>
   <div>
     <v-header :headinfo="headinfo"></v-header>
-    <section class="sectc">
-      <div class="title">使用贝壳支付<span class="validcodePrompt">验证码已发往130****0000</span></div>
+    <section v-if="paydata.HasTimesCard" class="sectc padtop">
+      <div class="title">使用次卡支付</div>
+      <div class="content">
+          <div class="line borderbottom">
+              <label id="TimesCardSelect" class="unselectpoint"></label>次卡支付 :
+              <span class="price"><span id="TimesCardPrice">0<span class="gstotal">(¥ 0)</span></span></span>
+          </div>
+      </div>
+    </section>
+    <section class="sectc" :class="{padtop: !paydata.HasTimesCard}">
+      <div class="title">使用贝壳支付</div>
       <div class="content">
         <div class="line borderbottom">
           <label id="OrderPayPointSelect" class="unselectpoint"></label>贝壳支付 :
@@ -10,9 +19,20 @@
           <span id="SeatNoPointPayRemark">* 安全座椅不可使用</span>
         </div>
       </div>
-      <p class="get-voice-validate get" style="display: none;">收不到短信？使用<span data-id="1" class="SendTTSValidCode SendValidCode">语音验证码</span></p>
     </section>
-    <section class="sectc" style="padding-top:0">
+    <section class="sectc">
+      <div class="content">
+        <div class="line">
+          <p class="validcodep">
+            <input type="hidden" id="OrderPayTel" value="15271947990">
+            <input type="tel" id="OrderPayValidCode" oninput="Global_CommonHelper.CheckOnlyNumber(this, 4)" data-role="none" name="" value="" placeholder="请输入验证码">
+            <button id="OrderPaySendVerifyCode" data-id="0" data-role="none" class="getvalidcodebtn SendValidCode">获取验证码</button>
+          </p>
+        </div>
+        <p class="get-voice-validate get">收不到短信？使用<span data-id="1" class="SendTTSValidCode SendValidCode">语音验证码</span></p>
+      </div>
+    </section>
+    <section class="sectc">
       <div class="title">使用第三方支付</div>
       <div class="pf">
           <div class="rpay OrderPaySelect" id="zfbPay" v-if="!isWx" @click="payselect(0)">
@@ -59,6 +79,7 @@ export default {
   data () {
     return {
       headinfo: {title: '交易支付'},
+      paydata: [],
       paying: false,
       OrderType: 1,
       PointsUsable: 0,
@@ -93,6 +114,7 @@ export default {
       .then(res => {
         console.log('订单支付信息', res.data)
         let data = res.data
+        this.paydata = data
         this.isZMXYOrder = data.IsZMXYOrder
         this.OrderType = data.OrderType
         this.PointsUsable = data.PointsUsable
@@ -259,10 +281,12 @@ export default {
 
 <style lang="less" scoped>
 @import "../../assets/less/variable";
+.padtop{
+  padding-top: 1rem;
+}
 .sectc{
   box-shadow: 0 -1px 1px #ebebec, 0 1px 1px #ebebec;
   background-color: #fff;
-  padding-top: 1rem;
   font-size: 16px;
   .title{
     line-height: .8rem;
@@ -270,23 +294,25 @@ export default {
     padding-left: .2rem;
     font-size: 15px;
   }
-  .validcodePrompt{
-    float: right;
-    margin-right: .2rem;
-    color: #ff9c00;
-    display: none;
-  }
   .line{
     font-size: 16px;
     margin-left: .2rem;
     line-height: .4rem;
     padding-bottom: .2rem;
-    border-bottom: 1px solid #ededed;
     .unselectpoint{
       display: inline-block;
       width: .6rem;
       height: .8rem;
       background: url(https://cdn.sys.img.95laibei.com/Content/Images/rectunchecked.png) no-repeat 0 center;
+      background-size: 16px;
+      font-size: 0;
+      vertical-align: middle;
+    }
+    .selectpoint{
+      display: inline-block;
+      width: .6rem;
+      height: .8rem;
+      background: url(http://cdn.sys.img.95laibei.com/Content/Images/rectselect_1.png) no-repeat 0 center;
       background-size: 16px;
       font-size: 0;
       vertical-align: middle;
@@ -297,16 +323,48 @@ export default {
       font-size: 13px;
     }
     .price{
-      color:#9fa0a0;
+      color: @base-ycolor3;
+      .gstotal{
+        color: @base-ycolor4;
+      }
+    }
+    .validcodep{
+      position: relative;
+      overflow: hidden;
+      padding-right: 3rem;
+      input{
+        -webkit-appearance: none;
+        outline: none;
+        border: none;
+        line-height: .5rem;
+        padding: .25rem 0;
+        width: 100%;
+        color: #3e3a39;
+      }
+      .getvalidcodebtn {
+        position: absolute;
+        top: .15rem;
+        right: .25rem;
+        padding: .1rem .2rem;
+        background-color: transparent;
+        border: 1px solid #f1bc19;
+        color: #f1bc19;
+        border-radius: 4px;
+        line-height: .4rem;
+        outline: 0;
+      }
     }
   }
   .get-voice-validate{
+    font-size: 12px;
     text-align: right;
-    margin-top: .2rem;
+    margin-top: 0;
     margin-right: .2rem;
     &.get{
-      margin-top: 0;
       padding-bottom: .2rem;
+    }
+    span{
+      color:@base-ycolor3;
     }
   }
   .pf{
@@ -315,6 +373,14 @@ export default {
       background-color: #fff;
       line-height: .8rem;
       border-bottom: 1px solid #ededed;
+      .alipayicon{
+        display: inline-block;
+        width: 22px;
+        height: 22px;
+        background: url(https://cdn.sys.img.95laibei.com/Content/Images/alipay.png) no-repeat;
+        background-size: 20px;
+        vertical-align: middle;
+      }
     }
     .selectpays{
       display: inline-block;

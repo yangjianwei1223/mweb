@@ -2,22 +2,23 @@
   <div>
     <v-header :headinfo="headinfo"></v-header>
     <section class="o-detail">
-      <div class="receipttime">还剩 <span>00</span> 天 <span>01</span>小时关闭交易</div>
+      <div v-if="orderstatus == 1 && paystatus == 1" class="receipttime">还剩 <span>{{RestDaysTime}}</span> 天 <span>{{RestHoursTime}}</span>小时关闭交易</div>
+      <div v-else-if="orderstatus == 1 && expressstatus == 2" class="receipttime">还剩 <span>{{RestDaysTime}}</span> 天 <span>{{RestHoursTime}}</span>小时自动确认</div>
       <div class="borderbottom">
         <div class="pad">
-          <p class="state">等待买家付款</p>
-          <p>订单编号：18101216012901</p>
-          <p>下单时间：2018-10-12 16:01:29</p>
-          <p>支付方式：未支付</p>
+          <p class="state">{{orderstatustext}}</p>
+          <p>订单编号：{{OrderCode}}</p>
+          <p>下单时间：{{CreateTime}}</p>
+          <p>支付方式：{{PaymentMethod}}</p>
         </div>
       </div>
       <div class="o-add">
         <div class="pad1">
           <div class="line">
-            <span class="name">收件人：杨健伟</span>
-            <span class="tel">15271947992</span>
+            <span class="name">收件人：{{Contact.name}}</span>
+            <span class="tel">{{Contact.phone}}</span>
           </div>
-          <div class="para">收货地址：天津市天津市和平区嘎嘎嘎</div>
+          <div class="para">收货地址：{{Contact.address}}</div>
         </div>
         <div class="pad1" id="SelfLiftAddressDom" style="display:none;">
           <div class="para" id="SelfLiftAddress"></div>
@@ -28,40 +29,60 @@
     </section>
     <!-- 商品信息 -->
     <section class="sectc">
-      <div class="item clearfix">
+      <div v-for="(item, index) in OrderGoodsList" :key="index" class="item clearfix">
         <div>
-          <a data-action-url="https://t-mweb.95laibei.com/Seat/Detail/8368">
+          <router-link :to='PayType !== 5 ? "/Seat/Detail/"+item.ProductBaseId : "/AlipayZMXY/RentSeatDetail/"+item.ProductBaseId'>
             <div class="left">
-              <img src="https://cdn.product.img.95laibei.com/180612134217477344.jpg@!standard_square_s">
+              <img :src='item.GoodsImgPath + "@!standard_square_s"'>
             </div>
             <div class="center">
-              <p class="title">芝麻信用测试商品，有运费哦</p>
-              <p class="style thirdtext">领用方式:邮寄;</p>
+              <p class="title">{{item.GoodsTitle}}</p>
+              <p class="style thirdtext">{{item.GoodsPropertyName}}</p>
+              <p v-if="RentDetailId > 0" class="thirdtext">租用期限：{{slt.RentName}}-{{RentAmount}}元</p>
             </div>
             <div class="right">
-              <p>¥ 0.03</p>
-              <p class="thirdtext">×1</p>
+              <p>¥ {{item.GoodsPrice}}</p>
+              <p class="thirdtext">×{{item.GoodsQuantity}}</p>
             </div>
-          </a>
+          </router-link>
         </div>
-        <ul class="menulist clearfix" id="BuyDetailGoodsOper_13004"></ul>
+        <ul class="menulist clearfix">
+          <li v-if="(orderstatus === 1 && (item.Status === 1 && paystatus !== 1 || item.Status === 6) || (orderstatus ===2 && (item.Status === 1 || item.Status === 6))) && PayType === 5">申请归还</li>
+          <li v-if="(orderstatus === 1 && (item.Status === 1 && paystatus !== 1 || item.Status === 6) || (orderstatus ===2 && (item.Status === 1 || item.Status === 6))) && PayType !== 5">申请退租</li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 2">退货中</li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 3">退货</li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 3">退租详情</li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 4">修改申请</li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 4 && item.RejectedType !== 2">撤销申请</li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 4 && item.RejectedType === 1">申请被拒绝</li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 4 && item.RejectedType === 2">退租被拒绝</li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 4 && item.RejectedType !== 1 && item.RejectedType !== 2 && PayType === 5">归还中</li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 4 && item.RejectedType !== 1 && item.RejectedType !== 2 && PayType !== 5">退租中</li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && (item.Status === 5 || item.Status === 8) && PayType ===5">归还成功</li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && (item.Status === 5 || item.Status === 8) && PayType !==5">退租成功</li>
+        </ul>
       </div>
     </section>
     <!-- 订单评价 -->
     <section class="order-comment">
     </section>
     <section class="paydetail">
-      <div class="line"><div class="left">商品总价</div><span>¥ 0.03</span></div>
-      <div class="line"><div class="left">优惠券</div><span>¥ 0.00</span></div>
-      <div class="line"><div class="left">运费</div><span>¥ 0.01</span></div>
+      <div class="line"><div class="left">商品总价</div><span>¥ {{zulindata.ProductTotalPrice}}</span></div>
+      <div class="line" v-if="zulindata.CouponPrice > 0"><div class="left">优惠券</div><span>-&yen; {{zulindata.CouponPrice}}</span></div>
+      <div class="line"><div class="left">运费</div><span>¥ {{zulindata.FreightMoney}}</span></div>
     </section>
     <section class="paydetail">
-      <div class="line"><div class="left">订单总价</div><span>¥ 0.04</span></div>
-      <div class="line"><div class="left">贝壳抵扣</div><span>- ¥ 0</span></div>
-      <div class="line"><div class="left">实付款</div><span class="textcolorr">¥ 0</span></div>
+      <div class="line"><div class="left">订单总价</div><span>&yen; {{zulindata.OrderMoney}}</span></div>
+      <div class="line" v-if="PayType !== 5"><div class="left">贝壳抵扣</div><span>- &yen; {{zulindata.PointTotalPrice}}</span></div>
+      <!-- 芝麻信用 -->
+      <div class="line" v-if="PayType === 5"><div class="left">押金</div><span>¥ 0.00</span></div>
+      <div class="line" v-if="PayType === 5"><div class="left">租金</div><span>¥ {{zulindata.rent_amount}}</span></div>
+      <div class="line" v-if="PayType === 5"><div class="left">起租日期</div><span>{{zulindata.borrow_time}}</span></div>
+      <div class="line" v-if="PayType === 5"><div class="left">到期日期</div><span>{{zulindata.expiry_time}}</span></div>
+      <div class="line"><div class="left">实付款</div><span class="textcolorr">¥ {{zulindata.CashTotalPrice}}</span></div>
     </section>
     <section class="paydetail" style="margin-bottom:1rem;">
-      <div class="center"><a data-action-url="/My/About?isback=true"><span class="iconfont">&#xe65f; </span>联系官方客服</a></div>
+      <div class="center"><router-link to="/My/About"><span class="iconfont">&#xe65f; </span>联系官方客服</router-link></div>
     </section>
     <section class="secsl">
       <div>备注：<span></span></div>
@@ -70,10 +91,14 @@
     <div class="order-cont">
       <div class="o-tabbtn">
         <ul id="BuyDetailOrderOper">
-          <li>
-            <a onclick="Global_OrderHelper.OrderToParentPay(20009)" class="ui-link">我要付款</a>
-          </li>
-          <li data-id="20009" class="BuyDetailCancleOrdel">取消订单</li></ul>
+          <li v-if="paystatus === 2">租赁协议</li>
+          <li v-if="orderstatus === 1 && paystatus === 1">我要付款</li>
+          <li v-if="orderstatus === 1 && paystatus === 1">取消订单</li>
+          <li v-if="orderstatus === 1 && expressstatus === 1">提醒发货</li>
+          <li v-if="orderstatus === 1 && (expressstatus === 2 || expressstatus === 3) || orderstatus === 2">查看物流</li>
+          <li v-if="orderstatus === 1 && expressstatus === 2">确认收货</li>
+          <li v-if="orderstatus === 1 && expressstatus === 3 || orderstatus === 2 || orderstatus === 9" @click="deleteOrder(zulindata.OrderBaseId)">删除订单</li>
+        </ul>
       </div>
     </div>
   </div>
@@ -92,9 +117,25 @@ export default {
   data () {
     return {
       headinfo: {title: '订单信息'},
+      zulindata: [],
       orderstatus: 1,
       paystatus: 1,
-      expressstatus: 1
+      expressstatus: 1,
+      RestDaysTime: '00',
+      RestHoursTime: '00',
+      OrderCode: 0,
+      CreateTime: '',
+      PaymentMethod: '',
+      SelfLiftAddress: '',
+      orderstatustext: '等待买家付款',
+      PayType: 5,
+      IsExchange: 0,
+      IsRefund: 0,
+      Contact: {name: '', phone: '', address: ''},
+      OrderGoodsList: [],
+      RentDetailId: 0,
+      RentAmount: 0,
+      RentName: ''
     }
   },
   mounted () {
@@ -111,14 +152,64 @@ export default {
       .then(res => {
         console.log('订单信息', res.data)
         let data = res.data
-        this.orderstatus = data.orderstatus
+        this.zulindata = data
+        this.orderstatus = data.OrderStatus
         this.paystatus = data.PayStatus
         this.expressstatus = data.ExpressStatus
+        this.RestDaysTime = data.RestDaysTime
+        this.RestHoursTime = data.RestHoursTime
+        this.OrderCode = data.OrderCode
+        this.CreateTime = data.CreateTime
+        this.PaymentMethod = data.PaymentMethod
+        this.SelfLiftAddress = data.SelfLiftAddress
+        this.PayType = data.PayType
+        this.IsExchange = data.IsExchange
+        this.IsRefund = data.IsRefund
+        this.Contact.name = data.ContactName
+        this.Contact.phone = data.ContactPhone
+        this.Contact.address = data.FullAddress
+        this.OrderGoodsList = data.OrderGoodsList
+        this.RentDetailId = data.RentDetailId
+        this.RentAmount = data.RentAmount
+        this.RentName = data.RentName
+        // 订单状态文字
+        if (this.orderstatus === 1) {
+          if (this.paystatus === 1) {
+            this.orderstatustext = '等待买家付款'
+          } else if (this.expressstatus === 1) {
+            this.orderstatustext = '等待卖家发货'
+          } else if (this.expressstatus === 2) {
+            this.orderstatustext = '等待买家收货'
+          } else {
+            this.orderstatustext = '交易成功'
+          }
+        } else if (this.orderstatus === 2) {
+          this.orderstatustext = '交易成功'
+        } else if (this.orderstatus === 9) {
+          this.orderstatustext = this.PayType === 5 ? '归还成功' : '交易关闭'
+        }
+        // 押金条
+        if (this.IsExchange === 1) {
+          this.orderstatustext += '押金条未兑换'
+        } else if (this.IsExchange === 2) {
+          this.orderstatustext += '押金条未兑换'
+        } else if (this.IsExchange === 3) {
+          this.orderstatustext += '押金条已失效'
+        }
+        // 退货商品
+        if (this.IsRefund) {
+          this.orderstatustext += '有退货商品'
+        }
       })
       .catch(error => {
         console.log(2)
         console.log(error)
       })
+  },
+  methods: {
+    deleteOrder (id) {
+      alert('删除订单')
+    }
   }
 }
 </script>
@@ -147,6 +238,7 @@ export default {
     position: relative;
     .state {
       font-size: 16px;
+      color: #ff9c00;
       &:before {
         content: "\e60e";
         font-family: iconfont;

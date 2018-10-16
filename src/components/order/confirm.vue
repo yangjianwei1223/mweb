@@ -2,36 +2,36 @@
   <div>
     <v-header :headinfo="headinfo" @hidediv="backordelivery"></v-header>
     <section class="confirmadd" v-show="deliverypage === 0">
-      <router-link class="clearfix" :to='{path:"/My/AddressManage",query:{returnUrl:"/Order/Confirm/" + orderid}}'>
+      <router-link class="clearfix" :to='{path:"/My/AddressManage",query:{returnUrl:orderid !== 0 ? "/Order/Confirm/" + orderid : "/Order/Confirm"}}'>
         <div class="iconfont dwlogo">&#xe61a;</div>
         <div class="title">
-          <p>{{ContactName}}&nbsp;&nbsp; {{ContactPhone}}</p>
-          <p>{{FullAddress}}</p>
+          <p>{{orderdata.ContactName}}&nbsp;&nbsp; {{orderdata.ContactPhone}}</p>
+          <p>{{orderdata.FullAddress}}</p>
         </div>
         <div class="arrow iconfont">&#xe61e;</div>
       </router-link>
     </section>
-    <section class="order-cont" v-show="deliverypage === 0">
+    <section class="order-cont" v-for="(item, index) in orderdata.OrderInfoList" :key="index" v-show="deliverypage === 0">
         <div class="item">
-          <router-link to="">
+          <router-link to="" v-for="(item1, index1) in item.GoodsList" :key="index1 + '_1'">
             <div class="left">
-              <img :src="GoodsImgPath">
+              <img :src="item1.ImgPath + '@!standard_square_m'">
             </div>
             <div class="center">
-              <p class="title twolinetext">{{GoodsTitle}}</p>
-              <p class="style">{{PropertyValue}}</p>
+              <p class="title twolinetext">{{item1.GoodsTitle}}</p>
+              <p class="style">{{item1.PropertyValue}}</p>
             </div>
             <div class="right">
-              <p>¥ {{GoodsPrice}}</p>
-              <p class="thirdtext">×{{Quantity}}</p>
+              <p class="f16">¥ {{item1.GoodsPrice}}</p>
+              <p class="thirdtext f16">×{{item1.GoodsQuantity}}</p>
             </div>
           </router-link>
         </div>
-        <div class="tag-wrap delivery" @click="checkdelivery">
+        <div class="tag-wrap delivery" @click="checkdelivery" v-show="item.FreightList[0].Status === 1">
           <div class="tag">
             <a href="javascript:;">
               <div class="tag-core">配送方式</div>
-              <div class="tag-arrow iconfont"><span>免邮</span>&#xe60b;</div>
+              <div class="tag-arrow iconfont"><span>{{item.FreightList[0].Title}}</span>&#xe60b;</div>
             </a>
           </div>
         </div>
@@ -49,11 +49,11 @@
       </div>
       <div class="la">
         <label>优惠券</label>
-        <a href="javascript:;" class="tr iconfont" id="availableCount">0张可用 &#xe60b;</a>
+        <a href="javascript:;" class="tr iconfont" id="availableCount">{{orderdata.availableList.length}}张可用 &#xe60b;</a>
       </div>
     </section>
     <div class="zcfoot" v-show="deliverypage === 0">
-      <p class="left price">合计 :&nbsp;&nbsp;<span>¥ {{parseFloat(GoodsPrice + FreightMoney).toFixed(2)}}</span><i>(含运费&yen;{{FreightMoney}})</i></p>
+      <p class="left price">合计 :&nbsp;&nbsp;<span>¥ {{parseFloat(orderdata.PayMoney + orderdata.FreightMoney).toFixed(2)}}</span><i>(含运费&yen;{{orderdata.FreightMoney}})</i></p>
       <a href="javascript:;"  @click="OrderConfirmSubmit" class="right">提交订单</a>
     </div>
     <!-- 选择配送方式 -->
@@ -79,7 +79,7 @@ import apiport from '../../util/api'
 
 import head from '@/components/common/header'
 export default {
-  name: 'zulinconfirm',
+  name: 'confirm',
   components: {
     'vHeader': head
   },
@@ -87,56 +87,23 @@ export default {
     return {
       headinfo: {'title': '确认购买', leftfun: 1},
       ConsigneeId: 0,
-      ContactName: '',
-      ContactPhone: '',
-      FullAddress: '',
-      GoodsImgPath: '',
-      GoodsTitle: '',
-      PropertyValue: '',
-      GoodsPrice: '',
-      FreightMoney: '',
-      BirthDay: '',
-      InsuredPersonSex: 0,
       orderid: '',
       Quantity: 1,
       PromotionCode: 99010,
-      deliverypage: 0
+      deliverypage: 0,
+      orderdata: {ConsigneeId: 0, ContactName: '', ContactPhone: '', FreightMoney: 0, FullAddress: '', IdCardFrontImgId: '', IdCardFrontPath: '', IdCardOppositeImgId: '', IdCardOppositeImgPath: '', IdentityCard: '', IsOverSeas: '', OrderInfoList: [{FreightList: [{Status: 1, Title: ''}], GoodsList: [{ImgPath: ''}]}], PayMoney: 0, availableList: []}
     }
   },
   mounted: function () {
     this.ConsigneeId = window.sessionStorage.getItem('ChooseConsigneeId') || 0
     this.orderid = this.$route.params.id ? this.$route.params.id : 0
     this.Quantity = this.$route.query.Quantity || 1
-    let model = {
-      Token: this.$store.state.UserToken,
-      GoodsBaseId: this.orderid,
-      ConsigneeId: this.ConsigneeId
+    if (this.orderid === 0) {
+      // 购物车
+    } else {
+      // 直接购买
+      this.getGoodsData(this.orderid, this.ConsigneeId, this.Quantity)
     }
-    this.$http({
-      url: apiport.Goods_GetZulinByGoodsId,
-      method: 'post',
-      header: {
-        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-      },
-      data: qs.stringify({ reqJson: JSON.stringify(model) })
-    })
-      .then(res => {
-        let data = res.data
-        console.log('购买信息', data)
-        this.ConsigneeId = data.ConsigneeId
-        this.ContactName = data.ContactName
-        this.ContactPhone = data.ContactPhone
-        this.FullAddress = data.FullAddress
-        this.GoodsImgPath = data.GoodsImgPath + '@!standard_square_m'
-        this.GoodsTitle = data.GoodsTitle
-        this.PropertyValue = data.PropertyValue
-        this.GoodsPrice = data.GoodsPrice
-        this.FreightMoney = data.FreightMoney
-      })
-      .catch(error => {
-        console.log(2)
-        console.log(error)
-      })
   },
   methods: {
     OrderConfirmSubmit () {
@@ -182,6 +149,28 @@ export default {
         this.deliverypage = 0
         this.headinfo.title = '确认购买'
       }
+    },
+    getGoodsData (goodsId, consigneeId, quantity) {
+      let model = {
+        Token: this.$store.state.UserToken,
+        ConsigneeId: consigneeId,
+        GoodsBaseId: goodsId,
+        GoodsQuantity: quantity
+      }
+      this.$http({
+        url: apiport.Goods_GetBaseConsigneeByUserId,
+        method: 'post',
+        data: qs.stringify({ reqJson: JSON.stringify(model) })
+      })
+        .then(res => {
+          let data = res.data
+          console.log('商品信息', data)
+          this.orderdata = data
+          this.ConsigneeId = data.ConsigneeId
+        })
+        .catch(error => {
+          console.log(error)
+        })
     }
   }
 }
@@ -231,8 +220,8 @@ export default {
       font-size: 12px;
       padding-right: .2rem;
       .title{
-        height: .6rem;
-        line-height: .3rem;
+        height: .8rem;
+        line-height: .4rem;
       }
       .style{
         line-height: .3rem;
@@ -510,6 +499,22 @@ export default {
 }
 .tag-wrap.ps{
   padding-top: 1rem;
+  .tag{
+    border-bottom: 1px solid #ededed;
+  }
+  .courier {
+    padding: .3rem .2rem;
+    li{
+      font-size: 16px;
+      line-height: .8rem;
+      span{
+        margin-right: .2rem;
+        font-size: 18px;
+        color: @base-ycolor3;
+        vertical-align: middle;
+      }
+    }
+  }
 }
 .btnabb {
   position: absolute;

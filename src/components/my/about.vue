@@ -1,12 +1,6 @@
 <template>
   <div class="about">
-    <header class="header">
-      <div></div>
-      <div id="headerTitle">帮助</div>
-      <div>
-          <a href="javascript:;" class="iconfont">&#xe67a;</a>
-      </div>
-    </header>
+    <v-header :headinfo="headinfo" @rightbtn1click="skipchat"></v-header>
     <section class="helptop">
       <div class="ms">
         <img src="https://cdn.sys.img.95laibei.com/Optimization/Images/lbxms.png" alt="">
@@ -33,19 +27,24 @@
 </template>
 
 <script>
+import header from '../common/header'
 import footer from '../common/footer'
 
 export default {
   name: 'about',
   data () {
     return {
-      asdf: 'sf'
+      headinfo: {title: '帮助', rightbtntext1: '&#xe67a;'}
     }
   },
   components: {
-    'v-footer': footer
+    'vHeader': header,
+    'vFooter': footer
   },
   methods: {
+    skipchat () {
+      this.$router.push({path: '/wechat/im'})
+    }
   }
 }
 </script>
