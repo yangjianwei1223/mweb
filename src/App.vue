@@ -29,8 +29,8 @@ export default {
       }
       setTimeout(() => {
       // 获取站点访问信息
-      SiteAccessLogHelper.GetSiteAccessInfo();
-      }, 3000);
+        SiteAccessLogHelper.GetSiteAccessInfo()
+      }, 3000)
       SiteAccessLogHelper.PageVisit()
       SiteAccessLogHelper.SetAppQueryString()
     }

@@ -1,3 +1,4 @@
+/* eslint-disable */
 function GetQueryString (name) {
     var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
     var r = null;
