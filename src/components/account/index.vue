@@ -2,9 +2,9 @@
   <div class="login">
     <header class="header">
       <div><a class="iconfont back" @click="back">&#xe651;</a></div>
-      <div id="headerTitle">登录</div>
+      <div id="headerTitle">登录/注册</div>
       <div>
-          <router-link :to="{name:'index'}">首页/注册</router-link>
+          <router-link :to='"/"'>首页</router-link>
       </div>
     </header>
     <section class="accountbox">
@@ -17,70 +17,102 @@
         <div class="accountline">
             <i class="iconfont">&#xe62b;</i>
             <p class="validcodep">
-                <input type="password" v-model="password" placeholder="请输入密码" maxlength="16" @keyup.enter="login">
+                <input type="valid" v-model="valid" placeholder="请输入手机验证码" maxlength="4" @keyup.enter="login">
+                <button type="button" id="sendVerifyCode" @click="GetValidCode(0)" class="getvalidcodebtn" style="">获取验证码</button>
             </p>
         </div>
     </section>
+    <p class="get-voice-validate">收不到短信？使用<span class="SendTTSValidCode" @click="GetValidCode(1)">语音验证码</span></p>
     <button type="button" class="loginbtn" :class={disabled:disabled} @click="login" :disabled="disabled">立即登录</button>
-    <div class="forgetbtn">
-      <a href="/" style="display:inline;">忘记密码</a>
-    </div>
+    <router-link :to='"/account/login"' class="forgetbtn" data-role="none">密码登录</router-link>
+
   </div>
 </template>
 
 <script>
-import qs from 'qs'
-import apiport from '../../util/api'
-import storage from '../../util/storage'
+/* eslint-disable */
+import qs from "qs";
+import apiport from "../../util/api";
+import storage from "../../util/storage";
+import CommonHelper from "../../util/Global_CommonHelper";
+import ValidCodeHelper from "../../util/Global_ValidCodeHelper";
 export default {
-  name: 'Login',
-  data () {
+  name: "index",
+  data() {
     return {
-      tel: '',
-      password: '',
+      tel: "",
+      valid: "",
       flag: 1
-    }
+    };
   },
   computed: {
-    disabled: function () {
-      if (this.tel !== '' && this.password !== '' && this.flag === 1) {
-        return false
+    disabled: function() {
+      if (this.tel !== "" && this.valid !== "" && this.flag === 1) {
+        return false;
       } else {
-        return true
+        return true;
       }
     }
   },
   methods: {
-    login () {
-      let that = this
+    login() {
+      let that = this;
       if (that.flag === 0) {
-        return false
+        return false;
       }
-      that.flag = 0
+      that.flag = 0;
+      if (that.tel == "") {
+        alert("手机号码不能为空");
+        that.flag = 1;
+        return;
+      }
+      if (!apiport.MobileCheckStr.test(that.tel)) {
+        alert("您填写的手机号格式有误，请输入11位大陆手机号码");
+        that.flag = 1;
+        return;
+      }
+      if (that.valid == "") {
+        alert("验证码不能为空");
+        that.flag = 1;
+        return;
+      } else if (that.valid.length != 4) {
+        alert("验证码位数错误");
+        that.flag = 1;
+        return;
+      }
+
       let model = {
         Mobile: this.tel,
-        Password: this.password
-      }
+        ValidCode: this.valid,
+        RegRequestURL: location.href
+      };
       this.$http({
-        url: apiport.Account_CheckLoginByPwd,
-        method: 'post',
-        data: qs.stringify({reqJson: JSON.stringify(model)})
-      }).then((res) => {
-        that.$store.commit('SET_TOKEN', res.data.Token)
-        storage.setUserTokenToStorage(res.data, that.$Global.TokenExpTime)
-        that.flag = 1
-        that.$router.push({name: 'index'})
-      }).catch((error) => {
-        console.log(2)
-        console.log(error)
-        that.flag = 1
+        url: apiport.Account_CheckLoginByValidCode,
+        method: "post",
+        data: qs.stringify({ reqJson: JSON.stringify(model) })
       })
+        .then(res => {
+          if (!!res.data && res.data.ResultNo == "00000000") {
+            that.$store.commit("SET_TOKEN", res.data.Token);
+            CommonHelper.LoginSuccess(res.data);
+            that.$router.push({ name: "index" });
+          } else {
+            alert(res.data.ResultRemark);
+          }
+          that.flag = 1;
+        })
+        .catch(error => {
+          that.flag = 1;
+        });
     },
-    back () {
-      this.$router.back()
+    back() {
+      this.$router.back();
+    },
+    GetValidCode(type) {
+      ValidCodeHelper.GetValidCode(21,this.tel, "sendVerifyCode", type);
     }
   }
-}
+};
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
@@ -123,64 +155,92 @@ export default {
     min-width: 20%;
     font-size: 16px;
   }
-  .back{
+  .back {
     font-size: 22px;
   }
 }
-.accountbox{
+.accountbox {
   margin: 1.4rem auto 0;
   background-color: #fff;
-  .accountline{
+  .accountline {
     position: relative;
-    padding-left: .2rem;
-    .iconfont{
+    padding-left: 0.2rem;
+    .iconfont {
       float: left;
       width: 20px;
       font-size: 20px;
       line-height: 1rem;
-      margin-right: .2rem;
+      margin-right: 0.2rem;
     }
-    p{
+    p {
       position: relative;
       overflow: hidden;
     }
-    input{
+    input {
       -webkit-appearance: none;
       outline: none;
       border: none;
-      line-height: .5rem;
-      padding: .25rem 0;
+      line-height: 0.5rem;
+      padding: 0.25rem 0;
       width: 100%;
       color: #3e3a39;
     }
   }
-  .accountline:not(:last-child) p{
-    border-bottom:1px solid #ededed;
+  .accountline:not(:last-child) p {
+    border-bottom: 1px solid #ededed;
   }
 }
-.loginbtn{
-    display: inline-block;
-    width: 7rem;
-    background-color: @base-ycolor;
-    border: none;
-    font-size: 18px;
-    color: #fff;
-    line-height: .8rem;
-    margin: .4rem .25rem .2rem;
-    text-align: center;
-    &.disabled{
-      background-color: @base-color4;
-    }
-    &:active{
-      background-color: @base-ycolor2;
-    }
+.loginbtn {
+  display: inline-block;
+  width: 7rem;
+  background-color: @base-ycolor;
+  border: none;
+  font-size: 18px;
+  color: #fff;
+  line-height: 0.8rem;
+  margin: 0.4rem 0.25rem 0.2rem;
+  text-align: center;
+  &.disabled {
+    background-color: @base-color4;
   }
-.forgetbtn{
+  &:active {
+    background-color: @base-ycolor2;
+  }
+}
+.forgetbtn {
+    display:inline-block;
+    width:7rem;
+    background-color:transparent;
+    border:none;
+    font-size:15px;
+    color:#9fa0a0!important;
+    line-height:1;
+    margin:10px .25rem;
+    text-align:center;
+}
+.accountbox .accountline .getvalidcodebtn {
+  position: absolute;
+  top: 0.15rem;
+  right: 0.25rem;
+  padding: 0.1rem 0.2rem;
+  background-color: transparent;
+  border: 1px solid #f1bc19;
+  color: #f1bc19;
+  border-radius: 4px;
+  line-height: 0.4rem;
+  outline: 0;
+}
+.get-voice-validate {
+  font-size: 12px;
   text-align: right;
-  margin-right:.25rem;
-  a{
-    font-size: @base-ftsize3;
-    color:@base-color2;
-  }
+  margin-top: 0.2rem;
+  margin-right: 0.2rem;
+}
+.get-voice-validate > span {
+  color: #ff9c00;
+}
+.get-voice-validate.get {
+  margin-top: 0;
+  padding-bottom: 0.2rem;
 }
 </style>

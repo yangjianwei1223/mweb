@@ -5,8 +5,10 @@ import apiport from './api'
 import http from './http.js'
 import BaseInfoHelper from './Global_BaseInfoHelper'
 import CommonHelper from './Global_CommonHelper'
-function GetSiteAccessInfo () {        
-    var SiteAccessLog = storage.getSession("SiteAccessLog");
+import ApicloudHelper from './Global_ApicloudHelper'
+import WeiXinHelper from './Global_WeiXinHelper'
+
+function GetSiteAccessInfo() {
     var SiteAccessLocal = storage.getLocal("SiteAccesslocalStorage");
     var ClientIdData = storage.getLocal("ClientId");
     var AppQueryString = storage.getSession("AppQueryString");
@@ -29,9 +31,9 @@ function GetSiteAccessInfo () {
             Latitude: "",
             URL: window.location.href,
             GUID: ""
-        }      
+        }
 
-        if (ClientIdData != null) {                
+        if (ClientIdData != null) {
             model.GUID = ClientIdData;
         }
         if (AppQueryString != null) {
@@ -41,46 +43,46 @@ function GetSiteAccessInfo () {
         }
 
 
-        // if (Global_ApicloudHelper.IsApp()) {                        
-        //     model.AppVersion = Global_ApicloudHelper.get_appVersion();
-        //     model.SystemType = Global_ApicloudHelper.get_systemType();
-        //     model.DeviceId = Global_ApicloudHelper.get_deviceId();
-        //     model.DeviceModel = Global_ApicloudHelper.get_deviceModel();
-        //     model.DeviceName = Global_ApicloudHelper.get_deviceName();
-        //     model.Operator = Global_ApicloudHelper.get_operator();
-        //     model.ScreenWidth = Global_ApicloudHelper.get_screenWidth();
-        //     model.ScreenHeight = Global_ApicloudHelper.get_screenHeight();
-        //     model.ConnectionType = Global_ApicloudHelper.get_connectionType();
-        //     if (model.AppChannel == "" && model.SystemType == "ios") {
-        //         model.AppChannel = "AS";
-        //         if (model.AppType == "") model.AppType = "12";
-        //     }
-        // }
-        // else
-        // {
-        //     if (Global_WeiXinHelper.IsWXBrowser()) {
-        //         model.AppChannel = "WX";
-        //     }
-        //     else {
-        //         model.AppChannel = "OT";
-        //     }
-        // }
-        model.AppChannel = "OT";
-        let GetLoginInfo=BaseInfoHelper.GetLoginInfo();
-        Promise.all([GetLoginInfo]).then((res) => {
-            model.MemberAccount = res[0].BaseId;
+        if (ApicloudHelper.IsApp()) {
+            model.AppVersion = ApicloudHelper.get_appVersion();
+            model.SystemType = ApicloudHelper.get_systemType();
+            model.DeviceId = ApicloudHelper.get_deviceId();
+            model.DeviceModel = ApicloudHelper.get_deviceModel();
+            model.DeviceName = ApicloudHelper.get_deviceName();
+            model.Operator = ApicloudHelper.get_operator();
+            model.ScreenWidth = ApicloudHelper.get_screenWidth();
+            model.ScreenHeight = ApicloudHelper.get_screenHeight();
+            model.ConnectionType = ApicloudHelper.get_connectionType();
+            if (model.AppChannel == "" && model.SystemType == "ios") {
+                model.AppChannel = "AS";
+                if (model.AppType == "") model.AppType = "12";
+            }
+        }
+        else {
+            if (WeiXinHelper.IsWXBrowser()) {
+                model.AppChannel = "WX";
+            }
+            else {
+                model.AppChannel = "OT";
+            }
+        }
+        BaseInfoHelper.GetLoginInfo().then((res) => {
+            if (res != null) {
+                model.MemberAccount = res[0].BaseId;
+            }
             AddSiteAccessLog(model);
-        }) 
-        
-        
+        })
+
+
+
     }
 }
-function AddSiteAccessLog (model) {
+function AddSiteAccessLog(model) {
     http({
         url: apiport.Common_AddSiteAccessLog,
         method: 'post',
-        data: qs.stringify({ reqJson: JSON.stringify(model)})
-      }).then((res) => {
+        data: qs.stringify({ reqJson: JSON.stringify(model) })
+    }).then((res) => {
         if (!!res.data && res.data.ResultNo == "00000000") {
             var resultStr = {
                 AppChannel: model.AppChannel,
@@ -89,19 +91,19 @@ function AddSiteAccessLog (model) {
                 SystemType: model.SystemType,
                 DeviceId: model.DeviceId,
                 DeviceModel: model.DeviceModel,
-                DeviceName: model.DeviceName,                        
+                DeviceName: model.DeviceName,
                 ScreenWidth: model.ScreenWidth,
-                ScreenHeight: model.ScreenHeight,                       
+                ScreenHeight: model.ScreenHeight,
                 GUID: res.data.GUID
             }
-            storage.setSession(JSON.stringify(resultStr),"SiteAccessLog");
-            storage.setLocal(JSON.stringify(resultStr),"SiteAccesslocalStorage");
-            storage.setLocal( res.data.GUID,"ClientId");
+            storage.setSession(JSON.stringify(resultStr), "SiteAccessLog");
+            storage.setLocal(JSON.stringify(resultStr), "SiteAccesslocalStorage");
+            storage.setLocal(res.data.GUID, "ClientId");
         }
-      }).catch((error) => {
-      })
+    }).catch((error) => {
+    })
 }
-function PageVisit(){
+function PageVisit() {
     var RouteUrl = GetRouteUrl();
     var Token = BaseInfoHelper.GetToken();
     var model = {
@@ -129,7 +131,7 @@ function PageVisit(){
     else {
         var guid = newGUID();
         model.ClientId = guid;
-        storage.setLocal(guid,"ClientId");
+        storage.setLocal(guid, "ClientId");
     }
 
     var Conversation = storage.getSession("Conversation");//存储会话
@@ -139,12 +141,12 @@ function PageVisit(){
     else {
         var guid = newGUID();
         model.SessionId = guid;
-        storage.setSession(guid,"Conversation");
+        storage.setSession(guid, "Conversation");
     }
     AddPageVisit(model);
 }
 /* -------------------------------------生成GUID码开始--------------------------------------- */
-function newGUID () {
+function newGUID() {
     var date = new Date(); var guidStr = '';
     var sexadecimalDate = hexadecimal(getGUIDDate(date), 16);
     var sexadecimalTime = hexadecimal(getGUIDTime(date), 16);
@@ -159,16 +161,16 @@ function newGUID () {
     return formatGUID(guidStr);
 }
 /*  * 功能：将y进制的数值，转换为x进制的数值 * 参数：第1个参数表示欲转换的数值；第2个参数表示欲转换的进制；第3个参数可选，表示当前的进制数，如不写则为10 * 返回值：返回转换后的字符串 */
-function hexadecimal (num, x, y) {
+function hexadecimal(num, x, y) {
     if (y != undefined) { return parseInt(num.toString(), y).toString(x); }
     else { return parseInt(num.toString()).toString(x); }
 }
- /* * 功能：获取当前日期的GUID格式，即8位数的日期：19700101 * 返回值：返回GUID日期格式的字条串 */
- function getGUIDDate (date) {
+/* * 功能：获取当前日期的GUID格式，即8位数的日期：19700101 * 返回值：返回GUID日期格式的字条串 */
+function getGUIDDate(date) {
     return date.getFullYear() + addZero(date.getMonth() + 1) + addZero(date.getDay());
 }
 /* * 功能: 为一位数的正整数前面添加0，如果是可以转成非NaN数字的字符串也可以实现 * 参数: 参数表示准备再前面添加0的数字或可以转换成数字的字符串 * 返回值: 如果符合条件，返回添加0后的字条串类型，否则返回自身的字符串 */
-function addZero (num) {
+function addZero(num) {
     if (Number(num).toString() != 'NaN' && num >= 0 && num < 10) {
         return '0' + Math.floor(num);
     } else {
@@ -176,17 +178,17 @@ function addZero (num) {
     }
 }
 /* * 功能：获取当前时间的GUID格式，即8位数的时间，包括毫秒，毫秒为2位数：12300933 * 返回值：返回GUID日期格式的字条串 */
-function getGUIDTime (date) {
+function getGUIDTime(date) {
     return addZero(date.getHours()) + addZero(date.getMinutes()) + addZero(date.getSeconds()) + addZero(parseInt(date.getMilliseconds() / 10));
 }
 /* * 功能：格式化32位的字符串为GUID模式的字符串 * 参数：第1个参数表示32位的字符串 * 返回值：标准GUID格式的字符串 */
-function formatGUID (guidStr) {
+function formatGUID(guidStr) {
     var str1 = guidStr.slice(0, 8) + '-', str2 = guidStr.slice(8, 12) + '-', str3 = guidStr.slice(12, 16) + '-', str4 = guidStr.slice(16, 20) + '-', str5 = guidStr.slice(20);
     return str1 + str2 + str3 + str4 + str5;
 }
 /* --------------------------------------生成GUID码结束------------------------------------- */
 //获取地址
-function GetRouteUrl () {
+function GetRouteUrl() {
     var FullUrl = window.location.href.toLowerCase();
     var AbsoluteUrl = GetAbsoluteUrl();
     var VisitOrigin = "";
@@ -196,7 +198,7 @@ function GetRouteUrl () {
     var route = { FullUrl: FullUrl, AbsoluteUrl: AbsoluteUrl, VisitOrigin: VisitOrigin };
     return route;
 }
-function GetAbsoluteUrl (linkUrl) {
+function GetAbsoluteUrl(linkUrl) {
     var AbsoluteUrl = "/";
     var urlArr = location.pathname.split("?")[0].split("/");
     if (urlArr != null && urlArr.length > 0) {
@@ -208,16 +210,16 @@ function GetAbsoluteUrl (linkUrl) {
     }
     return AbsoluteUrl.toLowerCase();
 }
-function AddPageVisit (model) {
+function AddPageVisit(model) {
     http({
         url: apiport.APIDomain + "/MWeb/BehaviorAnalysis/AddPageVisit",
         method: 'post',
-        data: qs.stringify({ reqJson: JSON.stringify(model)})
+        data: qs.stringify({ reqJson: JSON.stringify(model) })
     }).then((res) => {
     }).catch((error) => {
     })
 }
-function SetAppQueryString () {
+function SetAppQueryString() {
     var AppChannel = CommonHelper.GetQueryString("AppChannel");
     var AppType = CommonHelper.GetQueryString("AppType");
     var AppQueryString = {
@@ -225,8 +227,8 @@ function SetAppQueryString () {
         AppType: AppType
     }
     if (AppChannel != null && AppType != null) {
-        storage.setSession(JSON.stringify(AppQueryString),"AppQueryString");
-    }        
+        storage.setSession(JSON.stringify(AppQueryString), "AppQueryString");
+    }
 }
 export default {
     GetSiteAccessInfo: GetSiteAccessInfo,

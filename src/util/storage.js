@@ -23,6 +23,11 @@ function SetDataToStorage (key, data, ExpTime, ExpType) {
   }
   window.localStorage.setItem(key, JSON.stringify({ExpTime: dataCurrent, Date: data}))
 }
+// 删除session
+function DelSessionByKey (key) {
+  var storage = window.sessionStorage
+  storage.removeItem(key)
+}
 export default {
   // 获取
   getLocal (key = STORAGE_USER_KEY) {
@@ -63,5 +68,6 @@ export default {
     return window.sessionStorage.setItem(key, JSON.stringify(res))
   },
   GetStorageDataByKey: GetStorageDataByKey,
-  SetDataToStorage: SetDataToStorage
+  SetDataToStorage: SetDataToStorage,
+  DelSessionByKey: DelSessionByKey
 }
