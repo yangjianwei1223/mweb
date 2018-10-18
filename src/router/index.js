@@ -39,6 +39,7 @@ const Deposit = resolve => require(['@/components/my/deposit'], resolve)
 const Coupon = resolve => require(['@/components/my/coupon'], resolve)
 const Praise = resolve => require(['@/components/my/praise'], resolve)
 const Share = resolve => require(['@/components/my/share'], resolve)
+const Points = resolve => require(['@/components/my/points'], resolve)
 const ShareQRCode = resolve => require(['@/components/my/shareqrcode'], resolve)
 const LoginCenter = resolve => require(['@/components/wechat/logincenter'], resolve)
 const SeatInstallVideo = resolve => require(['@/components/activitys/seatinstallvideo'], resolve)
@@ -282,6 +283,14 @@ export default new Router({
     path: '/My/Share',
     name: 'share',
     component: Share,
+    meta: {
+      requireAuth: true,
+      index: 2
+    }
+  }, {
+    path: '/My/Points',
+    name: 'points',
+    component: Points,
     meta: {
       requireAuth: true,
       index: 2

@@ -10,6 +10,14 @@
         </div>
         <div class="arrow iconfont">&#xe61e;</div>
       </router-link>
+      <div v-if="orderdata.IsOverSeas" class="form_base_line">
+        <label>身份信息：</label>
+        <div class="right_inp">
+          <div><input type="text" readonly="readonly" value="请上传清晰端正的身份证正反面照片"></div>
+        </div>
+      </div>
+      <div v-if="orderdata.IsOverSeas" class="form_base_line"><p class="fscolor">海关政策要求，进口商品收货人必须提供真实姓名和身份证信息，加密保存，仅用于清关。</p></div>
+      <img-upload v-if="orderdata.IsOverSeas" :uploadimg='imguploaddata' @passimgid="receiveimgid"></img-upload>
     </section>
     <section class="order-cont" v-for="(item, index) in orderdata.OrderInfoList" :key="index" v-show="deliverypage === 0">
         <div class="item">
@@ -102,11 +110,13 @@ import orderDetail from '@/util/Order_Detail'
 
 import head from '@/components/common/header'
 import coupon from '@/components/common/coupon'
+import imgupload from '@/components/common/imgupload'
 export default {
   name: 'confirm',
   components: {
     'vHeader': head,
-    'vCoupon': coupon
+    'vCoupon': coupon,
+    'imgUpload': imgupload
   },
   data () {
     return {
@@ -121,7 +131,12 @@ export default {
       CouponId: 0,
       CouponMoney: 0,
       OrderRemark: [''],
-      FreightTemplateArr: []
+      FreightTemplateArr: [],
+      IdCardImgIdArr: [],
+      imguploaddata: {
+        max: 2,
+        imglist: []
+      }
     }
   },
   computed: {
@@ -151,6 +166,10 @@ export default {
       let _that = this
       orderDetail.CheckPromotionCode(this.PromotionCode).then(function (res) {
         if (res === 1) {
+          if (_that.IdCardImgIdArr.length < 2) {
+            alert('请上传身份证正反面各一张')
+            return true
+          }
           // 组合orderlist参数格式
           let orderlist = []
           let goodslist = []
@@ -166,8 +185,8 @@ export default {
             OrderList: orderlist,
             BuyType: _that.orderid === 0 ? '2' : '1',
             IdentityCard: '',
-            IdCardFrontImgId: 0,
-            IdCardOppositeImgId: 0,
+            IdCardFrontImgId: _that.IdCardImgIdArr[0],
+            IdCardOppositeImgId: _that.IdCardImgIdArr[1],
             PromotionCode: _that.PromotionCode
           }
           _that.$http({
@@ -224,6 +243,7 @@ export default {
         .then(res => {
           let data = res.data
           console.log('商品信息', data)
+          // 优惠券有效的状态设置为11无效为12和优惠券列表公用组件区分
           data.availableList.forEach(function (item, index) {
             item.status = 11
           })
@@ -233,6 +253,13 @@ export default {
           data.OrderInfoList.forEach(function (item, index) {
             _that.FreightTemplateArr.push(item.FreightList[0].FreightTemplateId)
           })
+          // 身份证照片传递
+          if (data.IsOverSeas) {
+            if (data.IdCardFrontPath && data.IdCardOppositeImgPath) {
+              this.IdCardImgIdArr.push(data.IdCardFrontImgId, data.IdCardOppositeImgId)
+              this.imguploaddata.imglist.push({imgpath: data.IdCardFrontPath + '@!standard_square_s', imgbaseid: data.IdCardFrontImgId}, {imgpath: data.IdCardOppositeImgPath + '@!standard_square_s', imgbaseid: data.IdCardOppositeImgId})
+            }
+          }
           this.orderdata = data
           this.ConsigneeId = data.ConsigneeId
           let GetLoginInfo = BaseInfoHelper.GetLoginInfo()
@@ -269,6 +296,13 @@ export default {
           data.OrderInfoList.forEach(function (item, index) {
             _that.FreightTemplateArr.push(item.FreightList[0].FreightTemplateId)
           })
+          // 身份证照片传递
+          if (data.IsOverSeas) {
+            if (data.IdCardFrontPath && data.IdCardOppositeImgPath) {
+              this.IdCardImgIdArr.push(data.IdCardFrontImgId, data.IdCardOppositeImgId)
+              this.imguploaddata.imglist.push({imgpath: data.IdCardFrontPath + '@!standard_square_s', imgbaseid: data.IdCardFrontImgId}, {imgpath: data.IdCardOppositeImgPath + '@!standard_square_s', imgbaseid: data.IdCardOppositeImgId})
+            }
+          }
           this.orderdata = data
           this.ConsigneeId = data.ConsigneeId
           let GetLoginInfo = BaseInfoHelper.GetLoginInfo()
@@ -295,6 +329,14 @@ export default {
       } else {
         this.CouponId = couponid
         this.CouponMoney = money
+      }
+    },
+    receiveimgid (imgid) {
+      let index = this.IdCardImgIdArr.indexOf(imgid)
+      if (index > -1) {
+        this.IdCardImgIdArr.splice(index, 1)
+      } else {
+        this.IdCardImgIdArr.push(imgid)
       }
     }
   }
@@ -370,7 +412,7 @@ export default {
 }
 .lr_form{
     background-color:#fff;
-    margin-top:.2rem;
+    margin:.2rem auto 1.2rem;
     border-top:1px solid #dcdddd;
     border-bottom:1px solid #dcdddd;
     .title{
@@ -684,6 +726,32 @@ export default {
     &::after{
       border-color: transparent transparent #ccc #ccc;
     }
+  }
+}
+.form_base_line{
+  display: -webkit-box;
+  display: flex;
+  padding: 0 .2rem;
+  label{
+    width:1.5rem;
+    line-height:.8rem;
+    font-size: 14px;
+  }
+  .right_inp {
+    -webkit-box-flex: 1;
+    flex: 1;
+    input {
+      height: .8rem;
+      line-height: .8rem;
+      width: 100%;
+      border: 0;
+      outline: none;
+      color: #999;
+    }
+  }
+  .fscolor {
+    font-size: 12px;
+    color: #ff4965;
   }
 }
 </style>
