@@ -25,11 +25,11 @@
         <div class="line">
           <p class="validcodep">
             <input type="hidden" id="OrderPayTel" value="15271947990">
-            <input type="tel" id="OrderPayValidCode" oninput="Global_CommonHelper.CheckOnlyNumber(this, 4)" data-role="none" name="" value="" placeholder="请输入验证码">
-            <button id="OrderPaySendVerifyCode" data-id="0" data-role="none" class="getvalidcodebtn SendValidCode">获取验证码</button>
+            <input type="tel" id="OrderPayValidCode" data-role="none" name="" value="" placeholder="请输入验证码">
+            <button id="OrderPaySendVerifyCode" data-id="0" data-role="none" class="getvalidcodebtn SendValidCode" @click="sendValidCode(0)">获取验证码</button>
           </p>
         </div>
-        <p class="get-voice-validate get">收不到短信？使用<span data-id="1" class="SendTTSValidCode SendValidCode">语音验证码</span></p>
+        <p class="get-voice-validate get">收不到短信？使用<span data-id="1" class="SendTTSValidCode SendValidCode" @click="sendValidCode(1)">语音验证码</span></p>
       </div>
     </section>
     <section class="sectc">
@@ -76,6 +76,11 @@
 import qs from "qs";
 import apiport from "../../util/api";
 import head from "@/components/common/header";
+import weiXinHelper from "../../util/Global_WeiXinHelper"; 
+import alipayHelper from "../../util/Global_AlipayHelper"; 
+import zmxyHelper from "../../util/Global_ZMXYHelper"; 
+import validCodeHelper from "../../util/Global_ValidCodeHelper"; 
+
 export default {
   name: "goodspay",
   components: {
@@ -101,22 +106,24 @@ export default {
       pointsUsable: 0,
       returnUrl:'',
       setIntervalObj:0,
-      orderId:0,
-      paydetailId:0,
+      orderId:'',
+      paydetailId:'',
       payTotalHtml:'',
       isCheckTimesCardSelect:true,
-      isCheckOrderPayPoint:true
+      isCheckOrderPayPoint:true,
+      IsLocalOrder:false,//是否为本地母婴
 
     };
   },
   mounted: function() {
-    let _that = this
+    this.paydetailId= this.$route.query.paydetailId==undefined?'':this.$route.query.paydetailId;
+    this.orderId=this.$route.query.id;
+    let _that = this 
+    
     // eslint-disable-next-line
-    this.isWx =
-      navigator.userAgent.toLowerCase().match(/MicroMessenger/i) ==
-      "micromessenger";
-    this.isZfb =
-      navigator.userAgent.toLowerCase().indexOf("alipayclient") !== -1;
+    this.isWx =weiXinHelper.IsWXBrowser();
+    this.isZfb =zmxyHelper.IsAlipayBrowser();
+
     if (this.isWx) {
       this.payselect(1);
     } else if (this.isZfb) {
@@ -138,34 +145,39 @@ export default {
         console.log("订单支付信息", res.data);
          let data = res.data;
       if (data != null && data.ResultNo == "00000000") {
-        this.paydata = data;
-        this.isZMXYOrder = data.IsZMXYOrder;
-        this.OrderType = data.OrderType;
-        this.PointsUsable = data.PointsUsable;
-        this.PointsQuantity = data.PointsQuantity;
-        this.thirdPayPoint = Number(
+        _that.paydata = data;
+        _that.isZMXYOrder = data.IsZMXYOrder;
+        _that.OrderType = data.OrderType;
+        _that.PointsUsable = data.PointsUsable;
+        _that.PointsQuantity = data.PointsQuantity;
+        _that.thirdPayPoint = Number(
           data.PointsQuantity - data.PointsUsable
         ).toFixed(2);
-        this.isShowSeatTip = data.SeatNoPointPay;
-        this.goodsPrice = data.GoodsPrice;
-        this.pointsUsable = data.PointsUsable;
+        _that.isShowSeatTip = data.SeatNoPointPay;
+        _that.goodsPrice = data.GoodsPrice;
+        _that.pointsUsable = data.PointsUsable;
+        _that.IsLocalOrder=data.IsLocalOrder;
+
         //参数校验
          if (!!data.IsLocalOrder) {
-            this.returnUrl = "/Local/OrderDetail/" + data.OrderBaseId;
+            _that.returnUrl = "/Local/OrderDetail/" + data.OrderBaseId;
          } else {
-                this.returnUrl = "/Order/" + (data.OrderType == 1 ? "BuyDetail" : "ZulinDetail") + "/" + data.OrderBaseId;
+            _that.returnUrl = "/Order/" + (data.OrderType == 1 ? "BuyDetail" : "ZulinDetail") + "/" + data.OrderBaseId;
          }
 
-        if (data.HasPaySuccess && !data.HasOrderNotPay && paydetailId == "") {
+        if (data.HasPaySuccess && !data.HasOrderNotPay && _that.paydetailId == "") {
                 alert('订单已支付')
+                 this.$router.push(_that.returnUrl)
                 return;
             }
              if (data.HasPaySuccess && data.HasOrderNotPay) {
                 alert('订单状态不一致')
+                this.$router.push(_that.returnUrl)
                 return;
             }
             if (data.PinTuanStatus == 1) {
                 alert('订单状态不一致')
+                this.$router.push(_that.returnUrl)
                 return;
             }
             _that.goodsPrice=data.GoodsPrice;
@@ -187,7 +199,7 @@ export default {
             }else
             {
                data.GoodsPrice = 0;
-               this.isCheckTimesCardSelect=false;
+               _that.isCheckTimesCardSelect=false;
             }
             if (data.PointsUsable > 0 && (data.PointsQuantity - data.GoodsPrice) > 0) {
                 //使用贝壳支付
@@ -199,7 +211,7 @@ export default {
                 }
             }
             else {
-              this.isCheckOrderPayPoint=false;//取消贝壳支付选中
+              _that.isCheckOrderPayPoint=false;//取消贝壳支付选中
             }
             if (data.PointsUsable == 0 && !data.HasTimesCard) {
                 //不可以使用贝壳和次卡的时候隐藏验证法发送
@@ -225,17 +237,17 @@ export default {
             OrderPayTotalPoint += " )";
             this.payTotalHtml=OrderPayTotalPoint;
 
-           if (paydetailId != "") {
+           if (_that.paydetailId != "") {
                 //需要现金支付时处理支付宝和微信网页支付问题
-                if (!isWx&& !isZfb &&
-                   !isApp) {
-                    this.paydata.paying=true
-                    this.setIntervalObj = setInterval(this.AutoCheckPayState, 3000);
+                if (!_that.isWx&& !_that.isZfb &&
+                   !_that.isApp) {
+                    _that.paying=true
+                    _that.setIntervalObj = setInterval(_that.AutoCheckPayState, 3000);
                 } else {
                    let param = {
-                        PayDetailId: this.$route.query.paydetailid,
+                        PayDetailId:_that.paydetailId,
                        // Token: this.$store.state.UserToken,
-                        ParentOrderId:his.$route.query.id
+                        ParentOrderId:this.$route.query.id
                       };
                   this.$http({
                         url: apiport.Points_GetCommonPayById,
@@ -260,13 +272,13 @@ export default {
                                       PayPoints = 0;
                                       OrderPayTotalPoint += '(';
                                       if (payDetail.HasTimesCardPay) {
-                                         document.getElementById("TimesCardSelect").setAttribute("class", "selectpoint");
+                                         this.isCheckTimesCardSelect=true;
                                           TimesCardPayPrice =  this.paydata.GoodsPrice;
                                           OrderPayTotalPoint += '<i class="iconfont">&#xe62e;</i>' + TimesCardPayPrice + ' +';
                                       }
                                       if (payDetail.HasPointPay) {
                                           OrderPayTotalPoint += payDetail.HasTimesCardPay ? ' ' : '';
-                                          document.getElementById("OrderPayPointSelect").setAttribute("class", "selectpoint");
+                                         this.isCheckOrderPayPoint=true;
                                           PayPoints = this.paydata.PointsQuantity - TimesCardPayPrice - thirdPayPoint;
                                           OrderPayTotalPoint += '<i class="shellgrey"></i>' + PayPoints.toFixed(2) + ' +';
                                       }
@@ -324,10 +336,7 @@ export default {
     AutoCheckPayState(){
         this.$http({ url: apiport.Order_GetPayState,
                      method: "post",
-                     header: {
-                          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
-                        },
-                        data:{reqJson: '{"ParentOrderId":"' + this.orderId + '","Token":"' +  this.$store.state.UserToken + '"}'}
+                    data:{reqJson: '{"ParentOrderId":"' +this.$route.query.id + '","Token":"' +  this.$store.state.UserToken + '"}'}
                       }).then( slt=>{
                           if (slt != null && slt.ResultNo == "00000000") {
                                           if (slt.PayState > 0) {
@@ -338,16 +347,82 @@ export default {
                                           }
                                       }
 
-                      } );
+                      });
     },
     CashPaySucess(paydetailId){
-        alert('支付成功')
+       alert(this.orderId);
+        alert('支付成功,paydetailId'+paydetailId)
+        
+        return;
+      // Global_StorageHelper.DelSessionByKey("validCodeCache31");
+        if (this.paydata.IsPinTuan) {
+            this.$router.push(apiport.CurrentDomain + "/PinTuan/OrderDetail?code=" + this.paydata.PinTuanCode);
+        }
+        else if (this.paydata.IsLocalOrder) {
+            this.$router.push(apiport.CurrentDomain + "/Local/PaySuccess/" + this.orderId.replace("local", ""));
+        }
+        else {
+            this.$router.push(apiport.CurrentDomain + "/Order/PaySucess/" + this.orderId);
+        }
     },
     CashPayErr(){
       alert('支付遇到阻碍')
     },
     confirmpay() {
-      let _that = this;
+        try {
+                if (this.checkPayType=="zhima") {
+                    if (!this.isZfb) {
+                        alert('该订单为芝麻信用订单,请在支付宝中完成付款操作');
+                        return;
+                    }
+                }
+              var valid = document.getElementById("OrderPayValidCode").value;
+                var thirdPayPoint = 0;
+                if ( this.isCheckTimesCardSelect || this.isCheckOrderPayPoint) {
+                    if (valid == "") {
+                        alert('验证码不能为空');
+                        return false;
+                    }
+                    else if (valid.length != 4) {
+                        alert('验证码位数错误');
+                        return false;
+                    }
+                }
+                var TimesCardPayPrice = 0;//次卡支付金额
+                var PayPoints=0;
+                if (this.isCheckTimesCardSelect) {
+                    TimesCardPayPrice = this.paydata.GoodsPrice;
+                }
+                if (this.isCheckOrderPayPoint) {
+                    if (this.paydata.PointsUsable < (this.paydata.PointsQuantity - TimesCardPayPrice)) {
+                        PayPoints = this.paydata.PointsUsable;
+                    }
+                    else {
+                        PayPoints =  this.paydata.PointsQuantity - TimesCardPayPrice;
+                    }
+                }
+                thirdPayPoint =  this.paydata.PointsQuantity - TimesCardPayPrice - PayPoints;
+                if (thirdPayPoint > 0) {
+                    //现金支付或混合支付
+                   // PayCash = (Number(thirdPayPoint)).toFixed(2);
+                    this.CashPay(PayPoints);
+                }
+                else {
+                    //不需要现金支付
+                    var model={
+                      ValidCode:valid,
+                      ParentOrderId:this.$route.query.id,
+                      PointPay: PayPoints > 0,
+                      TimesCardPay: TimesCardPayPrice > 0,
+                      Token:Token
+                    }
+                    this.PointPay(model);
+                }
+            } catch (err) {
+                //SetErrSession(err);
+            }
+
+    /*  let _that = this;
       // 支付前检测
       let chkmodel = {
         ValidCode: "undefined",
@@ -458,23 +533,121 @@ export default {
         .catch(error => {
           console.log(error);
         });
+        */
     },
-    callpay(wxJsApiParam, payDetailId, sucFun, errFun) {
-      if (typeof WeixinJSBridge === "undefined") {
-        if (document.addEventListener) {
-          document.addEventListener(
-            "WeixinJSBridgeReady",
-            this.jsApiCall,
-            false
-          );
-        } else if (document.attachEvent) {
-          document.attachEvent("WeixinJSBridgeReady", this.jsApiCall);
-          document.attachEvent("onWeixinJSBridgeReady", this.jsApiCall);
+    CashPay(PayPoints){
+        //第三方支付验证
+        var IsMixPay = 0;
+        var hasPointPay = false;
+         var hasTimesCardPay = false;
+        if (!!this.isCheckTimesCardSelect) {
+            hasTimesCardPay = true;
         }
-      } else {
-        this.jsApiCall(wxJsApiParam, payDetailId, sucFun, errFun);
-      }
+        if (!!this.isCheckOrderPayPoint) {
+            hasPointPay = true;
+        }
+        if (hasPointPay || hasTimesCardPay) {
+            //混合支付
+            IsMixPay = 1;
+        }
+        var OrderId=this.$route.query.id;
+        let chkmodel = {
+            ValidCode: document.getElementById("OrderPayValidCode").value,
+            ParentOrderId: this.$route.query.id,
+            PayPoints: PayPoints,
+            IsMixPay:IsMixPay,
+            hasPointPay: hasPointPay,
+            hasTimesCardPay: hasTimesCardPay,
+            Token: this.$store.state.UserToken
+          };
+          this.$http({
+            url: apiport.Order_CheckPayment,
+            method: "post",
+            data: qs.stringify({ reqJson: JSON.stringify(chkmodel) })
+        })
+        .then(res=>{
+                var data=res.data;
+                if (typeof (data.ResultNo) != "undefined" && data.ResultNo == "00000000") {
+                    //对接第三方支付
+                    if (this.checkPayType == "zfb") {
+                        //支付宝支付
+                        var return_url = apiport.CurrentDomain + '/Pay/GoodsPay?id=' + OrderId;
+                        alipayHelper.Pay(IsMixPay, hasPointPay, hasTimesCardPay, "商品购买", return_url, 1, OrderId, this.CashPaySucess, this.CashPayErr);
+                    }
+                    else if (this.checkPayType='wx') {
+                        if (weiXinHelper.IsWXSmallProgram()) {
+                            //启用自动刷新方法操作
+                            this.paying=true;
+                            this.setIntervalObj = setInterval(this.AutoCheckPayState, 3000);
+                        }
+                        //微信支付
+                       weiXinHelper.Pay(IsMixPay, hasPointPay, hasTimesCardPay, "商品购买", 1, OrderId, this.CashPaySucess, this.CashPayErr);
+                    }
+                    else if (this.checkPayType='zhima') {
+                        //芝麻信用借还
+                        if (this.IsLocalOrder) {
+                            alert("本地母婴不支持芝麻信用借还");
+                       }
+                        else {
+                            zmxyHelper.Pay(OrderId, this.CashPaySucess, this.CashPayErr);
+                        }
+                    }
+                    else if (this.checkPayType='bankcard') {
+                        //银行卡
+                        alert("支付宝支付未做");
+                    }
+                }
+                else if (typeof (data.ResultRemark) != "undefined") {
+                   alert('支付失败');
+                }
+                else {
+                      alert('支付失败');
+                }
+
+
+        });
+    
     },
+    PointPay(model){
+         // Global_CommonHelper.ConfirmLoadingShow();
+         let _that=this;
+          this.$http({
+            url: apiport.Order_Pay,
+            method: "post",
+            data: qs.stringify({ reqJson: JSON.stringify(model) })
+        })
+        .then(res=>{
+                   var data=res.data;
+                    if (typeof (data.ResultNo) != "undefined" && data.ResultNo == "00000000") {
+                            //  Global_StorageHelper.DelSessionByKey("validCodeCache31");
+                              if (this.paydata.IsPinTuan) { 
+                                 window.location= apiport.CurrentDomain + "/PinTuan/OrderDetail?code=" + _that.paydata.PinTuanCode;
+                              }
+                              else if (this.paydata.IsLocalOrder) {
+                                  window.location=apiport.CurrentDomain + "/Local/PaySuccess/" + _that.orderId.replace("local", "");
+                              }
+                              else {
+                                   window.location=apiport.CurrentDomain + "/Order/PaySucess/" + _that.orderId;
+                              }
+                          }
+                          else if (typeof (data.ResultRemark) != "undefined") {
+                              if (data.ResultNo != "10010033") {
+                                  //订单状态修改不提示信息
+                                  alert('对不起，支付失败：'+data.ResultRemark)
+                              }
+                          }
+                          else {
+                            alert('对不起，支付失败')
+                          }
+                //Global_CommonHelper.ConfirmLoadingHide();
+        }).catch(error => {
+          alert('对不起，支付失败')
+                  console.log(2);
+                  console.log(error);
+                });
+        
+    },
+  /*
     jsApiCall(wxJsApiParam, payDetailId, sucFun, errFun) {
       // eslint-disable-next-line
       WeixinJSBridge.invoke(
@@ -488,12 +661,15 @@ export default {
           }
         }
       );
-    },
+    },*/
     sucFun(payDetailId) {
       this.$router.push("/Order/PaySucess/" + this.$route.query.id);
     },
     errFun() {
       alert("支付失败");
+    },
+    sendValidCode(dataid){
+       validCodeHelper.GetValidCode(31, "OrderPayTel", "OrderPaySendVerifyCode", dataid);
     },
     payselect(i) {
       //支付bao 微信 芝麻信用 
@@ -526,10 +702,11 @@ export default {
               '(<i class="iconfont">&#xe62e;</i>' + TimesCardPayPrice;
             OrderPayTotalPoint += " + &yen; " + thirdPayPrice + ")";
           }
-         this.payTotalHtml=OrderPayTotalPoint;
+          this.payTotalHtml=OrderPayTotalPoint;
            this.isCheckOrderPayPoint=false;
+             this.thirdPayPoint=thirdPayPrice;
         }
-        this.thirdPayPoint=thirdPayPrice;
+      
         this.PointsQuantity=(Number(this.paydata.PointsQuantity)).toFixed(2)
 
       }
@@ -922,4 +1099,43 @@ export default {
   padding: 12px;
   border: none;
 }
+/*支付页面添加正在支付的提示*/
+.payingtips{
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: rgba(122,122,122,0.5);
+    z-index: 1000;
+}
+.payingtips .pcontent{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -ms-transform: translate(-50%,-50%);
+    -webkit-transform: translate(-50%,-50%);
+    transform: translate(-50%,-50%);
+    background: #fff;
+    width: 5.5rem;
+    text-align: center;
+    padding: .45rem 0;
+    border-radius: 10px;
+    box-sizing: content-box;
+}
+.payingtips .pcontent img{
+    display:block;
+    width:2.11rem;
+    margin: 0 auto;
+}
+.payingtips .pcontent p{
+    margin-top: .1rem;
+    font-size: 11px;
+    color: #666;
+}
+.payingtips .pcontent span{
+    color: #E62327;
+    font-size: 12px;
+}
+
 </style>

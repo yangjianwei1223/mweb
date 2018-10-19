@@ -77,6 +77,32 @@ function get_connectionType() {
     }
     return api.connectionType;
 }
+
+var wxPay = function (mchId, nonceStr, orderId, payDetailId, timeStamp, sign, sucFun, errFun) {
+    try {
+        var wxpay = api.require('wxPay');
+        wxpay.payOrder({
+            orderId: orderId,
+            mchId: mchId,
+            nonceStr: nonceStr,
+            timeStamp: timeStamp,
+            sign: sign
+
+        }, function (ret, err) {
+            if (ret.status) {
+                sucFun(payDetailId);
+            }
+            else {
+                errFun();
+            }
+        });
+    }
+    catch (err) {
+        //Global_CommonHelper.ConfirmLoadingHide();
+        //Global_CommonHelper.SetTryCatchLog(err);
+    }
+}
+
 export default {
     IsApp: IsApp,
     get_appVersion: get_appVersion,
@@ -89,4 +115,5 @@ export default {
     get_screenWidth: get_screenWidth,
     get_screenHeight: get_screenHeight,
     get_connectionType: get_connectionType,
+    wxPay:wxPay,
 }

@@ -11,10 +11,14 @@ const Beiquan = resolve => require(['@/components/beiquan/list'], resolve)
 const BeiquanDetail = resolve => require(['@/components/beiquan/detail'], resolve)
 const LoginIndex = resolve => require(['@/components/account/index'], resolve)
 const Login = resolve => require(['@/components/account/login'], resolve)
+const AccountBindphone = resolve => require(['@/components/account/Bindphone'], resolve)
+const AccountForgetPassword = resolve => require(['@/components/account/ForgetPassword'], resolve)
 const Cart = resolve => require(['@/components/home/cart'], resolve)
 const AboutUs = resolve => require(['@/components/home/about'], resolve)
 const About = resolve => require(['@/components/my/about'], resolve)
 const My = resolve => require(['@/components/my/index'], resolve)
+const Zulin = resolve => require(['@/components/zulin/index'], resolve)
+const ZulinList = resolve => require(['@/components/zulin/seatlist'], resolve)
 const Seat = resolve => require(['@/components/seat/index'], resolve)
 const SeatDetail = resolve => require(['@/components/seat/detail'], resolve)
 const RentKnowledge = resolve => require(['@/components/seat/rentknowledge'], resolve)
@@ -81,6 +85,20 @@ export default new Router({
     path: '/Account/Login',
     name: 'login',
     component: Login,
+    meta: {
+      index: 1
+    }
+  }, {
+    path: '/Account/ForgetPassword',
+    name: 'AccountForgetPassword',
+    component: AccountForgetPassword,
+    meta: {
+      index: 1
+    }
+  }, {
+    path: '/Account/Bindphone',
+    name: 'AccountBindphone',
+    component: AccountBindphone,
     meta: {
       index: 1
     }
@@ -154,7 +172,17 @@ export default new Router({
   }, {
     path: '/Zulin',
     name: 'zulin',
-    redirect: {name: 'seat', query: {zulin: true}}
+    component: Zulin,
+    meta: {
+      index: 2
+    }
+  }, {
+    path: '/Zulin/SeatList/:id',
+    name: 'zulinlist',
+    component: ZulinList,
+    meta: {
+      index: 2
+    }
   }, {
     path: '/Zulin/RentKnowledge',
     name: 'rentknowledge',

@@ -3,7 +3,8 @@
       <div><a v-show="showbackbtn" class="iconfont back" @click="back">&#xe651;</a></div>
       <div>{{headinfo.title}}</div>
       <div>
-        <a v-if="headinfo.rightbtntext1" href="javascript:;" class="rightbtn1" @click.stop="rightbtnfun1" v-html="headinfo.rightbtntext1"></a>
+        <a v-if="headinfo.rightbtntext1" href="javascript:;" class="rightbtn1 iconfont" @click.stop="rightbtnfun1" v-html="headinfo.rightbtntext1"></a>
+        <a v-if="headinfo.rightbtntext2" href="javascript:;" class="rightbtn1 iconfont" @click.stop="rightbtnfun2" v-html="headinfo.rightbtntext2"></a>
       </div>
     </header>
 </template>
@@ -31,6 +32,9 @@ export default {
     },
     rightbtnfun1 () {
       this.$emit('rightbtn1click')
+    },
+    rightbtnfun2 () {
+      this.$emit('rightbtn2click')
     }
   }
 }

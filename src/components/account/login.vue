@@ -23,7 +23,7 @@
     </section>
     <button type="button" class="loginbtn" :class={disabled:disabled} @click="login" :disabled="disabled">立即登录</button>
     <div class="forgetbtn">
-      <a href="/" style="display:inline;">忘记密码</a>
+      <router-link :to='"/account/ForgetPassword"'  style="display:inline;">忘记密码</router-link>
     </div>
   </div>
 </template>

@@ -2,13 +2,16 @@
 //  let  APIDomain='http://v2base.api.95laibei.com';
 // let APIDomain = 'https://base-api.95laibei.com'
 let APIDomain = 'https://t-base-api.95laibei.com'
+let CurrentDomain=location.protocol + '//' + location.host
 // let APIDomain = '/api'
 
 export default {
   APIDomain: APIDomain,
+  CurrentDomain:CurrentDomain,
   IMServiceUrl: 'https://t-im-api.95laibei.com',
   MobileCheckStr: /^\d{11}$/,//手机判断正则(11位数字)
-  TokenExpTime:8760,//Token过期时间（单位小时）
+  PasswordCheckStr: /^[0-9a-zA-Z]{6,16}$/,//密码判断正则（6-16位字母数字组合）
+  TokenExpTime: 8760,//Token过期时间（单位小时）
   // 通用方法类接口
   Common_PicFileSave: APIDomain + '/MWeb/Common/PicFileSave',
   Common_GetGeoCoder: APIDomain + '/MWeb/Common/GetGeoCoder',

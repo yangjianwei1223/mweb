@@ -68,7 +68,7 @@ function GetSiteAccessInfo() {
         }
         BaseInfoHelper.GetLoginInfo().then((res) => {
             if (res != null) {
-                model.MemberAccount = res[0].BaseId;
+                model.MemberAccount = res.BaseId;
             }
             AddSiteAccessLog(model);
         })

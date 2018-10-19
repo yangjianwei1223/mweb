@@ -1,65 +1,30 @@
 <template>
   <div class="seat">
-    <header class="header">
-      <div><a class="iconfont back" @click="back">&#xe651;</a></div>
-      <div class="tabs">
-        <a href="javascript:;" :class="{active:tab==0}" @click="tabfun(0)">座椅租赁
-        </a><a href="javascript:;" :class="{active:tab==1}" @click="tabfun(1)">座椅商城</a>
-      </div>
-      <div>
-      </div>
-    </header>
+    <v-header :headinfo="headinfo"  @rightbtn2click="skipchat" @rightbtn1click="skipsearch"></v-header>
     <div class="container">
-      <div class="zulin" v-show="tab==0">
-        <div class="seat-sum">
-          <router-link to="/Zulin/RentKnowledge" class="piclink">
-           <img src="https://cdn.sys.img.95laibei.com/Content/Images/zuindex-101.png" class="pic" alt="租赁须知">
-          </router-link>
-          <router-link to="/Zulin/ServiceAssurance" class="piclink">
-           <img src="https://cdn.sys.img.95laibei.com/Content/Images/zuindex-102.png" class="pic" alt="服务保障">
-          </router-link>
-          <router-link to="/Activitys/SeatInstallVideo" class="piclink">
-           <img src="https://cdn.sys.img.95laibei.com/Content/Images/zuindex-103.png" class="pic" alt="安装视频">
-          </router-link>
-          <router-link to="/Zulin/FreeInstall" class="piclink">
-           <img src="https://cdn.sys.img.95laibei.com/Content/Images/zuindex-104.png" class="pic" alt="全国门店">
-          </router-link>
-        </div>
-        <div v-infinite-scroll="infinite" infinite-scroll-disabled="busy" infinite-scroll-distance="10" class="_v-container">
-          <ul class="dbitem clearfix">
-            <li v-for="(item,index) in zulinlist" :key="index">
-              <router-link :to='"/Seat/Detail/"+item.ProductBaseId' class="clearfix">
-                <img class="lazyDetail" v-lazy='item.ImgPath+"@!standard_square_m"'>
-                <p class="ptitle onelinetext">{{item.Title}}</p>
-                <p class="rent">押金  <span>¥{{item.Price}}</span></p><p class="sum">已领用<span>{{item.Sales}}</span>台</p>
-              </router-link>
-            </li>
-          </ul>
-          <div tip="正在加载" v-if="showLoading" class="tips">{{tips}}</div>
-        </div>
-      </div>
-      <div class="mall" v-show="tab==1">
-        <section id="zulinseatsales" class="zulin-seatsales-banner">
+      <div class="mall">
+        <seatfouricon ref="topmenu"></seatfouricon>
+        <section id="zulinseatsales" class="zulin-seatsales-banner" :class="{fixed: menufixed}">
           <ul class="zulin-seatsales-filterOne">
             <li class="zunlin-filterOne-item" :class="{active:sort==1}" @click="sortfun(1)"><span>综合</span></li>
             <li class="zunlin-filterOne-item zunlin-filterOne-price" :class='{active:sort==3||sort==4, "arrow-up":sort==3, "arrow-down": sort == 4}' @click="sortfun(3)"><span>价格</span></li>
             <li class="zunlin-filterOne-item" :class="{active:sort==2}" @click="sortfun(2)"><span>销量</span></li>
           </ul>
           <ul class="zulin-seatsales-filterTwo">
-            <li class="zunlin-filterTwo-item arrownone" @click="filterfun(0)"><span>全部</span></li>
-            <li class="zunlin-filterTwo-item arow-down" @click="filterfun(1)"><span>品牌<i></i></span></li>
-            <li class="zunlin-filterTwo-item arow-down" @click="filterfun(2)"><span>年龄<i></i></span></li>
-            <li class="zunlin-filterTwo-item arow-down" @click="filterfun(3)"><span>接口<i></i></span></li>
+            <li class="zunlin-filterTwo-item arrownone" :class="{active: BrandId.length==0 && Age.length==0 && Restraints.length==0}" @click="filterfun(0)"><span>全部</span></li>
+            <li class="zunlin-filterTwo-item arow-down" :class="{active: filternum==1 || BrandId.length>0}" @click="filterfun(1)"><span>品牌<i></i></span></li>
+            <li class="zunlin-filterTwo-item arow-down" :class="{active: filternum==2 || Age.length>0}" @click="filterfun(2)"><span>年龄<i></i></span></li>
+            <li class="zunlin-filterTwo-item arow-down" :class="{active: filternum==3 || Restraints.length>0}" @click="filterfun(3)"><span>接口<i></i></span></li>
           </ul>
           <div class="zulin-seatsales-filterPop" v-show="filter">
             <ul id="SeatPropertyList" class="zulin-filterPop-list clearfix">
-              <li class="zulin-filterPop-item" v-show="filternum==1" v-for="(item, index) in seatBrandList" :key="index"><a class="link" href="javascript:;" :data-id="item.PropertyId"><span class="item">{{item.PropertyName}}</span></a></li>
-              <li class="zulin-filterPop-item" v-show="filternum==2" v-for="(item, index) in ageList" :key="index"><a class="link" href="javascript:;" :data-id="item.PropertyId"><span class="item">{{item.PropertyName}}</span></a></li>
-              <li class="zulin-filterPop-item" v-show="filternum==3" v-for="(item, index) in restraintsList" :key="index"><a class="link" href="javascript:;" :data-id="item.PropertyId"><span class="item">{{item.PropertyName}}</span></a></li>
+              <li class="zulin-filterPop-item" :class="{checked: propertystorage.indexOf(item.PropertyId)>-1}" v-show="filternum==1" v-for="(item, index) in seatBrandList" :key="index + '_1'" @click="checkproperty(item.PropertyId)"><a class="link" href="javascript:;" :data-id="item.PropertyId"><span class="item">{{item.PropertyName}}</span><i class="icon"></i></a></li>
+              <li class="zulin-filterPop-item" :class="{checked: propertystorage.indexOf(item.PropertyId)>-1}" v-show="filternum==2" v-for="(item, index) in ageList" :key="index + '_2'" @click="checkproperty(item.PropertyId)"><a class="link" href="javascript:;" :data-id="item.PropertyId"><span class="item">{{item.PropertyName}}</span><i class="icon"></i></a></li>
+              <li class="zulin-filterPop-item" :class="{checked: propertystorage.indexOf(item.PropertyId)>-1}" v-show="filternum==3" v-for="(item, index) in restraintsList" :key="index + '_3'" @click="checkproperty(item.PropertyId)"><a class="link" href="javascript:;" :data-id="item.PropertyId"><span class="item">{{item.PropertyName}}</span><i class="icon"></i></a></li>
             </ul>
             <div class="zulin-seatsales-btn">
-                <a class="zulin-pop-btn zulin-btn-reset">重置</a>
-                <a class="zulin-pop-btn zulin-btn-confirm">确定</a>
+                <a class="zulin-pop-btn zulin-btn-reset" @click="resetproperty">重置</a>
+                <a class="zulin-pop-btn zulin-btn-confirm" @click="selectedproperty">确定</a>
             </div>
           </div>
         </section>
@@ -74,9 +39,9 @@
               </router-link>
             </li>
           </ul>
-          <div v-if="showLoading" class="tips">{{tips1}}</div>
+          <div class="tips">{{tips1}}</div>
         </div>
-        <div class="cover" v-show="filter" @click.stop="filter=false"></div>
+        <div class="cover" v-show="filter" @click.stop="coverclick"></div>
       </div>
     </div>
     <go-top></go-top>
@@ -89,65 +54,59 @@ import qs from 'qs'
 import infiniteScroll from 'vue-infinite-scroll'
 
 import apiport from '../../util/api'
+import head from '@/components/common/header'
 import goTop from '@/components/common/scrolltop'
+import seatfouricon from '@/components/common/seatfouricon'
 
 Vue.use(infiniteScroll)
-
 export default {
   name: 'seat',
   data () {
     return {
-      tab: 0,
-      busy: false,
-      busy1: true,
-      showLoading: true,
-      showLoading1: true,
-      page: 0,
+      headinfo: {'title': '座椅商城', rightbtntext2: '&#xe67a;', rightbtntext1: '&#xe608;'},
+      busy1: false,
       page1: 0,
       sort: 1,
       BrandId: [],
       Age: [],
       Restraints: [],
-      tips: '正在加载',
       tips1: '正在加载',
-      zulinlist: [],
       seatlist: [],
       filter: false,
       filternum: 0,
       seatBrandList: [],
       ageList: [],
-      restraintsList: []
+      restraintsList: [],
+      menufixed: false,
+      propertystorage: []
     }
   },
   components: {
-    goTop
+    'vHeader': head,
+    goTop,
+    seatfouricon
   },
   mounted () {
-    if (!this.$route.query.zulin) {
-      this.tab = 1
-      this.busy = true
-      this.busy1 = false
-    }
+    window.addEventListener('scroll', this.handleScroll)
+  },
+  destroyed () {
+    window.removeEventListener('scroll', this.handleScroll)
   },
   methods: {
     back: function () {
       this.$router.back()
     },
-    tabfun: function (index) {
-      document.body.scrollTop = document.documentElement.scrollTop = 0
-      this.tab = index
-      if (index === 0) {
-        this.busy = false
-        this.busy1 = true
+    handleScroll () {
+      var scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop
+      // var sumHeight = document.querySelector('.seat-sum').outerHeight
+      var sumHeight = this.$refs.topmenu.$el.offsetHeight
+      if (scrollTop > sumHeight) {
+        this.menufixed = true
       } else {
-        this.busy = true
-        this.busy1 = false
+        this.menufixed = false
       }
     },
     sortfun (i) {
-      this.seatlist = []
-      this.page1 = 0
-      this.busy1 = false
       if (i === 1 || i === 2) {
         this.sort = i
       } else if (i === 3 && this.sort === 3) {
@@ -155,7 +114,7 @@ export default {
       } else {
         this.sort = 3
       }
-      this.infinite1()
+      this.resetinfinite1()
     },
     getPropertyList () {
       let model = {
@@ -163,9 +122,6 @@ export default {
       this.$http({
         url: apiport.Product_GetZulinProperty,
         method: 'post',
-        header: {
-          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-        },
         data: qs.stringify({ reqJson: JSON.stringify(model) })
       })
         .then(res => {
@@ -176,53 +132,31 @@ export default {
           this.restraintsList = da.RestraintsList
         })
         .catch(error => {
-          console.log(2)
           console.log(error)
         })
     },
     filterfun (j) {
       if (j === 0) {
         this.filter = false
+        this.filternum = 0
         this.BrandId = []
         this.Age = []
         this.Restraints = []
+        this.resetinfinite1()
       } else {
         this.filter = true
         this.filternum = j
         if (!this.seatBrandList.length) {
           this.getPropertyList()
         }
+        if (j === 1) {
+          this.propertystorage = [].concat(this.BrandId)
+        } else if (j === 2) {
+          this.propertystorage = [].concat(this.Age)
+        } else {
+          this.propertystorage = [].concat(this.Restraints)
+        }
       }
-    },
-    infinite () {
-      this.page += 1
-      this.busy = true
-      let model = {
-        pageIndex: this.page,
-        pageSize: 20
-      }
-      this.$http({
-        url: apiport.Product_GetZulinList,
-        method: 'post',
-        header: {
-          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-        },
-        data: qs.stringify({ reqJson: JSON.stringify(model) })
-      })
-        .then(res => {
-          console.log(res)
-          if (res.data.Data.length > 0) {
-            this.zulinlist = this.zulinlist.concat(res.data.Data)
-            this.busy = false
-          } else {
-            this.tips = '已经到底了...'
-            this.busy = true
-          }
-        })
-        .catch(error => {
-          console.log(2)
-          console.log(error)
-        })
     },
     infinite1 () {
       this.page1 += 1
@@ -239,9 +173,6 @@ export default {
       this.$http({
         url: apiport.Product_GetSeatList,
         method: 'post',
-        header: {
-          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-        },
         data: qs.stringify({ reqJson: JSON.stringify(model) })
       })
         .then(res => {
@@ -258,6 +189,58 @@ export default {
           console.log(2)
           console.log(error)
         })
+    },
+    skipchat () {
+      this.$router.push('/wechat/im')
+    },
+    skipsearch () {
+      this.$router.push('/Search/OptimizationProduct')
+    },
+    checkproperty (id) {
+      let index = this.propertystorage.indexOf(id)
+      if (index !== -1) {
+        this.propertystorage.splice(index, 1)
+      } else {
+        this.propertystorage.push(id)
+      }
+    },
+    // 属性重置按钮
+    resetproperty () {
+      if (this.filternum === 1) {
+        this.BrandId = []
+      } else if (this.filternum === 2) {
+        this.Age = []
+      } else {
+        this.Restraints = []
+      }
+      this.filter = false
+      this.filternum = 0
+      this.resetinfinite1()
+    },
+    // 属性确定按钮
+    selectedproperty () {
+      if (this.filternum === 1) {
+        this.BrandId = [].concat(this.propertystorage)
+      } else if (this.filternum === 2) {
+        this.Age = [].concat(this.propertystorage)
+      } else {
+        this.Restraints = [].concat(this.propertystorage)
+      }
+      this.filter = false
+      this.filternum = 0
+      this.resetinfinite1()
+    },
+    resetinfinite1 () {
+      this.seatlist = []
+      this.page1 = 0
+      this.tips1 = '正在加载'
+      this.busy1 = false
+      this.infinite1()
+    },
+    coverclick () {
+      this.filter = false
+      this.filternum = 0
+      this.propertystorage = []
     }
   }
 }
@@ -325,83 +308,16 @@ export default {
     }
   }
 }
-.seat-sum{
-    display:-webkit-flex;
-    display:flex;
-    overflow:hidden;
-    border-left: 1px solid #fff;
-    border-right: 1px solid #fff;
-    margin-top: 1rem;
-    .piclink{
-      flex:1;
-      font-size: 0;
-    }
-}
-.dbitem{
-  margin-top:.1rem;
-  li{
-    width: 50%;
-    float: left;
-    margin-top:.1rem;
-    box-sizing:border-box;
-    a{
-      display:block;
-      background-color: #fff;
-    }
-    img{
-      height: 3.7rem;
-      display: block;
-    }
-    .ptitle{
-      padding:0 .2rem;
-      font-size:13px;
-      color:#333;
-      line-height:2;
-    }
-    .rent{
-      float:left;
-      padding-left:.2rem;
-      padding-bottom: .1rem;
-      font-size:12px;
-      color:#929292;
-      width: 1.6rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      span{
-        font-size:13px;
-        color:#ff9c00;
-      }
-    }
-    .sum{
-      float: right;
-      padding-right: .2rem;
-      padding-bottom: .1rem;
-      font-size: 10px;
-      color: #929292;
-      width: 1.6rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      text-align: right;
-    }
-  }
-  li:nth-child(2n){
-    padding-left: .1rem;
-  }
-}
-.tips{
-  text-align:center;
-  line-height:50px;
-  margin-bottom:50px;
-}
-// 租赁筛选
+// 购买筛选
 .zulin-seatsales-banner{
-  position:fixed;
-  top: 1rem;
-  left: 0;
-  width: 100%;
+  position: relative;
   z-index: 21;
+  &.fixed{
+    position:fixed;
+    top: 1rem;
+    left: 0;
+    width: 100%;
+  }
   .zulin-seatsales-filterOne,.zulin-seatsales-filterTwo{
     position: relative;
     height: .78rem;
@@ -470,8 +386,13 @@ export default {
         vertical-align: middle;
         margin-left: 2px;
       }
-      &.arow-down.active i{
-        background-position: 0 -15px;
+      &.active{
+        span{
+          color: @base-ycolor3;
+        }
+        &.arow-down i{
+          background-position: 0 -15px;
+        }
       }
     }
     span{
@@ -516,6 +437,22 @@ export default {
             white-space: nowrap;
           }
         }
+        &.checked .link{
+          color: @base-ycolor3;
+          border-bottom: 1px solid @base-ycolor3;
+          .icon{
+            display: block;
+            background: url(http://cdn.sys.img.95laibei.com/Content/Images/zulin-sales_2.png) no-repeat;
+            background-size: 100px 100px;
+            background-position: -10px 0;
+            width: 13px;
+            height: 10px;
+            position: absolute;
+            margin: 0;
+            right: 5px;
+            top: 16px;
+          }
+        }
       }
     }
     .zulin-seatsales-btn{
@@ -549,7 +486,6 @@ export default {
 // 座椅商城
 .singleitem{
   position: relative;
-  margin-top: 2.6rem;
   background-color: #fff;
   .item{
     margin-left: .3rem;
@@ -610,5 +546,10 @@ export default {
   bottom: 0;
   background:rgba(0,0,0,.3);
   z-index: 20;
+}
+.tips{
+    text-align:center;
+    line-height:50px;
+    margin-bottom:50px;
 }
 </style>

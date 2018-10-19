@@ -139,6 +139,7 @@
 import qs from 'qs'
 import apiport from '../../util/api'
 import head from '@/components/common/header'
+import orderDetail from '@/util/Order_Detail'
 
 export default {
   name: 'zulindetail',
@@ -239,7 +240,7 @@ export default {
   },
   methods: {
     deleteOrder (id) {
-      alert('删除订单')
+      orderDetail.DeleteOrder(id)
     }
   }
 }
