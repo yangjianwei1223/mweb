@@ -44,9 +44,14 @@
             <div class="total">合计：¥<span>{{item.OrderMoney}}</span>(含运费¥{{item.FreightMoney}})</div>
             <div class="o-tabbtn">
               <ul class="MyBuyInOrderOper">
+                <li v-if="item.PayStatus === 2">租赁协议</li>
                 <li v-if="item.OrderStatus === 1 && item.PayStatus === 1"><router-link :to='"/Order/ReturnGoods/" + item.OrderGoodsId'>我要付款</router-link></li>
                 <li v-if="item.OrderStatus === 1 && item.PayStatus === 1"><router-link :to='"/Order/ReturnGoods/" + item.OrderGoodsId'>取消订单</router-link></li>
-                <li data-id="18510">删除订单</li>
+                <li v-if="item.OrderStatus === 1 && item.ExpressStatus === 1"><router-link :to='"/Order/ReturnGoods/" + item.OrderGoodsId'>提醒发货</router-link></li>
+                <li v-if="(item.OrderStatus === 1 || item.OrderStatus === 2) && (item.ExpressStatus === 2 || item.ExpressStatus === 3)"><router-link :to='"/Order/Express/" + item.OrderBaseId'>查看物流</router-link></li>
+                <li v-if="item.OrderStatus === 1 && item.ExpressStatus === 2"><router-link :to='"/Order/ReturnGoods/" + item.OrderGoodsId'>确认收货</router-link></li>
+                <li v-if="item.OrderStatus === 1 && item.ExpressStatus === 3 || item.OrderStatus === 2 || item.OrderStatus === 9" @click="delOrderFun(item.OrderBaseId)">删除订单</li>
+                <li v-if="item.ExpressStatus === 3 && item.CommentStatus === 0" class="comment">立即评价</li>
               </ul>
             </div>
           </template>
@@ -101,6 +106,7 @@ import apiport from '../../util/api'
 import infiniteScroll from 'vue-infinite-scroll'
 import head from '@/components/common/header'
 import goTop from '@/components/common/scrolltop'
+import orderDetail from '@/util/Order_Detail'
 
 Vue.use(infiniteScroll)
 export default {
@@ -191,6 +197,19 @@ export default {
           console.log(2)
           console.log(error)
         })
+    },
+    delOrderFun (id) {
+      orderDetail.DeleteOrder(id, this.delcallback)
+    },
+    delcallback (id) {
+      console.log('回调')
+      let num
+      this.orderlist.forEach(function (item, index) {
+        if (item.OrderBaseId === id) {
+          num = index
+        }
+      })
+      this.orderlist.splice(num, 1)
     }
   }
 }
@@ -306,6 +325,11 @@ export default {
           padding: 0 6px;
           height: .5rem;
           line-height: .5rem;
+        }
+        .comment{
+          background-color: @base-ycolor3;
+          border-color: @base-ycolor3;
+          color:#fff;
         }
       }
     }

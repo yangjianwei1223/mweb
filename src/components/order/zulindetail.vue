@@ -240,7 +240,10 @@ export default {
   },
   methods: {
     deleteOrder (id) {
-      orderDetail.DeleteOrder(id)
+      orderDetail.DeleteOrder(id, this.delecallback)
+    },
+    delecallback (id) {
+      this.$router.push('/My/ZulinBuyIn')
     }
   }
 }

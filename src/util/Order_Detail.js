@@ -1,11 +1,11 @@
 import qs from 'qs'
 import apiport from './api'
 import http from './http.js'
-import router from '../router'
+// import router from '../router'
 import BaseInfoHelper from './Global_BaseInfoHelper'
 
 let orderDetail = {
-  DeleteOrder: function (id) {
+  DeleteOrder: function (id, sucFun) {
     let model = {
       OrderBaseId: id,
       Token: BaseInfoHelper.GetToken()
@@ -20,7 +20,9 @@ let orderDetail = {
         let data = res.data
         if (data.ResultNo === '00000000') {
           alert('删除成功')
-          router.push('/My/ZulinBuyIn')
+          if (typeof (sucFun) === 'function') {
+            sucFun(id)
+          }
         }
       })
       .catch(error => {

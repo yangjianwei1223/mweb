@@ -25,6 +25,7 @@ const RentKnowledge = resolve => require(['@/components/seat/rentknowledge'], re
 const ServiceAssurance = resolve => require(['@/components/seat/serviceassurance'], resolve)
 const ZulinConfirm = resolve => require(['@/components/order/zulinconfirm'], resolve)
 const Confirm = resolve => require(['@/components/order/confirm'], resolve)
+const Express = resolve => require(['@/components/order/express'], resolve)
 const OptimizationList = resolve => require(['@/components/optimization/list'], resolve)
 const CommentList = resolve => require(['@/components/optimization/commentlist'], resolve)
 const GoodsPay = resolve => require(['@/components/pay/goodspay'], resolve)
@@ -353,6 +354,14 @@ export default new Router({
     meta: {
       requireAuth: true,
       index: 2
+    }
+  }, {
+    path: '/Order/Express/:id',
+    name: 'express',
+    component: Express,
+    meta: {
+      requireAuth: true,
+      index: 3
     }
   }, {
     path: '/Wechat/LoginCenter',
