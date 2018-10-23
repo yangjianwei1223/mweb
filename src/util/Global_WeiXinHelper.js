@@ -167,7 +167,7 @@ var jsApiCall = function (wxJsApiParam, payDetailId, sucFun, errFun) {
 
 export default {
     IsWXBrowser: IsWXBrowser,
+    GetOpenId: GetOpenId,
     IsWXSmallProgram:IsWXSmallProgram,
     Pay:Pay
-
 }

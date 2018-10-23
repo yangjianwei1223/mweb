@@ -1,19 +1,17 @@
 <template>
   <div>
-    <div>
-      <ul class="pic-group bgtr">
-        <li v-for="(item, index) in uploadimg.imglist" :key="index">
-          <img :src="item.imgpath">
-          <span class="delimg" @click="delimg(index)"></span>
-        </li>
-        <li v-show="uploadimg.imglist.length < uploadimg.max">
-          <label class="btnfile">
-            <img src="https://cdn.sys.img.95laibei.com/Content/Images/uploadPhotos.png">
-            <input type="file" class="input-file" accept="image/*" @change="sendimg">
-          </label>
-        </li>
-      </ul>
-    </div>
+    <ul class="pic-group bgtr">
+      <li v-for="(item, index) in uploadimg.imglist" :key="index">
+        <img :src="item.imgpath">
+        <span class="delimg" @click="delimg(index)"></span>
+      </li>
+      <li v-show="uploadimg.imglist.length < uploadimg.max">
+        <label class="btnfile">
+          <img src="https://cdn.sys.img.95laibei.com/Content/Images/uploadPhotos.png">
+          <input type="file" class="input-file" accept="image/*" @change="sendimg">
+        </label>
+      </li>
+    </ul>
   </div>
 </template>
 

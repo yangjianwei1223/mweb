@@ -27,31 +27,34 @@
               </div>
             </div>
             <div class="item">
-              <router-link :to='"/Order/ZulinDetail/"+ item.OrderBaseId'>
+              <router-link :to='"/Order/ZulinDetail/"+ item.OrderBaseId' v-for="(item1, index1) in item.OrderGoodsList" :key="index1+'_li'">
                 <div class="left">
-                  <img :src='item.OrderGoodsList[0].GoodsImgPath + "@!standard_square_s"'>
+                  <img :src='item1.GoodsImgPath + "@!standard_square_s"'>
                 </div>
                 <div class="center">
-                  <p>{{item.OrderGoodsList[0].GoodsTitle}}</p>
-                  <p class="style">{{item.OrderGoodsList[0].GoodsPropertyName}}</p>
+                  <p>{{item1.GoodsTitle}}</p>
+                  <p class="style">{{item1.GoodsPropertyName}}</p>
                 </div>
                 <div class="right">
-                  <p>¥ {{item.OrderGoodsList[0].GoodsPrice}}</p>
-                  <p class="thirdtext">×{{item.OrderGoodsList[0].GoodsQuantity}}</p>
+                  <p>¥ {{item1.GoodsPrice}}</p>
+                  <p class="thirdtext">×{{item1.GoodsQuantity}}</p>
+                  <p v-if="item1.Status===2" class="refund">退货中</p>
+                  <p v-else-if="item1.Status===3" class="refund">等待买家退货</p>
+                  <p v-else-if="item1.Status===4" class="refund">{{item.PayType === 5 ? "归还中" : "退租中"}}</p>
                 </div>
               </router-link>
             </div>
             <div class="total">合计：¥<span>{{item.OrderMoney}}</span>(含运费¥{{item.FreightMoney}})</div>
             <div class="o-tabbtn">
               <ul class="MyBuyInOrderOper">
-                <li v-if="item.PayStatus === 2">租赁协议</li>
-                <li v-if="item.OrderStatus === 1 && item.PayStatus === 1"><router-link :to='"/Order/ReturnGoods/" + item.OrderGoodsId'>我要付款</router-link></li>
-                <li v-if="item.OrderStatus === 1 && item.PayStatus === 1"><router-link :to='"/Order/ReturnGoods/" + item.OrderGoodsId'>取消订单</router-link></li>
-                <li v-if="item.OrderStatus === 1 && item.ExpressStatus === 1"><router-link :to='"/Order/ReturnGoods/" + item.OrderGoodsId'>提醒发货</router-link></li>
+                <li v-if="item.PayStatus === 2" @click="showrentcontract(item.RentType)">租赁协议</li>
+                <li v-if="item.OrderStatus === 1 && item.PayStatus === 1" @click="gopay(item.OrderBaseId)">我要付款</li>
+                <li v-if="item.OrderStatus === 1 && item.PayStatus === 1" @click="cancleOrdel(item.OrderBaseId)">取消订单</li>
+                <li v-if="item.OrderStatus === 1 && item.PayStatus !==1 && item.ExpressStatus === 1" @click="remindDelivery(item.OrderBaseId)">提醒发货</li>
                 <li v-if="(item.OrderStatus === 1 || item.OrderStatus === 2) && (item.ExpressStatus === 2 || item.ExpressStatus === 3)"><router-link :to='"/Order/Express/" + item.OrderBaseId'>查看物流</router-link></li>
-                <li v-if="item.OrderStatus === 1 && item.ExpressStatus === 2"><router-link :to='"/Order/ReturnGoods/" + item.OrderGoodsId'>确认收货</router-link></li>
+                <li v-if="item.OrderStatus === 1 && item.ExpressStatus === 2" @click="confirmExpress(item.OrderBaseId, item.PayType, item.OrderMoney, item.OrderGoodsList)">确认收货</li>
                 <li v-if="item.OrderStatus === 1 && item.ExpressStatus === 3 || item.OrderStatus === 2 || item.OrderStatus === 9" @click="delOrderFun(item.OrderBaseId)">删除订单</li>
-                <li v-if="item.ExpressStatus === 3 && item.CommentStatus === 0" class="comment">立即评价</li>
+                <li v-if="item.ExpressStatus === 3 && item.CommentStatus === 0" class="comment"><router-link :to="'/Order/Comment/'+ item.OrderBaseId">立即评价</router-link></li>
               </ul>
             </div>
           </template>
@@ -107,6 +110,7 @@ import infiniteScroll from 'vue-infinite-scroll'
 import head from '@/components/common/header'
 import goTop from '@/components/common/scrolltop'
 import orderDetail from '@/util/Order_Detail'
+import globalDocumentHelper from '@/util/Global_DocumentHelper'
 
 Vue.use(infiniteScroll)
 export default {
@@ -164,8 +168,8 @@ export default {
           console.log(error)
         })
     },
-    changestate (state) {
-      if (state === this.OrderState) {
+    changestate (state, refresh) {
+      if (state === this.OrderState && !refresh) {
         return true
       }
       this.OrderState = state
@@ -210,6 +214,100 @@ export default {
         }
       })
       this.orderlist.splice(num, 1)
+    },
+    remindDelivery (id) {
+      orderDetail.RemindDelivery(id)
+    },
+    // 展示租赁协议
+    showrentcontract (type) {
+      if (type === 0) {
+        globalDocumentHelper.SetDocument('seat-detail-longcontract', this.rentcontractcallback)
+      } else {
+        globalDocumentHelper.SetDocument('seat-detail-contract', this.rentcontractcallback)
+      }
+    },
+    rentcontractcallback (text) {
+      alert(text.Data.Content)
+    },
+    // 确认收货
+    confirmExpress (id, type, money, goodsList) {
+      let IsCanConfirmExpress = true
+      for (let i = 0; i < goodsList.length; i++) {
+        if (goodsList[i].Status === 2 || goodsList[i].Status === 3 || goodsList[i].Status === 4) {
+          IsCanConfirmExpress = false
+          break
+        }
+      }
+      if (!IsCanConfirmExpress) {
+        alert('当前订单中有退租中商品<br/>退租结束才能确认收货')
+      } else {
+        let r = confirm(type === 5 ? '确认收货' : '确认收货后' + money + '元将打给卖家')
+        if (r) {
+          let model = {
+            Token: this.$store.state.UserToken,
+            OrderBaseId: id
+          }
+          this.$http({
+            url: apiport.Order_ConfirmExpress,
+            method: 'post',
+            data: qs.stringify({ reqJson: JSON.stringify(model) })
+          })
+            .then(res => {
+              if (res.data.ResultNo === '00000000') {
+                alert('操作成功')
+                this.changestate(0, 1)
+              }
+            })
+            .catch(error => {
+              console.log(error)
+            })
+        }
+      }
+    },
+    // 我要付款
+    gopay (orderid) {
+      let model = {
+        Token: this.$store.state.UserToken,
+        SubOrderList: orderid,
+        DiscountCouponList: ''
+      }
+      this.$http({
+        url: apiport.Order_AddOrderParent,
+        method: 'post',
+        data: qs.stringify({ reqJson: JSON.stringify(model) })
+      })
+        .then(res => {
+          if (res.data.ResultNo === '00000000') {
+            orderDetail.PageToGoodsPay(res.data.Data)
+          }
+        })
+        .catch(error => {
+          console.log(error)
+        })
+    },
+    // 取消订单
+    cancleOrdel (orderid) {
+      let r = confirm('是否确定关闭交易')
+      if (r) {
+        let model = {
+          Token: this.$store.state.UserToken,
+          OrderBaseId: orderid
+        }
+        this.$http({
+          url: apiport.Order_CancelBase,
+          method: 'post',
+          data: qs.stringify({ reqJson: JSON.stringify(model) })
+        })
+          .then(res => {
+            if (res.data.ResultNo === '00000000') {
+              alert('操作成功')
+              this.changestate(0, 1)
+            }
+          })
+          .catch(error => {
+            console.log(error)
+          })
+      }
     }
   }
 }
@@ -293,8 +391,15 @@ export default {
           margin-right: .2rem;
           text-align: right;
           position: relative;
-          p:last-child{
+          .thirdtext{
             color:#9fa0a0;
+          }
+          .refund{
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            color: #ffa1ad;
+            font-size: 14px;
           }
         }
       }
@@ -329,7 +434,9 @@ export default {
         .comment{
           background-color: @base-ycolor3;
           border-color: @base-ycolor3;
-          color:#fff;
+          a{
+            color:#fff;
+          }
         }
       }
     }

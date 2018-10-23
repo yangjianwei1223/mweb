@@ -32,6 +32,7 @@ const GoodsPay = resolve => require(['@/components/pay/goodspay'], resolve)
 const Wxcode = resolve => require(['@/components/pay/wxcode'], resolve)
 const PaySucess = resolve => require(['@/components/order/paysucess'], resolve)
 const ZulinDetail = resolve => require(['@/components/order/zulindetail'], resolve)
+const Comment = resolve => require(['@/components/order/comment'], resolve)
 const AddressManage = resolve => require(['@/components/my/addressmanage'], resolve)
 const AddAddress = resolve => require(['@/components/my/addaddress'], resolve)
 const Setting = resolve => require(['@/components/my/setting'], resolve)
@@ -359,6 +360,14 @@ export default new Router({
     path: '/Order/Express/:id',
     name: 'express',
     component: Express,
+    meta: {
+      requireAuth: true,
+      index: 3
+    }
+  }, {
+    path: '/Order/Comment/:id',
+    name: 'comment',
+    component: Comment,
     meta: {
       requireAuth: true,
       index: 3

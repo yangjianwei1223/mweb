@@ -142,6 +142,7 @@ export default {
   Order_GetZuLin: APIDomain + '/MWeb/Order/GetZuLin',
   Order_AddZMXYBase: APIDomain + '/MWeb/Order/AddZMXYBase',
   Order_GetZMXYPolicy: APIDomain + '/MWeb/Order/GetZMXYPolicy',
+  Order_GetGoodsBaseByOrderId: APIDomain + '/MWeb/Order/GetGoodsBaseByOrderId',
   // 主页接口
 
   // 支付宝接口
