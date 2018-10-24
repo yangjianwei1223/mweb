@@ -1,7 +1,7 @@
 <template>
   <ul class="commentlist">
     <li v-for="(item, index) in commentlist" :key="index" class="commentitem">
-      <h4>
+      <h4 v-if="item.FaceImage">
         <img :src="item.FaceImage" alt="">
         <span>{{item.NickName}}</span>
       </h4>

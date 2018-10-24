@@ -7,7 +7,7 @@
       </li>
       <li v-show="uploadimg.imglist.length < uploadimg.max">
         <label class="btnfile">
-          <img src="https://cdn.sys.img.95laibei.com/Content/Images/uploadPhotos.png">
+          <img :src='uploadimg.type === 2 ? "https://cdn.sys.img.95laibei.com/Content/Images/upimg1.png" : "https://cdn.sys.img.95laibei.com/Content/Images/uploadPhotos.png"'>
           <input type="file" class="input-file" accept="image/*" @change="sendimg">
         </label>
       </li>

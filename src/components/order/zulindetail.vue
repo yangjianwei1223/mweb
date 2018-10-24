@@ -12,7 +12,7 @@
           <p>支付方式：{{PaymentMethod}}</p>
         </div>
       </div>
-      <div class="o-add">
+      <div class="o-add borderbottom">
         <div class="pad1">
           <div class="line">
             <span class="name">收件人：{{Contact.name}}</span>
@@ -24,21 +24,29 @@
           <div class="para" id="SelfLiftAddress"></div>
         </div>
       </div>
-      <div class="logistics" id="BuyDetailWuliu" style="display:none;">
+      <div class="logistics" v-if="expressstatus !== 1">
+        <div>
+          <router-link :to='"/Order/Express/" + zulindata.OrderBaseId'>
+            <p>【物流信息】</p>
+            <p>{{logicdata.ExpressList[0].Traces[0].AcceptStation}}</p>
+            <p>{{logicdata.ExpressList[0].Traces[0].AcceptTime}}</p>
+            <span class="arrow iconfont">&#xe61e;</span>
+          </router-link>
+        </div>
       </div>
     </section>
     <!-- 商品信息 -->
     <section class="sectc">
-      <div v-for="(item, index) in OrderGoodsList" :key="index" class="item clearfix">
+      <div v-for="(item, index) in zulindata.OrderGoodsList" :key="index" class="item clearfix">
         <div>
-          <router-link :to='PayType !== 5 ? "/Seat/Detail/"+item.ProductBaseId : "/AlipayZMXY/RentSeatDetail/"+item.ProductBaseId'>
+          <router-link :to='PayType !== 5 ? "/Seat/Detail/"+item.ProductBaseId : "/AlipayZMXY/RentSeatDetail/"+item.ProductBaseId' class="goodsa">
             <div class="left">
               <img :src='item.GoodsImgPath + "@!standard_square_s"'>
             </div>
             <div class="center">
               <p class="title">{{item.GoodsTitle}}</p>
               <p class="style thirdtext">{{item.GoodsPropertyName}}</p>
-              <p v-if="RentDetailId > 0" class="thirdtext">租用期限：{{slt.RentName}}-{{RentAmount}}元</p>
+              <p v-if="zulindata.RentDetailId > 0" class="thirdtext">租用期限：{{zulindata.RentName}}-{{zulindata.RentAmount}}元</p>
             </div>
             <div class="right">
               <p>¥ {{item.GoodsPrice}}</p>
@@ -47,55 +55,28 @@
           </router-link>
         </div>
         <ul class="menulist clearfix">
-          <li v-if="(orderstatus === 1 && (item.Status === 1 && paystatus !== 1 || item.Status === 6) || (orderstatus ===2 && (item.Status === 1 || item.Status === 6))) && PayType === 5">申请归还</li>
-          <li v-if="(orderstatus === 1 && (item.Status === 1 && paystatus !== 1 || item.Status === 6) || (orderstatus ===2 && (item.Status === 1 || item.Status === 6))) && PayType !== 5">申请退租</li>
-          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 2">退货中</li>
-          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 3">退货</li>
-          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 3">退租详情</li>
-          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 4">修改申请</li>
-          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 4 && item.RejectedType !== 2">撤销申请</li>
-          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 4 && item.RejectedType === 1">申请被拒绝</li>
-          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 4 && item.RejectedType === 2">退租被拒绝</li>
-          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 4 && item.RejectedType !== 1 && item.RejectedType !== 2 && PayType === 5">归还中</li>
-          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 4 && item.RejectedType !== 1 && item.RejectedType !== 2 && PayType !== 5">退租中</li>
-          <li v-if="(orderstatus === 1 || orderstatus === 2) && (item.Status === 5 || item.Status === 8) && PayType ===5">归还成功</li>
-          <li v-if="(orderstatus === 1 || orderstatus === 2) && (item.Status === 5 || item.Status === 8) && PayType !==5">退租成功</li>
-        </ul>
-        <div>
-          <router-link :to='PayType !== 5 ? "/Seat/Detail/"+item.ProductBaseId : "/AlipayZMXY/RentSeatDetail/"+item.ProductBaseId'>
-            <div class="left">
-              <img :src='item.GoodsImgPath + "@!standard_square_s"'>
-            </div>
-            <div class="center">
-              <p class="title">{{item.GoodsTitle}}</p>
-              <p class="style thirdtext">{{item.GoodsPropertyName}}</p>
-              <p v-if="RentDetailId > 0" class="thirdtext">租用期限：{{slt.RentName}}-{{RentAmount}}元</p>
-            </div>
-            <div class="right">
-              <p>¥ {{item.GoodsPrice}}</p>
-              <p class="thirdtext">×{{item.GoodsQuantity}}</p>
-            </div>
-          </router-link>
-        </div>
-        <ul class="menulist clearfix">
-          <li v-if="(orderstatus === 1 && (item.Status === 1 && paystatus !== 1 || item.Status === 6) || (orderstatus ===2 && (item.Status === 1 || item.Status === 6))) && PayType === 5">申请归还</li>
-          <li v-if="(orderstatus === 1 && (item.Status === 1 && paystatus !== 1 || item.Status === 6) || (orderstatus ===2 && (item.Status === 1 || item.Status === 6))) && PayType !== 5">申请退租</li>
-          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 2">退货中</li>
-          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 3">退货</li>
-          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 3">退租详情</li>
-          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 4">修改申请</li>
-          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 4 && item.RejectedType !== 2">撤销申请</li>
-          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 4 && item.RejectedType === 1">申请被拒绝</li>
-          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 4 && item.RejectedType === 2">退租被拒绝</li>
-          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 4 && item.RejectedType !== 1 && item.RejectedType !== 2 && PayType === 5">归还中</li>
-          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 4 && item.RejectedType !== 1 && item.RejectedType !== 2 && PayType !== 5">退租中</li>
-          <li v-if="(orderstatus === 1 || orderstatus === 2) && (item.Status === 5 || item.Status === 8) && PayType ===5">归还成功</li>
-          <li v-if="(orderstatus === 1 || orderstatus === 2) && (item.Status === 5 || item.Status === 8) && PayType !==5">退租成功</li>
+          <li v-if="(orderstatus === 1 && (item.Status === 1 && paystatus !== 1 || item.Status === 6) || (orderstatus ===2 && (item.Status === 1 || item.Status === 6))) && PayType === 5"><router-link :to='{path: "/Order/ApplyRefund/" + item.OrderGoodsId}'>申请归还</router-link></li>
+          <li v-if="(orderstatus === 1 && (item.Status === 1 && paystatus !== 1 || item.Status === 6) || (orderstatus ===2 && (item.Status === 1 || item.Status === 6))) && PayType !== 5"><router-link :to='{path: "/Order/ApplyRefund/" + item.OrderGoodsId}'>申请退租</router-link></li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 2"><router-link :to='{path: "/Order/RefundHistory/" + item.OrderGoodsId}'>退货中</router-link></li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 3"><router-link :to='{path: "/Order/ReturnGoods/" + item.OrderGoodsId}'>退货</router-link></li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 3"><router-link :to='{path: "/Order/RefundHistory/" + item.OrderGoodsId}'>退租详情</router-link></li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 4"><router-link :to='{path: "/Order/ApplyRefund/" + item.OrderGoodsId}'>修改申请</router-link></li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 4 && item.RejectedType !== 2" @click="CancelRefund(item.OrderGoodsId)">撤销申请</li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 4 && item.RejectedType === 1"><router-link :to='{path: "/Order/RefundHistory/" + item.OrderGoodsId}'>申请被拒绝</router-link></li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 4 && item.RejectedType === 2"><router-link :to='{path: "/Order/RefundHistory/" + item.OrderGoodsId}'>退租被拒绝</router-link></li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 4 && item.RejectedType !== 1 && item.RejectedType !== 2 && PayType === 5"><router-link :to='{path: "/Order/RefundHistory/" + item.OrderGoodsId}'>归还中</router-link></li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && item.Status === 4 && item.RejectedType !== 1 && item.RejectedType !== 2 && PayType !== 5"><router-link :to='{path: "/Order/RefundHistory/" + item.OrderGoodsId}'>退租中</router-link></li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && (item.Status === 5 || item.Status === 8) && PayType ===5"><router-link :to='{path: "/Order/RefundHistory/" + item.OrderGoodsId}'>归还成功</router-link></li>
+          <li v-if="(orderstatus === 1 || orderstatus === 2) && (item.Status === 5 || item.Status === 8) && PayType !==5"><router-link :to='{path: "/Order/RefundHistory/" + item.OrderGoodsId}'>退租成功</router-link></li>
         </ul>
       </div>
     </section>
     <!-- 订单评价 -->
-    <section class="order-comment">
+    <section class="order-comment" v-if="zulindata.CommentStatus === 1">
+      <h3 @click="triggercomment">我的评价<span class="iconfont" :class="{colored: showcomment}"></span></h3>
+      <section class="mmcomment" v-show="showcomment">
+        <commentitem :commentlist='commentdata.Data'></commentitem>
+      </section>
     </section>
     <section class="paydetail">
       <div class="line"><div class="left">商品总价</div><span>¥ {{zulindata.ProductTotalPrice}}</span></div>
@@ -122,12 +103,12 @@
     <div class="order-cont">
       <div class="o-tabbtn">
         <ul id="BuyDetailOrderOper">
-          <li v-if="paystatus === 2">租赁协议</li>
-          <li v-if="orderstatus === 1 && paystatus === 1">我要付款</li>
-          <li v-if="orderstatus === 1 && paystatus === 1">取消订单</li>
-          <li v-if="orderstatus === 1 && expressstatus === 1">提醒发货</li>
-          <li v-if="orderstatus === 1 && (expressstatus === 2 || expressstatus === 3) || orderstatus === 2">查看物流</li>
-          <li v-if="orderstatus === 1 && expressstatus === 2">确认收货</li>
+          <li v-if="paystatus === 2" @click="showrentcontract(zulindata.RentType)">租赁协议</li>
+          <li v-if="orderstatus === 1 && paystatus === 1" @click="gopay(zulindata.OrderBaseId)">我要付款</li>
+          <li v-if="orderstatus === 1 && paystatus === 1" @click="cancleOrdel(zulindata.OrderBaseId)">取消订单</li>
+          <li v-if="orderstatus === 1 && paystatus !==1 && expressstatus === 1" @click="remindDelivery(zulindata.OrderBaseId)">提醒发货</li>
+          <li v-if="orderstatus === 1 && (expressstatus === 2 || expressstatus === 3) || orderstatus === 2"><router-link :to='"/Order/Express/" + zulindata.OrderBaseId'>查看物流</router-link></li>
+          <li v-if="orderstatus === 1 && expressstatus === 2" @click="confirmExpress(zulindata.OrderBaseId, zulindata.PayType, zulindata.OrderMoney, zulindata.OrderGoodsList)">确认收货</li>
           <li v-if="orderstatus === 1 && expressstatus === 3 || orderstatus === 2 || orderstatus === 9" @click="deleteOrder(zulindata.OrderBaseId)">删除订单</li>
         </ul>
       </div>
@@ -139,12 +120,15 @@
 import qs from 'qs'
 import apiport from '../../util/api'
 import head from '@/components/common/header'
+import commentitem from '@/components/common/commentitem'
 import orderDetail from '@/util/Order_Detail'
+import globalDocumentHelper from '@/util/Global_DocumentHelper'
 
 export default {
   name: 'zulindetail',
   components: {
-    vHeader: head
+    vHeader: head,
+    commentitem
   },
   data () {
     return {
@@ -164,10 +148,9 @@ export default {
       IsExchange: 0,
       IsRefund: 0,
       Contact: {name: '', phone: '', address: ''},
-      OrderGoodsList: [],
-      RentDetailId: 0,
-      RentAmount: 0,
-      RentName: ''
+      logicdata: {ExpressList: [{Traces: [{AcceptStation: '', AcceptTime: ''}]}]}, // 物流信息
+      showcomment: false,
+      commentdata: [] // 评价信息
     }
   },
   mounted () {
@@ -200,10 +183,6 @@ export default {
         this.Contact.name = data.ContactName
         this.Contact.phone = data.ContactPhone
         this.Contact.address = data.FullAddress
-        this.OrderGoodsList = data.OrderGoodsList
-        this.RentDetailId = data.RentDetailId
-        this.RentAmount = data.RentAmount
-        this.RentName = data.RentName
         // 订单状态文字
         if (this.orderstatus === 1) {
           if (this.paystatus === 1) {
@@ -232,9 +211,19 @@ export default {
         if (this.IsRefund) {
           this.orderstatustext += '有退货商品'
         }
+        // 是否获取物流
+        if (this.expressstatus !== 1) {
+          let _that = this
+          orderDetail.getExpressData(this.$route.params.id, this.$store.state.UserToken).then(function (res) {
+            _that.logicdata = res
+          })
+        }
+        // 是否获取评价
+        if (res.data.CommentStatus === 1) {
+          this.getCommentById(this.$route.params.id)
+        }
       })
       .catch(error => {
-        console.log(2)
         console.log(error)
       })
   },
@@ -244,6 +233,59 @@ export default {
     },
     delecallback (id) {
       this.$router.push('/My/ZulinBuyIn')
+    },
+    getCommentById (id) {
+      let model = {
+        Token: this.$store.state.UserToken,
+        InfomationType: 1,
+        InfomationRelationId: id
+      }
+      this.$http({
+        url: apiport.CommentBase_GetBaseById,
+        method: 'post',
+        data: qs.stringify({ reqJson: JSON.stringify(model) })
+      })
+        .then(res => {
+          this.commentdata = res.data
+        })
+        .catch(error => {
+          console.log(error)
+        })
+    },
+    triggercomment () {
+      this.showcomment = !this.showcomment
+    },
+    gopay (orderid) {
+      orderDetail.gopay(orderid, this.$store.state.UserToken)
+    },
+    // 取消订单
+    cancleOrdel (orderid) {
+      orderDetail.cancleOrdel(orderid, this.$store.state.UserToken)
+    },
+    // 确认收货
+    confirmExpress (id, type, money, goodsList) {
+      orderDetail.confirmExpress(id, type, money, goodsList, this.$store.state.UserToken)
+    },
+    // 展示租赁协议
+    showrentcontract (type) {
+      if (type === 0) {
+        globalDocumentHelper.SetDocument('seat-detail-longcontract', this.rentcontractcallback)
+      } else {
+        globalDocumentHelper.SetDocument('seat-detail-contract', this.rentcontractcallback)
+      }
+    },
+    rentcontractcallback (text) {
+      alert(text.Data.Content)
+    },
+    remindDelivery (id) {
+      orderDetail.RemindDelivery(id)
+    },
+    // 撤销退款申请
+    CancelRefund (id) {
+      orderDetail.CancelRefund(id, this.$store.state.UserToken, this.CancelRefundcallback)
+    },
+    CancelRefundcallback () {
+      console.log('shuaxin')
     }
   }
 }
@@ -306,12 +348,27 @@ export default {
       }
     }
   }
+  .logistics {
+    position: relative;
+    padding: .2rem;
+    color: #33a6ff;
+    p{
+      margin-right: .4rem;
+      margin-bottom: .1rem;
+    }
+    .arrow {
+      position: absolute;
+      top: .6rem;
+      right: .2rem;
+      color: #9fa0a0;
+    }
+  }
 }
 .sectc {
   box-shadow: 0 -1px 1px #ebebec, 0 1px 1px #ebebec;
   background-color: #fff;
   opacity: 1;
-  a{
+  .goodsa{
     display: flex;
     padding: .2rem 0;
     .left{
@@ -363,6 +420,30 @@ export default {
 }
 .order-comment{
   margin-bottom: .2rem;
+  background-color: #fff;
+  h3{
+    height: .8rem;
+    line-height: .8rem;
+    padding: 0 .2rem;
+    border-bottom: 1px solid #f2f2f2;
+    font-size: 14px;
+    color: #333;
+    span{
+      float: right;
+      width: .5rem;
+      text-align: right;
+      color: #cbcbcb;
+      &.colored{
+        color: @base-ycolor3;
+        &::before{
+          content: '\e60c'
+        }
+      }
+      &:before{
+        content: '\e609'
+      }
+    }
+  }
 }
 .paydetail {
   background-color: #fff;

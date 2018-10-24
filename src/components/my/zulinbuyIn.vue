@@ -66,12 +66,9 @@
                 {{item.ApplyTime}}
                 <span class="state" v-if="item.Status===2">退货中</span>
                 <span class="state" v-else-if="item.Status===3">等待买家退货</span>
-                <span class="state" v-else-if="item.Status===4 && item.PayType===5">归还中</span>
-                <span class="state" v-else-if="item.Status===4">退租中</span>
-                <span class="state" v-else-if="item.Status===5 && item.PayType===5">归还成功</span>
-                <span class="state" v-else-if="item.Status===5">退租成功</span>
-                <span class="state" v-else-if="item.Status===6 && item.PayType===5">归还关闭</span>
-                <span class="state" v-else-if="item.Status===6">退租关闭</span>
+                <span class="state" v-else-if="item.Status===4">{{item.PayType === 5 ? "归还中" : "退租中"}}</span>
+                <span class="state" v-else-if="item.Status===5">{{item.PayType === 5 ? "归还成功" : "退租成功"}}</span>
+                <span class="state" v-else-if="item.Status===6">{{item.PayType === 5 ? "归还关闭" : "退租关闭"}}</span>
               </div>
             </div>
             <div class="item">
@@ -90,7 +87,7 @@
               <ul class="MyBuyInOrderOper">
                 <li v-if="item.Status === 3"><router-link :to='"/Order/ReturnGoods/" + item.OrderGoodsId'>退货</router-link></li>
                 <li v-if="item.Status === 4"><router-link :to='"/Order/ApplyRefund/" + item.OrderGoodsId'>修改申请</router-link></li>
-                <li v-if="item.Status === 4" @click="CancelRefund(item.OrderGoodsId)">撤销申请</li>
+                <li v-if="item.Status === 4" @click="CancelRefund(item.OrderGoodsId,item.PayType)">撤销申请</li>
               </ul>
             </div>
           </template>
@@ -121,7 +118,7 @@ export default {
   },
   data () {
     return {
-      headinfo: {title: '我的订单'},
+      headinfo: { title: '我的订单' },
       orderlist: [],
       OrderState: 0,
       currentPageIndex: 0,
@@ -131,8 +128,7 @@ export default {
       tips: '正在加载'
     }
   },
-  mounted: function () {
-  },
+  mounted: function () {},
   methods: {
     infinite () {
       this.currentPageIndex += 1
@@ -164,7 +160,6 @@ export default {
           }
         })
         .catch(error => {
-          console.log(2)
           console.log(error)
         })
     },
@@ -180,33 +175,19 @@ export default {
       this.infinite()
     },
     CancelRefund (id) {
-      let model = {
-        Token: this.$store.state.UserToken,
-        OrderGoodsId: id
-      }
-      this.$http({
-        url: apiport.Order_CancelRefund,
-        method: 'post',
-        data: qs.stringify({ reqJson: JSON.stringify(model) })
-      })
-        .then(res => {
-          console.log('撤销申请', res.data)
-          this.currentPageIndex = 0
-          this.orderlist = []
-          this.tips = '正在加载'
-          this.busy = false
-          this.infinite()
-        })
-        .catch(error => {
-          console.log(2)
-          console.log(error)
-        })
+      orderDetail.CancelRefund(id, this.$store.state.UserToken, this.CancelRefundcallback)
+    },
+    CancelRefundcallback () {
+      this.currentPageIndex = 0
+      this.orderlist = []
+      this.tips = '正在加载'
+      this.busy = false
+      this.infinite()
     },
     delOrderFun (id) {
       orderDetail.DeleteOrder(id, this.delcallback)
     },
     delcallback (id) {
-      console.log('回调')
       let num
       this.orderlist.forEach(function (item, index) {
         if (item.OrderBaseId === id) {
@@ -231,83 +212,19 @@ export default {
     },
     // 确认收货
     confirmExpress (id, type, money, goodsList) {
-      let IsCanConfirmExpress = true
-      for (let i = 0; i < goodsList.length; i++) {
-        if (goodsList[i].Status === 2 || goodsList[i].Status === 3 || goodsList[i].Status === 4) {
-          IsCanConfirmExpress = false
-          break
-        }
-      }
-      if (!IsCanConfirmExpress) {
-        alert('当前订单中有退租中商品<br/>退租结束才能确认收货')
-      } else {
-        let r = confirm(type === 5 ? '确认收货' : '确认收货后' + money + '元将打给卖家')
-        if (r) {
-          let model = {
-            Token: this.$store.state.UserToken,
-            OrderBaseId: id
-          }
-          this.$http({
-            url: apiport.Order_ConfirmExpress,
-            method: 'post',
-            data: qs.stringify({ reqJson: JSON.stringify(model) })
-          })
-            .then(res => {
-              if (res.data.ResultNo === '00000000') {
-                alert('操作成功')
-                this.changestate(0, 1)
-              }
-            })
-            .catch(error => {
-              console.log(error)
-            })
-        }
-      }
+      orderDetail.confirmExpress(id, type, money, goodsList, this.$store.state.UserToken, this.cancleOrdelcallback)
     },
     // 我要付款
     gopay (orderid) {
-      let model = {
-        Token: this.$store.state.UserToken,
-        SubOrderList: orderid,
-        DiscountCouponList: ''
-      }
-      this.$http({
-        url: apiport.Order_AddOrderParent,
-        method: 'post',
-        data: qs.stringify({ reqJson: JSON.stringify(model) })
-      })
-        .then(res => {
-          if (res.data.ResultNo === '00000000') {
-            orderDetail.PageToGoodsPay(res.data.Data)
-          }
-        })
-        .catch(error => {
-          console.log(error)
-        })
+      orderDetail.gopay(orderid, this.$store.state.UserToken)
     },
     // 取消订单
     cancleOrdel (orderid) {
-      let r = confirm('是否确定关闭交易')
-      if (r) {
-        let model = {
-          Token: this.$store.state.UserToken,
-          OrderBaseId: orderid
-        }
-        this.$http({
-          url: apiport.Order_CancelBase,
-          method: 'post',
-          data: qs.stringify({ reqJson: JSON.stringify(model) })
-        })
-          .then(res => {
-            if (res.data.ResultNo === '00000000') {
-              alert('操作成功')
-              this.changestate(0, 1)
-            }
-          })
-          .catch(error => {
-            console.log(error)
-          })
-      }
+      orderDetail.cancleOrdel(orderid, this.$store.state.UserToken, this.cancleOrdelcallback)
+    },
+    // 取消订单和确认收货回调
+    cancleOrdelcallback () {
+      this.changestate(0, 1)
     }
   }
 }
@@ -315,86 +232,86 @@ export default {
 
 <style lang="less" scoped>
 @import "../../assets/less/variable";
-.navbar{
-  position:fixed;
+.navbar {
+  position: fixed;
   left: 0;
   top: 1rem;
   width: 100%;
   overflow-x: auto;
   z-index: 2;
-  .navbar-ul{
+  .navbar-ul {
     display: flex;
     flex-wrap: nowrap;
-    li{
-      flex:1;
+    li {
+      flex: 1;
       min-width: 63px;
       font-size: 13px;
       text-align: center;
-      line-height: .8rem;
+      line-height: 0.8rem;
       background-color: #fff;
-      &.active{
-        color:@base-ycolor3;
-        span{
+      &.active {
+        color: @base-ycolor3;
+        span {
           display: inline-block;
-          border-bottom:1px solid @base-ycolor3;
+          border-bottom: 1px solid @base-ycolor3;
         }
       }
     }
   }
 }
-.order-cont{
-  margin-top:2rem;
-  li{
+.order-cont {
+  margin-top: 2rem;
+  li {
     background-color: #fff;
-    margin-bottom: .2rem;
+    margin-bottom: 0.2rem;
     border-top: 1px solid #ededed;
     border-bottom: 1px solid #ededed;
-    .topxl{
-      line-height: .8rem;
-      padding:0 .2rem;
-      .state{
-        float:right;
-        color:@base-ycolor3;
+    .topxl {
+      line-height: 0.8rem;
+      padding: 0 0.2rem;
+      .state {
+        float: right;
+        color: @base-ycolor3;
       }
     }
-    .item{
-      a{
-        display:flex;
-        padding:.2rem 0;
-        .left{
+    .item {
+      a {
+        display: flex;
+        padding: 0.2rem 0;
+        .left {
           width: 1.6rem;
-          margin-left: .2rem;
-          margin-right: .2rem;
+          margin-left: 0.2rem;
+          margin-right: 0.2rem;
           font-size: 0;
         }
-        .center{
+        .center {
           flex: 1;
           font-size: 12px;
-          padding-right: .2rem;
-          p:first-child{
+          padding-right: 0.2rem;
+          p:first-child {
             display: -webkit-box;
             overflow: hidden;
             text-overflow: ellipsis;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             word-break: break-all;
-            height: .6rem;
-            line-height: .3rem;
+            height: 0.6rem;
+            line-height: 0.3rem;
           }
-          .style{
-            line-height: .3rem;
-            min-height: .6rem;
+          .style {
+            line-height: 0.3rem;
+            min-height: 0.6rem;
           }
         }
-        .right{
+        .right {
           min-width: 1.4rem;
-          margin-right: .2rem;
+          margin-right: 0.2rem;
           text-align: right;
           position: relative;
-          .thirdtext{
-            color:#9fa0a0;
+          .thirdtext {
+            color: #9fa0a0;
           }
-          .refund{
+          .refund {
             position: absolute;
             bottom: 0;
             right: 0;
@@ -404,47 +321,47 @@ export default {
         }
       }
     }
-    .total{
+    .total {
       font-size: 14px;
       line-height: 30px;
       text-align: right;
-      padding-right: .2rem;
+      padding-right: 0.2rem;
       padding-bottom: 4px;
       border-bottom: 1px solid #ededed;
-      span{
+      span {
         font-size: 18px;
       }
     }
-    .o-tabbtn{
+    .o-tabbtn {
       width: 100%;
-      height: .8rem;
-      ul{
-        margin-right: .2rem;
-        li{
+      height: 0.8rem;
+      ul {
+        margin-right: 0.2rem;
+        li {
           float: right;
           font-size: 14px;
           border: 1px solid #9fa0a0;
           box-sizing: border-box;
           border-radius: 4px;
-          margin: .15rem 0 .15rem .14rem;
+          margin: 0.15rem 0 0.15rem 0.14rem;
           padding: 0 6px;
-          height: .5rem;
-          line-height: .5rem;
+          height: 0.5rem;
+          line-height: 0.5rem;
         }
-        .comment{
+        .comment {
           background-color: @base-ycolor3;
           border-color: @base-ycolor3;
-          a{
-            color:#fff;
+          a {
+            color: #fff;
           }
         }
       }
     }
   }
 }
-.tips{
-  text-align:center;
-  line-height:50px;
-  margin-bottom:50px;
+.tips {
+  text-align: center;
+  line-height: 50px;
+  margin-bottom: 50px;
 }
 </style>

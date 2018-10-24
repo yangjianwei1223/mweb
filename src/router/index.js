@@ -26,6 +26,9 @@ const ServiceAssurance = resolve => require(['@/components/seat/serviceassurance
 const ZulinConfirm = resolve => require(['@/components/order/zulinconfirm'], resolve)
 const Confirm = resolve => require(['@/components/order/confirm'], resolve)
 const Express = resolve => require(['@/components/order/express'], resolve)
+const ApplyRefund = resolve => require(['@/components/order/applyrefund'], resolve)
+const RefundHistory = resolve => require(['@/components/order/refundhistory'], resolve)
+const ReturnGoods = resolve => require(['@/components/order/returngoods'], resolve)
 const OptimizationList = resolve => require(['@/components/optimization/list'], resolve)
 const CommentList = resolve => require(['@/components/optimization/commentlist'], resolve)
 const GoodsPay = resolve => require(['@/components/pay/goodspay'], resolve)
@@ -360,6 +363,30 @@ export default new Router({
     path: '/Order/Express/:id',
     name: 'express',
     component: Express,
+    meta: {
+      requireAuth: true,
+      index: 3
+    }
+  }, {
+    path: '/Order/ApplyRefund/:id',
+    name: 'applyrefund',
+    component: ApplyRefund,
+    meta: {
+      requireAuth: true,
+      index: 3
+    }
+  }, {
+    path: '/Order/RefundHistory/:id',
+    name: 'refundhistory',
+    component: RefundHistory,
+    meta: {
+      requireAuth: true,
+      index: 3
+    }
+  }, {
+    path: '/Order/ReturnGoods/:id',
+    name: 'returngoods',
+    component: ReturnGoods,
     meta: {
       requireAuth: true,
       index: 3
