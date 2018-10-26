@@ -103,6 +103,31 @@ var wxPay = function (mchId, nonceStr, orderId, payDetailId, timeStamp, sign, su
     }
 }
 
+var aliPay = function (orderInfo, SucFun, ErrFun) {
+   // var orderInfo='it_b_pay=30m&notify_url=https%3a%2f%2ft-base-api.95laibei.com%2fMwebNotify%2fPay%2fAlipayNotify&out_trade_no=18950&partner=2088821856628860&payment_type=1&seller_id=itit%4095laibei.com&service=mobile.securitypay.pay&subject=%e5%95%86%e5%93%81%e8%b4%ad%e4%b9%b0&total_fee=0.01&sign=ocTcUZrZLtZJJWxCysn5e4kHmr2Q8pMY412vIbtY4mSLJZvVZayFTdTanS5cjzVHGeqPlefqmeacyQyzQioQgtx3UhRfePWqfcctb1Q23Q%2fjOw8bsoEzOUBe1BCNmHJ2gPNeE5bdc2LrOWrRG%2fU4MJkHC6WFWw0HFVS1atSWYO0%3d&sign_type=RSA'
+   //alert('dnew'+orderInfo);
+    try {
+        var alipay = api.require('aliPay');
+        alipay.payOrder({
+            orderInfo: orderInfo
+        }, function (ret, err) {
+            if (ret.code == "9000") {
+                SucFun();
+                //Global_CommonHelper.ConfirmLoadingHide();
+            }
+            else {
+                alert(JSON.stringify(err));
+                ErrFun();
+                //Global_CommonHelper.ConfirmLoadingHide();
+            }
+        })
+    }
+    catch (err) {
+        //Global_CommonHelper.SetTryCatchLog(err);
+       // Global_CommonHelper.ConfirmLoadingHide();
+    }
+}
+
 export default {
     IsApp: IsApp,
     get_appVersion: get_appVersion,
@@ -116,4 +141,5 @@ export default {
     get_screenHeight: get_screenHeight,
     get_connectionType: get_connectionType,
     wxPay:wxPay,
+    aliPay:aliPay
 }

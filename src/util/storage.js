@@ -32,7 +32,12 @@ export default {
   // 获取
   getLocal (key = STORAGE_USER_KEY) {
     // console.log('get local operation')
-    return JSON.parse(window.localStorage.getItem(key))
+    let val = window.localStorage.getItem(key)
+    if (val.indexOf('{') > -1) {
+      return JSON.parse(val)
+    } else {
+      return val
+    }
   },
   // 设置用
   setLocal (res, key = STORAGE_USER_KEY, isSaveOldData = false) {
@@ -54,7 +59,12 @@ export default {
   // 获取
   getSession (key = STORAGE_USER_KEY) {
     // console.log('get local operation')
-    return JSON.parse(window.sessionStorage.getItem(key))
+    let val = window.sessionStorage.getItem(key)
+    if (val && val.indexOf('{') > -1 && val.indexOf('}') > -1) {
+      return JSON.parse(val)
+    } else {
+      return val
+    }
   },
   // 设置用
   setSession (res, key = STORAGE_USER_KEY, isSaveOldData = false) {
@@ -62,10 +72,10 @@ export default {
     if (isSaveOldData) {
       if (this.getLocal(key)) {
         let oldData = this.getLocal(key)
-        return window.sessionStorage.setItem(key, JSON.stringify(oldData.concat(res)))
+        return window.sessionStorage.setItem(key, oldData.concat(res))
       }
     }
-    return window.sessionStorage.setItem(key, JSON.stringify(res))
+    return window.sessionStorage.setItem(key, res)
   },
   GetStorageDataByKey: GetStorageDataByKey,
   SetDataToStorage: SetDataToStorage,

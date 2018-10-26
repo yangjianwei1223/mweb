@@ -7,9 +7,12 @@
 </template>
 
 <script>
+/* eslint-disable */
 import '../static/js/rem.js'
 import goTop from './components/common/scrolltop'
 import SiteAccessLogHelper from './util/Global_SiteAccessLogHelper'
+import aJpushHelper from './util/Global_AJpushHelper'
+
 export default {
   name: 'App',
   data () {
@@ -33,9 +36,23 @@ export default {
       }, 3000)
       SiteAccessLogHelper.PageVisit()
       SiteAccessLogHelper.SetAppQueryString()
+       //Jpush通知回调，初次加载完成
+        if (window.JpushData != undefined && window.JpushData != null
+               && window.JpushData != '') {
+             aJpushHelper.ReceiveCallBack(false, window.JpushData);
+            }
     }
   },
   created: function () {
+  },
+  mounted:function(){
+    window.apiready=function(){
+      aJpushHelper.Init();
+    };
+    window.JpushCallBack=function(type,dataStr) {
+        window.JpushData = dataStr;
+        aJpushHelper.ReceiveCallBack(true, window.JpushData);
+     }
   },
   beforeMount: function () {
   }

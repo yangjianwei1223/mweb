@@ -15,6 +15,7 @@ const AccountBindphone = resolve => require(['@/components/account/Bindphone'], 
 const AccountForgetPassword = resolve => require(['@/components/account/ForgetPassword'], resolve)
 const Cart = resolve => require(['@/components/home/cart'], resolve)
 const AboutUs = resolve => require(['@/components/home/about'], resolve)
+const Channel = resolve => require(['@/components/home/channel'], resolve)
 const About = resolve => require(['@/components/my/about'], resolve)
 const My = resolve => require(['@/components/my/index'], resolve)
 const Zulin = resolve => require(['@/components/zulin/index'], resolve)
@@ -33,8 +34,10 @@ const OptimizationList = resolve => require(['@/components/optimization/list'], 
 const CommentList = resolve => require(['@/components/optimization/commentlist'], resolve)
 const GoodsPay = resolve => require(['@/components/pay/goodspay'], resolve)
 const Wxcode = resolve => require(['@/components/pay/wxcode'], resolve)
+const AlipayReturn = resolve => require(['@/components/pay/alipayreturn'], resolve)
 const PaySucess = resolve => require(['@/components/order/paysucess'], resolve)
 const ZulinDetail = resolve => require(['@/components/order/zulindetail'], resolve)
+const BuyDetail = resolve => require(['@/components/order/buydetail'], resolve)
 const Comment = resolve => require(['@/components/order/comment'], resolve)
 const AddressManage = resolve => require(['@/components/my/addressmanage'], resolve)
 const AddAddress = resolve => require(['@/components/my/addaddress'], resolve)
@@ -46,6 +49,7 @@ const ZulinBuyIn = resolve => require(['@/components/my/zulinbuyin'], resolve)
 const BuyIn = resolve => require(['@/components/my/buyin'], resolve)
 const Deposit = resolve => require(['@/components/my/deposit'], resolve)
 const Coupon = resolve => require(['@/components/my/coupon'], resolve)
+const CouponValidProList = resolve => require(['@/components/my/couponvalidprolist'], resolve)
 const Praise = resolve => require(['@/components/my/praise'], resolve)
 const Share = resolve => require(['@/components/my/share'], resolve)
 const Points = resolve => require(['@/components/my/points'], resolve)
@@ -119,6 +123,13 @@ export default new Router({
     path: '/Home/About',
     name: 'aboutus',
     component: AboutUs,
+    meta: {
+      index: 2
+    }
+  }, {
+    path: '/Home/Channel',
+    name: 'channel',
+    component: Channel,
     meta: {
       index: 2
     }
@@ -241,6 +252,15 @@ export default new Router({
       index: 2
     }
   }, {
+    path: '/Pay/AlipayReturn',
+    name: 'alipayreturn',
+    component: AlipayReturn,
+    meta: {
+      requireAuth: true,
+      index: 2
+    }
+  },
+  {
     path: '/My/AddressManage',
     name: 'adresslist',
     component: AddressManage,
@@ -305,6 +325,14 @@ export default new Router({
       index: 2
     }
   }, {
+    path: '/My/CouponValidProList/:id',
+    name: 'couponvalidprolist',
+    component: CouponValidProList,
+    meta: {
+      requireAuth: true,
+      index: 2
+    }
+  }, {
     path: '/My/Praise',
     name: 'praise',
     component: Praise,
@@ -355,6 +383,14 @@ export default new Router({
     path: '/Order/ZulinDetail/:id',
     name: 'zulindetail',
     component: ZulinDetail,
+    meta: {
+      requireAuth: true,
+      index: 2
+    }
+  }, {
+    path: '/Order/BuyDetail/:id',
+    name: 'buydetail',
+    component: BuyDetail,
     meta: {
       requireAuth: true,
       index: 2

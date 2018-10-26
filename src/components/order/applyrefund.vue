@@ -23,10 +23,12 @@
     <section class="sld clearfix" v-if="refunddata.OrderType === 1">
       <label class="lab-replace-txt">{{textObj.money}}</label>
       <div class="con return">
-        <input type="number" oninput="Global_CommonHelper.ChechNumberOneDecimal(this, 10)" v-model="pointsPay"/>元
+        <input type="number" v-on:input="ChechNumberOneDecimal" v-on:keyup="RefundPricekeyup" v-model="pointsPay" />元
       </div>
     </section>
-    <div class="canrefundmoney textcolorr" v-if="refunddata.OrderType === 1">{{pointsPay-refunddata.PointsBalancePay > 0 ? "现金: " + pointsPay-refunddata.PointsBalancePay + "元;" : ''}}{{refunddata.PointsBalancePay > 0 ? refunddata.PointsBalancePay > pointsPay ? "贝壳: " + pointsPay+ "个" : "贝壳: " + refunddata.PointsBalancePay + "个" : ''}}个</div>
+    <div class="canrefundmoney textcolorr" v-if="refunddata.OrderType === 1">
+      {{priceStr}}
+      </div>
     <section class="sld clearfix">
       <label class="lab-replace-txt" id="ApplyCauseTxtLabel">{{textObj.state}}</label>
       <div class="con mline">
@@ -78,20 +80,22 @@
 </template>
 
 <script>
-import qs from 'qs'
-import apiport from '../../util/api'
-import head from '@/components/common/header'
-import imgupload from '@/components/common/imgupload'
+/* eslint-disable */ 
+import qs from "qs";
+import apiport from "../../util/api";
+import head from "@/components/common/header";
+import imgupload from "@/components/common/imgupload";
+import CommonHelper from "@/util/Global_CommonHelper";
 
 export default {
-  name: 'ApplyRefund',
+  name: "ApplyRefund",
   components: {
     vHeader: head,
     imgupload
   },
-  data () {
+  data() {
     return {
-      headinfo: {title: '申请退租'},
+      headinfo: { title: "申请退租" },
       refunddata: {},
       uploadimgdata: {
         max: 3,
@@ -100,10 +104,10 @@ export default {
       },
       showcause: false,
       textObj: {
-        type: '退租类型',
-        cause: '退租原因',
-        money: '退款金额',
-        state: '退租说明'
+        type: "退租类型",
+        cause: "退租原因",
+        money: "退款金额",
+        state: "退租说明"
       },
       isrefundgoods: 1,
       allpointsPay: 0,
@@ -111,185 +115,232 @@ export default {
       holdcausetxt: null,
       causetxt: null,
       causeindex: null,
-      confirming: false
-    }
+      confirming: false,
+      priceStr: "",
+    };
   },
-  mounted () {
+  mounted() {
     let model = {
       OrderGoodsId: this.$route.params.id,
       Token: this.$store.state.UserToken
-    }
+    };
     this.$http({
       url: apiport.Order_GetRefundByOrderGoodsId,
-      method: 'post',
+      method: "post",
       data: qs.stringify({ reqJson: JSON.stringify(model) })
     })
       .then(res => {
-        console.log('申请退租', res.data)
-        if (res.data.ResultNo === '00000000') {
-          let data = res.data
-          this.refunddata = data
+        console.log("申请退租", res.data);
+        if (res.data.ResultNo === "00000000") {
+          let data = res.data;
+          this.refunddata = data;
           if (data.OrderType === 2 && data.PointCashPay === 0) {
             // 提篮归还
-            this.headinfo.title = '申请归还'
-            this.textObj.cause = '归还原因'
-            this.textObj.state = '归还说明'
+            this.headinfo.title = "申请归还";
+            this.textObj.cause = "归还原因";
+            this.textObj.state = "归还说明";
           } else if (data.OrderType === 2) {
-            this.headinfo.title = '申请退租'
-            this.textObj.cause = '退租原因'
-            this.textObj.state = '退租说明'
-            this.textObj.money = '退租金额'
+            this.headinfo.title = "申请退租";
+            this.textObj.cause = "退租原因";
+            this.textObj.state = "退租说明";
+            this.textObj.money = "退租金额";
           }
           if (data.Type) {
-            this.isrefundgoods = data.Type
+            this.isrefundgoods = data.Type;
           } else if (data.ExpressStatus === 2) {
-            this.isrefundgoods = 2
+            this.isrefundgoods = 2;
           }
-          this.pointsPay = (parseFloat(data.PointsBalancePay + data.PointCashPay)).toFixed(2)
-          this.allpointsPay = this.pointsPay
+          this.pointsPay = parseFloat(
+            data.PointsBalancePay + data.PointCashPay
+          ).toFixed(2);
+          this.allpointsPay = this.pointsPay;
           if (data.RefundImgList && data.RefundImgList.length > 0) {
-            data.RefundImgList.forEach(function (item) {
-              item.imgbaseid = item.Id
-              item.imgpath = item.Path + '@!standard_square_s'
-            })
+            data.RefundImgList.forEach(function(item) {
+              item.imgbaseid = item.Id;
+              item.imgpath = item.Path + "@!standard_square_s";
+            });
           }
-          this.uploadimgdata.imglist = data.RefundImgList ? data.RefundImgList : []
+          this.uploadimgdata.imglist = data.RefundImgList
+            ? data.RefundImgList
+            : [];
           if (data.RefundCauseType) {
-            let _that = this
-            this.causeindex = data.RefundCauseType
-            data.RefundCauseList.forEach(function (item) {
+            let _that = this;
+            this.causeindex = data.RefundCauseType;
+            data.RefundCauseList.forEach(function(item) {
               if (item.Type === data.RefundCauseType) {
-                _that.causetxt = item.Name
+                _that.causetxt = item.Name;
               }
-            })
+            });
           }
+          let priceStr =
+            this.pointsPay - this.refunddata.PointsBalancePay > 0? "现金: " +this.pointsPay -this.refunddata.PointsBalancePay +"元;": "";
+          priceStr +=
+            this.refunddata.PointsBalancePay > 0? this.refunddata.PointsBalancePay > this.pointsPay ? "贝壳: " + this.pointsPay + "个": "贝壳: " + this.refunddata.PointsBalancePay + "个" : "";
+          this.priceStr = priceStr;
           if (data.PayStatus !== 2) {
-            alert('订单状态已改变，请刷新后操作')
-            this.$router.back()
+            alert("订单状态已改变，请刷新后操作");
+            this.$router.back();
           }
         } else {
-          this.$router.push({path: '/My/BuyIn'})
+          this.$router.push({ path: "/My/BuyIn" });
         }
       })
       .catch(error => {
-        console.log(error)
-      })
+        console.log(error);
+      });
   },
   methods: {
-    receiveimgid (id) {
-      console.log(id)
+    receiveimgid(id) {
+
     },
-    selectcause () {
-      this.showcause = true
+    selectcause() {
+      this.showcause = true;
     },
     // 取消按钮
-    hidecause () {
-      this.showcause = false
-      this.causeindex = null
-      this.holdcausetxt = null
+    hidecause() {
+      this.showcause = false;
+      this.causeindex = null;
+      this.holdcausetxt = null;
     },
-    confirmcause () {
-      this.showcause = false
-      this.causetxt = this.holdcausetxt
-      this.refunddata.RefundCauseType = this.causeindex
-      this.holdcausetxt = null
-      this.causeindex = null
+    confirmcause() {
+      this.showcause = false;
+      this.causetxt = this.holdcausetxt;
+      this.refunddata.RefundCauseType = this.causeindex;
+      this.holdcausetxt = null;
+      this.causeindex = null;
     },
-    selectrefundtype (type) {
-      this.isrefundgoods = type
+    selectrefundtype(type) {
+      this.isrefundgoods = type;
     },
-    activecause (type, text) {
-      this.causeindex = type
-      this.holdcausetxt = text
+    activecause(type, text) {
+      this.causeindex = type;
+      this.holdcausetxt = text;
     },
     // 提交申请
-    applyRefundConfirm () {
+    applyRefundConfirm() {
       if (!this.confirming) {
-        this.confirming = true
+        this.confirming = true;
         if (!this.refunddata.RefundCauseType) {
-          alert('请选择' + this.textObj.cause)
-          this.confirming = false
-          return true
+          alert("请选择" + this.textObj.cause);
+          this.confirming = false;
+          return true;
         }
         if (this.allpointsPay < this.pointsPay) {
-          alert('退款金额不能大于付款金额')
-          this.confirming = false
-          return true
+          alert("退款金额不能大于付款金额");
+          this.confirming = false;
+          return true;
         }
         if (this.refunddata.ShowCardMsg) {
-          if (!this.refunddata.BankCardNo || this.refunddata.BankCardNo.length === 0) {
-            alert('请输入银行卡号')
-            this.confirming = false
-            return true
-          } else if (this.refunddata.BankCardNo.length < 10 || this.refunddata.BankCardNo.length > 20) {
-            alert('银行卡号位数不正确')
-            this.confirming = false
-            return true
+          if (
+            !this.refunddata.BankCardNo ||
+            this.refunddata.BankCardNo.length === 0
+          ) {
+            alert("请输入银行卡号");
+            this.confirming = false;
+            return true;
+          } else if (
+            this.refunddata.BankCardNo.length < 10 ||
+            this.refunddata.BankCardNo.length > 20
+          ) {
+            alert("银行卡号位数不正确");
+            this.confirming = false;
+            return true;
           }
           if (!this.refunddata.Name || this.refunddata.Name.length === 0) {
-            alert('请输入银行卡账户名')
-            this.confirming = false
-            return true
+            alert("请输入银行卡账户名");
+            this.confirming = false;
+            return true;
           } else if (this.refunddata.Name.length > 10) {
-            alert('银行卡账户名不正确')
-            this.confirming = false
-            return true
+            alert("银行卡账户名不正确");
+            this.confirming = false;
+            return true;
           }
           if (this.refunddata.bankName && this.refunddata.bankName > 100) {
-            alert('银行卡开户行不正确')
-            this.confirming = false
-            return true
+            alert("银行卡开户行不正确");
+            this.confirming = false;
+            return true;
           }
         }
         // 造提交的数据
-        let Img = ''
-        this.uploadimgdata.imglist.forEach(function (item) {
-          Img += item.imgbaseid + ','
-        })
-        let Type = this.isrefundgoods
+        let Img = "";
+        this.uploadimgdata.imglist.forEach(function(item) {
+          Img += item.imgbaseid + ",";
+        });
+        let Type = this.isrefundgoods;
         let model = {
           OrderGoodsId: this.$route.params.id,
           RefundCauseType: this.refunddata.RefundCauseType,
-          RefundCauseTxt: this.refunddata.RefundCauseTxt,
+          RefundCauseTxt: this.refunddata.RefundCauseTxt
+            ? this.refunddata.RefundCauseTxt
+            : "",
           Type: Type,
           Img: Img,
           Token: this.$store.state.UserToken,
           RefundMoney: this.pointsPay,
-          BankCardNo: this.refunddata.BankCardNo ? this.refunddata.BankCardNo : '',
-          Name: this.refunddata.Name ? this.refunddata.Name : '',
-          BankName: this.refunddata.BankName ? this.refunddata.BankName : ''
-        }
+          BankCardNo: this.refunddata.BankCardNo
+            ? this.refunddata.BankCardNo
+            : "",
+          Name: this.refunddata.Name ? this.refunddata.Name : "",
+          BankName: this.refunddata.BankName ? this.refunddata.BankName : ""
+        };
         this.$http({
           url: apiport.Order_ApplyRefund,
-          method: 'post',
+          method: "post",
           data: qs.stringify({ reqJson: JSON.stringify(model) })
         })
           .then(res => {
-            console.log('提交申请', res.data)
-            if (res.data.ResultNo === '00000000') {
-              console.log(res.data)
-              alert('提交成功')
-              this.$router.back()
+            if (res.data.ResultNo === "00000000") {
+              alert("提交成功");
+              this.$router.back();
             }
           })
           .catch(error => {
-            console.log(error)
-          })
+            console.log(error);
+          });
+      }
+    },
+    ChechNumberOneDecimal() {
+      CommonHelper.ChechNumberOneDecimal(this);
+    },
+    RefundPricekeyup() {
+      var iprice = parseFloat(this.pointsPay);
+      if (!iprice) return;
+      if (iprice > this.allpointsPay) {
+        alert("退款金额不能大于付款金额");
+        this.iPriceStr = "";
+      } else {
+        var iPriceStr = "";
+        if (
+          this.refunddata.PointsBalancePay > 0 &&
+          iprice - this.refunddata.PointsBalancePay <= 0
+        ) {
+          iPriceStr = "贝壳: " + parseFloat(iprice).toFixed(2) + "个";
+        } else {
+          if (this.refunddata.PointCashPay > 0) {
+            if (this.refunddata.PointsBalancePay > 0) {
+              iPriceStr =
+                "现金: " +(iprice - this.refunddata.PointsBalancePay).toFixed(2) +"元;贝壳: " +parseFloat(this.refunddata.PointsBalancePay).toFixed(2) +"个";
+            } else {
+              iPriceStr = "现金: " + iprice.toFixed(2) + "元";
+            }
+          }
+        }
+        this.priceStr = iPriceStr;
       }
     }
   }
-}
+};
 </script>
 
 <style lang="less" scoped>
 @import "../../assets/less/variable";
 .sld {
   position: relative;
-  margin: .2rem 0;
-  padding-left: .4rem;
+  margin: 0.2rem 0;
+  padding-left: 0.4rem;
   line-height: 1rem;
   background-color: #fff;
-  &.qtmt{
+  &.qtmt {
     margin-top: 1rem;
   }
   .muststar {
@@ -310,22 +361,22 @@ export default {
     font-size: 12px;
     .switchways {
       display: inline-block;
-      margin-right: .8rem;
+      margin-right: 0.8rem;
     }
     .oarcause {
       display: block;
       .iconfont {
         position: absolute;
         top: 0;
-        right: .2rem;
+        right: 0.2rem;
         color: #9fa0a0;
       }
     }
     .inp {
       width: 4.9rem;
-      height: .8rem;
-      line-height: .8rem;
-      padding: .1rem .2rem .1rem 0;
+      height: 0.8rem;
+      line-height: 0.8rem;
+      padding: 0.1rem 0.2rem 0.1rem 0;
       -webkit-appearance: none;
       border: 0;
       outline: 0;
@@ -340,9 +391,9 @@ export default {
 .textcolorr {
   color: @base-ycolor3;
 }
-.canrefundmoney{
-  text-indent:2.4rem;
-  font-size:12px;
+.canrefundmoney {
+  text-indent: 2.4rem;
+  font-size: 12px;
 }
 .abbot {
   position: absolute;
@@ -364,7 +415,7 @@ export default {
   z-index: 1111;
   .title {
     background-color: #fbfbfb;
-    padding: 0 .2rem;
+    padding: 0 0.2rem;
     border-bottom: 1px solid #ededed;
     line-height: 1rem;
     .frs {

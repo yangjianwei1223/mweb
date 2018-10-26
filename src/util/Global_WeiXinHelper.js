@@ -36,7 +36,7 @@ function GetOpenId()
 }
 var Pay = function (IsMixPay, hasPointPay, hasTimesCardPay, remark, type, relationId, sucFun, errFun) {
     var Token = BaseInfoHelper.GetToken();
-    if (ApicloudHelper.IsApp() || IsWXSmallProgram()) {
+   if (ApicloudHelper.IsApp() || IsWXSmallProgram()) {
         //app微信、微信小程序支付
         var openId = "", xcxname = "";
         var paymentMethod=4;
@@ -59,15 +59,16 @@ var Pay = function (IsMixPay, hasPointPay, hasTimesCardPay, remark, type, relati
             hasPointPay: hasPointPay,
             hasTimesCardPay: hasTimesCardPay
         };
-        var url = IsWXSmallProgram() ?
-        apiport.WeiXin_XCXGetOrderId : apiport.WeiXin_GetOrderId;
-        //WeiXin_XCXGetOrderId
+        var url = IsWXSmallProgram() ?apiport.WeiXin_XCXGetOrderId : apiport.WeiXin_GetOrderId;
+       
         http({
             url: url,
             method: "post",
             data: qs.stringify({ reqJson: JSON.stringify(model) })
           })
         .then(res => {
+            var data=res.data;
+            alert(JSON.stringify(data));
             if (data.ResultNo == "00000000") {
                 if (ApicloudHelper.IsApp()) {
                     //APP支付

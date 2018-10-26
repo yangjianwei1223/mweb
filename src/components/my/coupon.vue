@@ -1,52 +1,13 @@
 <template>
   <div>
     <v-header :headinfo="headinfo"></v-header>
-    <div class="header">
+    <div class="topmenu">
       <div :class="{active:status===1}" @click="changestatus(1)">待使用({{UnUsedCount}})</div>
       <div :class="{active:status===2}" @click="changestatus(2)">已使用({{UsedCount}})</div>
       <div :class="{active:status===3}" @click="changestatus(3)">已过期({{OutCount}})</div>
     </div>
     <ul class="couponlist" v-infinite-scroll="getcouponlist" infinite-scroll-disabled="busy" infinite-scroll-distance="10" infinite-scroll-listen-for-event="reload">
-      <li v-for="(item, index) in couponlist" :key="index" :class="{used:status===2,overdue:status===3}">
-        <div class="fline" v-if="item.Type === 1">
-          <div class="loan">
-            ¥&nbsp;<span>{{item.DeductMoney}}</span>
-            <p>满¥{{item.OrderMoney}}使用</p>
-          </div>
-          <div class="copy">
-            <p class="title twolinetext">{{item.Title}}</p>
-            <p v-if="item.IsLimitGoodsUsed || item.IsLimitCategoryUsed"><i class="iconfont">&#xe60d;</i> 指定商品适用</p>
-            <p v-else-if="item.ZuLinGoodsUsed && !item.GeneralGoodsUsed"><i class="iconfont">&#xe60d;</i> 租赁商品适用</p>
-            <p v-else-if="!item.ZuLinGoodsUsed && item.GeneralGoodsUsed"><i class="iconfont">&#xe60d;</i> 普通商品适用</p>
-            <p v-else><i class="iconfont">&#xe60d;</i> 全场通用券</p>
-            <div v-if="status===2" class=touse></div>
-            <div v-else-if="status===3" class="touse"></div>
-            <router-link v-else-if="item.IsLimitGoodsUsed || item.IsLimitCategoryUsed" class="touse" :to='"/My/CouponValidProList/" + item.DiscountCouponId'>立即使用</router-link>
-            <router-link v-else-if="item.ZuLinGoodsUsed && !item.GeneralGoodsUsed" class="touse" to='/Zulin'>立即使用</router-link>
-            <!-- <router-link v-else-if="!item.ZuLinGoodsUsed && item.GeneralGoodsUsed" class="touse" to='/'>立即使用</router-link> -->
-            <router-link v-else class="touse" to='/'>立即使用</router-link>
-          </div>
-        </div>
-        <div class="fline" v-else>
-          <div class="loan">
-            <span>免邮券</span>
-          </div>
-          <div class="copy">
-            <p>限抵用于安全座椅邮费</p>
-            <p>全平台可用</p>
-            <p v-if="item.IsLimitGoodsUsed">(部分商品可用)</p>
-             <div v-if="status===2" class=touse></div>
-            <div v-else-if="status===3" class="touse"></div>
-            <router-link v-else-if="item.IsLimitGoodsUsed || item.IsLimitCategoryUsed" class="touse" :to='"/My/CouponValidProList/" + item.DiscountCouponId'>立即使用</router-link>
-            <router-link v-else-if="item.ZuLinGoodsUsed && !item.GeneralGoodsUsed" class="touse" to='/Zulin'>立即使用</router-link>
-            <!-- <router-link v-else-if="!item.ZuLinGoodsUsed && item.GeneralGoodsUsed" class="touse" to='/'>立即使用</router-link> -->
-            <router-link v-else class="touse" to='/'>立即使用</router-link>
-          </div>
-        </div>
-        <div v-if="status===1" class="time">{{item.BeginTime}}至{{item.EndTime}}</div>
-        <div v-else-if="status===2" class="time">{{item.UsedTime}}已使用</div>
-        <div v-else class="time">{{item.EndTime}}已过期</div>
-      </li>
+       <v-coupon v-for="(item, index) in couponlist" :key="index" :couponinfo='item'></v-coupon>
     </ul>
     <div tip="正在加载" v-if="showLoading" class="tips">{{tips}}</div>
     <go-top></go-top>
@@ -58,6 +19,7 @@ import Vue from 'vue'
 import qs from 'qs'
 import apiport from '../../util/api'
 import infiniteScroll from 'vue-infinite-scroll'
+import coupon from '@/components/common/coupon'
 import head from '@/components/common/header'
 import goTop from '@/components/common/scrolltop'
 Vue.use(infiniteScroll)
@@ -65,7 +27,8 @@ export default {
   name: 'coupon',
   components: {
     vHeader: head,
-    goTop: goTop
+    goTop: goTop,
+    'vCoupon': coupon
   },
   data () {
     return {
@@ -123,6 +86,10 @@ export default {
         .then(res => {
           console.log('优惠券', res.data)
           if (res.data.Data.length > 0) {
+            let _that = this
+            res.data.Data.forEach(function (ele) {
+              ele.status = _that.status
+            })
             this.couponlist = this.couponlist.concat(res.data.Data)
             this.busy = false
             this.$emit('reload')
@@ -153,7 +120,7 @@ export default {
 
 <style lang="less" scoped>
 @import "../../assets/less/variable";
-.header{
+.topmenu{
   position:fixed;
   top:1rem;
   left: 0;

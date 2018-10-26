@@ -24,12 +24,11 @@
       <div class="content">
         <div class="line">
           <p class="validcodep">
-            <input type="hidden" id="OrderPayTel" value="15271947990">
-            <input type="tel" id="OrderPayValidCode" data-role="none" name="" value="" placeholder="请输入验证码">
-            <button id="OrderPaySendVerifyCode" data-id="0" data-role="none" class="getvalidcodebtn SendValidCode" @click="sendValidCode(0)">获取验证码</button>
+            <input type="valid" v-model="valid" data-role="none" name="" value="" placeholder="请输入验证码">
+            <button id="OrderPaySendVerifyCode" data-id="0" v-bind:class="{'getvalidcodebtn':true,regetvalidcodebtn:!isValid}" :disabled="!isValid" @click="sendValidCode(0)">获取验证码</button>
           </p>
         </div>
-        <p class="get-voice-validate get">收不到短信？使用<span data-id="1" class="SendTTSValidCode SendValidCode" @click="sendValidCode(1)">语音验证码</span></p>
+        <p class="get-voice-validate get">收不到短信？使用<span data-id="1" class="SendTTSValidCode" @click="sendValidCode(1)">语音验证码</span></p>
       </div>
     </section>
     <section class="sectc">
@@ -79,6 +78,7 @@ import head from "@/components/common/header";
 import weiXinHelper from "../../util/Global_WeiXinHelper"; 
 import alipayHelper from "../../util/Global_AlipayHelper"; 
 import zmxyHelper from "../../util/Global_ZMXYHelper"; 
+import baseInfoHelper from "../../util/Global_BaseInfoHelper"; 
 import validCodeHelper from "../../util/Global_ValidCodeHelper"; 
 
 export default {
@@ -112,14 +112,30 @@ export default {
       isCheckTimesCardSelect:true,
       isCheckOrderPayPoint:true,
       IsLocalOrder:false,//是否为本地母婴
+      valid: "",
+      tel:"",
+      isValid:true
 
     };
   },
   mounted: function() {
+     let _that = this 
+     baseInfoHelper.GetLoginInfo().then(function (res) {
+        var loginResult = res;
+        if (loginResult == null) {
+            var returnUrl = apiport.CurrentDomain + "/Pay/GoodsPay?id=" +this.$route.query.id +"&paydetailId="+this.$route.query.paydetailId;
+            var url = "/Index/Account?ReturnUrl=" + returnUrl;
+             this.$router.push(url);
+        }
+        else {
+         _that.tel=loginResult.Mobile;
+        }
+     })
+      
+        
     this.paydetailId= this.$route.query.paydetailId==undefined?'':this.$route.query.paydetailId;
     this.orderId=this.$route.query.id;
-    let _that = this 
-    
+  
     // eslint-disable-next-line
     this.isWx =weiXinHelper.IsWXBrowser();
     this.isZfb =zmxyHelper.IsAlipayBrowser();
@@ -161,7 +177,10 @@ export default {
         //参数校验
          if (!!data.IsLocalOrder) {
             _that.returnUrl = "/Local/OrderDetail/" + data.OrderBaseId;
-         } else {
+         }else if (!!data.IsRecharge) {
+             _that.returnUrl = "/Activitys/FreeSeatApply"
+          }
+          else {
             _that.returnUrl = "/Order/" + (data.OrderType == 1 ? "BuyDetail" : "ZulinDetail") + "/" + data.OrderBaseId;
          }
 
@@ -184,8 +203,8 @@ export default {
             _that.pointsUsable=data.PointsUsable;
             _that.PointsQuantity= (Number(data.PointsQuantity)).toFixed(2);
           
-            if (data.OrderType == 2 || data.SharedWithPoint == false) {
-                  data.PointsUsable = 0;//租赁订单不能使用贝壳支付 或者 使用优惠券且不可以与贝壳同时使用，将余额设置成0 
+            if (data.SharedWithPoint == false) {
+                 data.PointsUsable = 0;// 使用优惠券且不可以与贝壳同时使用，将余额设置成0 
             }
             var OrderPayTotalPoint = "(";
             if (!!data.HasTimesCard) {
@@ -219,6 +238,7 @@ export default {
                 $("#OrderPaySendVerifyCode").parents(".sectc").css("opacity", ".7");
                 $(".accountline").remove();
                 $(".get-voice-validate").hide();*/
+                this.isValid=false;
             }
 
              //判断是否需要第三方支付
@@ -334,29 +354,38 @@ export default {
   },
   methods: {
     AutoCheckPayState(){
+      let para={
+        ParentOrderId:this.$route.query.id,
+        Token: this.$store.state.UserToken
+      };
         this.$http({ url: apiport.Order_GetPayState,
                      method: "post",
-                    data:{reqJson: '{"ParentOrderId":"' +this.$route.query.id + '","Token":"' +  this.$store.state.UserToken + '"}'}
-                      }).then( slt=>{
+                    data: qs.stringify({ reqJson: JSON.stringify(para) })
+                      }).then( res=>{
+                           var slt=res.data;
                           if (slt != null && slt.ResultNo == "00000000") {
                                           if (slt.PayState > 0) {
+                                              alert('支付成功');
                                               if (this.setIntervalObj != null) {
                                                   clearInterval(this.setIntervalObj);
                                               }
                                              this.CashPaySucess();
+                                             this.paying=false;
                                           }
                                       }
 
                       });
     },
     CashPaySucess(paydetailId){
-       alert(this.orderId);
-        alert('支付成功,paydetailId'+paydetailId)
-        
-        return;
+       //  alert(this.orderId);
+        alert('支付成功')
+     //   return;
       // Global_StorageHelper.DelSessionByKey("validCodeCache31");
         if (this.paydata.IsPinTuan) {
             this.$router.push(apiport.CurrentDomain + "/PinTuan/OrderDetail?code=" + this.paydata.PinTuanCode);
+        }
+         else if (this.paydata.IsRecharge) {
+            this.$router.push(apiport.CurrentDomain + '/Activitys/FreeSeatApply');
         }
         else if (this.paydata.IsLocalOrder) {
             this.$router.push(apiport.CurrentDomain + "/Local/PaySuccess/" + this.orderId.replace("local", ""));
@@ -376,7 +405,7 @@ export default {
                         return;
                     }
                 }
-              var valid = document.getElementById("OrderPayValidCode").value;
+              var valid =this.valid;
                 var thirdPayPoint = 0;
                 if ( this.isCheckTimesCardSelect || this.isCheckOrderPayPoint) {
                     if (valid == "") {
@@ -421,119 +450,6 @@ export default {
             } catch (err) {
                 //SetErrSession(err);
             }
-
-    /*  let _that = this;
-      // 支付前检测
-      let chkmodel = {
-        ValidCode: "undefined",
-        ParentOrderId: this.$route.query.id,
-        PayPoints: 0,
-        IsMixPay: 0,
-        hasPointPay: false,
-        hasTimesCardPay: false,
-        Token: this.$store.state.UserToken
-      };
-      this.$http({
-        url: apiport.Order_CheckPayment,
-        method: "post",
-        data: qs.stringify({ reqJson: JSON.stringify(chkmodel) })
-      })
-        .then(res => {
-          if (res.data.ResultNo === "00000000") {
-            if (
-              document
-                .getElementsByClassName("selected")[0]
-                .getAttribute("id") === "zfbOrderPaySelect"
-            ) {
-              // 支付宝支付
-              let model = {
-                IsMixPay: 0,
-                PaymentMethod: 1,
-                Remark: "商品购买",
-                Token: this.$store.state.UserToken,
-                showUrl:
-                  document.location.origin +
-                  "/Pay/GoodsPay?id=" +
-                  this.$route.query.id,
-                type: 1,
-                relationId: this.$route.query.id,
-                hasPointPay: false,
-                hasTimesCardPay: false
-              };
-              this.$http({
-                url: apiport.Alipay_Pay,
-                method: "post",
-                data: qs.stringify({ reqJson: JSON.stringify(model) })
-              })
-                .then(res => {
-                  let result = this.Alipayform(JSON.parse(res.data.AlipayHtml));
-                  document
-                    .getElementsByTagName("body")[0]
-                    .insertAdjacentHTML("afterBegin", result);
-                  document.getElementById("alipaysubmit").submit();
-                })
-                .catch(error => {
-                  console.log(error);
-                });
-            } else if (
-              document
-                .getElementsByClassName("selected")[0]
-                .getAttribute("id") === "wxOrderPaySelect"
-            ) {
-              // 微信支付
-              let model = {
-                IsMixPay: 0,
-                PaymentMethod: 2,
-                Remark: "商品购买",
-                Token: this.$store.state.UserToken,
-                type: 1,
-                relationId: this.$route.query.id,
-                openId: JSON.parse(window.sessionStorage.getItem("MainOpenId")),
-                // eslint-disable-next-line
-                IsWeChatBrowser:
-                  navigator.userAgent.toLowerCase().match(/MicroMessenger/i) ==
-                  "micromessenger",
-                hasPointPay: false,
-                hasTimesCardPay: false
-              };
-              this.$http({
-                url: apiport.WeiXin_GetJsApiParam,
-                method: "post",
-                data: qs.stringify({ reqJson: JSON.stringify(model) })
-              })
-                .then(res => {
-                  console.log("获取微信的参数appid等", res);
-                  if (model.IsWeChatBrowser) {
-                    _that.callpay(
-                      JSON.parse(res.data.jsApiParamJson),
-                      res.data.payDetailId,
-                      _that.sucFun,
-                      _that.errFun
-                    );
-                  } else {
-                    window.location.href =
-                      res.data.jsApiParamJson +
-                      "&redirect_url=" +
-                      encodeURIComponent(
-                        "https%3a%2f%2ft-mweb.95laibei.com%2f/Pay/GoodsPay?id=" +
-                          model.relationId +
-                          "&paydetailId=" +
-                          res.data.payDetailId +
-                          "&paymentmethod=6"
-                      );
-                  }
-                })
-                .catch(error => {
-                  console.log(2);
-                  console.log(error);
-                });
-            }
-          }
-        })
-        .catch(error => {
-          console.log(error);
-        });
-        */
     },
     CashPay(PayPoints){
         //第三方支付验证
@@ -552,7 +468,7 @@ export default {
         }
         var OrderId=this.$route.query.id;
         let chkmodel = {
-            ValidCode: document.getElementById("OrderPayValidCode").value,
+            ValidCode: this.valid,
             ParentOrderId: this.$route.query.id,
             PayPoints: PayPoints,
             IsMixPay:IsMixPay,
@@ -647,21 +563,6 @@ export default {
                 });
         
     },
-  /*
-    jsApiCall(wxJsApiParam, payDetailId, sucFun, errFun) {
-      // eslint-disable-next-line
-      WeixinJSBridge.invoke(
-        "getBrandWCPayRequest",
-        wxJsApiParam, // json串
-        function(res) {
-          if (res.err_msg === "get_brand_wcpay_request:ok") {
-            sucFun(payDetailId);
-          } else {
-            errFun();
-          }
-        }
-      );
-    },*/
     sucFun(payDetailId) {
       this.$router.push("/Order/PaySucess/" + this.$route.query.id);
     },
@@ -669,7 +570,7 @@ export default {
       alert("支付失败");
     },
     sendValidCode(dataid){
-       validCodeHelper.GetValidCode(31, "OrderPayTel", "OrderPaySendVerifyCode", dataid);
+       validCodeHelper.GetValidCode(31,this.tel, "OrderPaySendVerifyCode", dataid);
     },
     payselect(i) {
       //支付bao 微信 芝麻信用 
@@ -880,57 +781,6 @@ export default {
         this.payTotalHtml=OrderPayTotalPoint;
          this.thirdPayPoint=thirdPayPrice;
       }
-    },
-    Alipayform(slt) {
-      let result =
-        '<form id="alipaysubmit" name="alipaysubmit" action="' +
-        slt.action +
-        '" method="get">';
-      result +=
-        ' <input type="hidden" name="_input_charset" value="' +
-        slt._input_charset +
-        '"/>';
-      result += ' <input type="hidden" name="body" value="' + slt.body + '"/>';
-      result +=
-        ' <input type="hidden" name="notify_url" value="' +
-        slt.notify_url +
-        '"/>';
-      result +=
-        ' <input type="hidden" name="out_trade_no" value="' +
-        slt.out_trade_no +
-        '"/>';
-      result +=
-        ' <input type="hidden" name="partner" value="' + slt.partner + '"/>';
-      result +=
-        ' <input type="hidden" name="payment_type" value="' +
-        slt.payment_type +
-        '"/>';
-      result +=
-        ' <input type="hidden" name="return_url" value="' +
-        slt.return_url +
-        '"/>';
-      result +=
-        ' <input type="hidden" name="seller_id" value="' +
-        slt.seller_id +
-        '"/>';
-      result +=
-        ' <input type="hidden" name="service" value="' + slt.service + '"/>';
-      result +=
-        ' <input type="hidden" name="show_url" value="' + slt.show_url + '"/>';
-      result +=
-        ' <input type="hidden" name="subject" value="' + slt.subject + '"/>';
-      result +=
-        ' <input type="hidden" name="total_fee" value="' +
-        slt.total_fee +
-        '"/>';
-      result += ' <input type="hidden" name="sign" value="' + slt.sign + '"/>';
-      result +=
-        ' <input type="hidden" name="sign_type" value="' +
-        slt.sign_type +
-        '"/>';
-      result +=
-        ' <input type="submit" value="确认" style="display:none" /></form>';
-      return result;
     }
   }
 };
@@ -1026,6 +876,7 @@ export default {
       color: @base-ycolor3;
     }
   }
+  
   .pf {
     padding-left: 0.2rem;
     .rpay {

@@ -119,108 +119,119 @@ let orderDetail = {
   },
   // 公用去付款
   gopay: function (orderid, token) {
-    let model = {
-      Token: token,
-      SubOrderList: orderid,
-      DiscountCouponList: ''
-    }
-    http({
-      url: apiport.Order_AddOrderParent,
-      method: 'post',
-      data: qs.stringify({ reqJson: JSON.stringify(model) })
-    })
-      .then(res => {
-        if (res.data.ResultNo === '00000000') {
-          this.PageToGoodsPay(res.data.Data)
-        }
-      })
-      .catch(error => {
-        console.log(error)
-      })
-  },
-  // 取消订单
-  cancleOrdel (orderid, token, sucFun) {
-    let r = confirm('是否确定关闭交易')
-    if (r) {
+    return new Promise((resolve, reject) => {
       let model = {
         Token: token,
-        OrderBaseId: orderid
+        SubOrderList: orderid,
+        DiscountCouponList: ''
       }
       http({
-        url: apiport.Order_CancelBase,
+        url: apiport.Order_AddOrderParent,
         method: 'post',
         data: qs.stringify({ reqJson: JSON.stringify(model) })
       })
         .then(res => {
           if (res.data.ResultNo === '00000000') {
-            alert('操作成功')
-            if (typeof (sucFun) === 'function') {
-              sucFun()
-            }
+            this.PageToGoodsPay(res.data.Data)
+            resolve(res.data)
           }
         })
         .catch(error => {
           console.log(error)
+          reject(error)
         })
-    }
+    })
   },
-  // 确认收货
-  confirmExpress (id, type, money, goodsList, token, sucFun) {
-    let IsCanConfirmExpress = true
-    for (let i = 0; i < goodsList.length; i++) {
-      if (goodsList[i].Status === 2 || goodsList[i].Status === 3 || goodsList[i].Status === 4) {
-        IsCanConfirmExpress = false
-        break
-      }
-    }
-    if (!IsCanConfirmExpress) {
-      alert('当前订单中有退租中商品<br/>退租结束才能确认收货')
-    } else {
-      let r = confirm(type === 5 ? '确认收货' : '确认收货后' + money + '元将打给卖家')
+  // 取消订单
+  cancleOrdel (orderid, token) {
+    return new Promise((resolve, reject) => {
+      let r = confirm('是否确定关闭交易')
       if (r) {
         let model = {
           Token: token,
-          OrderBaseId: id
+          OrderBaseId: orderid
         }
         http({
-          url: apiport.Order_ConfirmExpress,
+          url: apiport.Order_CancelBase,
           method: 'post',
           data: qs.stringify({ reqJson: JSON.stringify(model) })
         })
           .then(res => {
             if (res.data.ResultNo === '00000000') {
               alert('操作成功')
-              if (typeof (sucFun) === 'function') {
-                sucFun()
-              }
+              resolve(res.data)
+            } else {
+              reject(res.data)
             }
           })
           .catch(error => {
             console.log(error)
           })
       }
-    }
+    })
+  },
+  // 确认收货
+  confirmExpress (id, type, money, goodsList, token) {
+    return new Promise((resolve, reject) => {
+      let IsCanConfirmExpress = true
+      for (let i = 0; i < goodsList.length; i++) {
+        if (goodsList[i].Status === 2 || goodsList[i].Status === 3 || goodsList[i].Status === 4) {
+          IsCanConfirmExpress = false
+          break
+        }
+      }
+      if (!IsCanConfirmExpress) {
+        alert('当前订单中有退租中商品<br/>退租结束才能确认收货')
+      } else {
+        let r = confirm(type === 5 ? '确认收货' : '确认收货后' + money + '元将打给卖家')
+        if (r) {
+          let model = {
+            Token: token,
+            OrderBaseId: id
+          }
+          http({
+            url: apiport.Order_ConfirmExpress,
+            method: 'post',
+            data: qs.stringify({ reqJson: JSON.stringify(model) })
+          })
+            .then(res => {
+              if (res.data.ResultNo === '00000000') {
+                alert('操作成功')
+                resolve(res.data)
+              } else {
+                reject(res)
+              }
+            })
+            .catch(error => {
+              console.log(error)
+            })
+        }
+      }
+    })
   },
   // 撤销退款申请
-  CancelRefund (id, token, sucFun) {
-    let model = {
-      Token: token,
-      OrderGoodsId: id
-    }
-    this.$http({
-      url: apiport.Order_CancelRefund,
-      method: 'post',
-      data: qs.stringify({ reqJson: JSON.stringify(model) })
+  CancelRefund (id, token, type) {
+    return new Promise((resolve, reject) => {
+      let url = apiport.Order_CancelRefund
+      type === 3 && (url = apiport.Order_CancelLeaseRefund)
+      let model = {
+        Token: token,
+        OrderGoodsId: id
+      }
+      http({
+        url: url,
+        method: 'post',
+        data: qs.stringify({ reqJson: JSON.stringify(model) })
+      })
+        .then(res => {
+          console.log('撤销申请', res.data)
+          resolve(res.data)
+        })
+        .catch(error => {
+          console.log(error)
+          reject(error)
+        })
     })
-      .then(res => {
-        console.log('撤销申请', res.data)
-        if (typeof (sucFun) === 'function') {
-          sucFun()
-        }
-      })
-      .catch(error => {
-        console.log(error)
-      })
   }
 }
 export default orderDetail

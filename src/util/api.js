@@ -3,7 +3,7 @@
 // let APIDomain = 'https://base-api.95laibei.com'
 let APIDomain = 'https://t-base-api.95laibei.com'
 let CurrentDomain=location.protocol + '//' + location.host
-// let APIDomain = '/api'
+//let APIDomain = '/api'
 
 export default {
   APIDomain: APIDomain,
@@ -149,6 +149,8 @@ export default {
   // 支付宝接口
   Alipay_Pay: APIDomain + '/MWeb/Alipay/Pay',
   Alipay_AppPay: APIDomain + '/MWeb/Alipay/AppPay',
+  Alipay_Return: APIDomain + '/MwebNotify/Pay/AlipayReturn',
+
   // SSO接口
   SSO_GetSSOInfo: APIDomain + '/MWeb/SSO/GetSSOInfo',
   // 数据统计接口

@@ -166,7 +166,7 @@ export default {
       let _that = this
       orderDetail.CheckPromotionCode(this.PromotionCode).then(function (res) {
         if (res === 1) {
-          if (_that.IdCardImgIdArr.length < 2) {
+          if (_that.orderdata.IsOverSeas && _that.IdCardImgIdArr.length < 2) {
             alert('请上传身份证正反面各一张')
             return true
           }

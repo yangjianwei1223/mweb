@@ -34,9 +34,17 @@ function addClass(element, className) {
 function removeClass(element, className) {
     element.className = element.className.replace(new RegExp("(^|\\s)" + className + "(?=(\\s|$))", "g"), '');
 }
+function ChechNumberOneDecimal(_this){
+    var reg1 = /^\d{0,5}(\.\d{0,2})?$/g;
+    if (!reg1.test(_this.pointsPay)) {
+        var len = _this.pointsPay.length - 1;
+        _this.pointsPay = parseFloat(_this.pointsPay.substring(0, len)) ;
+    }
+}
 export default {
     GetQueryString: GetQueryString,
     LoginSuccess: LoginSuccess,
     addClass: addClass,
     removeClass: removeClass,
+    ChechNumberOneDecimal:ChechNumberOneDecimal,
 }

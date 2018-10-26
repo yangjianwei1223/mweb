@@ -14,38 +14,78 @@
     <section class="order-cont">
       <ul v-infinite-scroll="infinite" infinite-scroll-disabled="busy" infinite-scroll-distance="10">
         <li v-for="(item, index) in orderlist" :key="index">
-          <div class="topxl">
-            <div class="padf">
-              {{item.CreateTime}}
-              <span class="state" v-if="item.OrderStatus===9">交易关闭</span>
-              <span class="state" v-else-if="item.OrderStatus===2">交易成功</span>
-              <span class="state" v-else-if="item.OrderStatus===1 && item.PayStatus===1">等待买家付款</span>
-              <span class="state" v-else-if="item.OrderStatus===1 && item.ExpressStatus===1">等待卖家发货</span>
-              <span class="state" v-else-if="item.OrderStatus===1 && item.ExpressStatus===2">等待买家收货</span>
-              <span class="state" v-else-if="item.OrderStatus===1 && item.ExpressStatus===3">交易成功</span>
+          <template v-if="OrderState!==4">
+            <div class="topxl">
+              <div class="padf">
+                {{item.CreateTime}}
+                <span class="state" v-if="item.OrderStatus===9">交易关闭</span>
+                <span class="state" v-else-if="item.OrderStatus===1 && item.PayStatus===1">等待买家付款</span>
+                <span class="state" v-else-if="item.OrderStatus===1 && item.ExpressStatus===1">等待卖家发货</span>
+                <span class="state" v-else-if="item.OrderStatus===1 && item.ExpressStatus===2">等待买家收货</span>
+                <span class="state" v-else-if="item.OrderStatus===1 && item.ExpressStatus===3 || item.OrderStatus===2">交易成功</span>
+              </div>
             </div>
-          </div>
-          <div class="item">
-            <router-link :to='"/Order/ZulinDetail/"+ item.OrderBaseId'>
-              <div class="left">
-                <img :src='item.OrderGoodsList[0].GoodsImgPath + "@!standard_square_s"'>
+            <div class="item">
+              <router-link :to='"/Order/BuyDetail/"+ item.OrderBaseId' v-for="(item1, index1) in item.OrderGoodsList" :key="index1+'_li'">
+                <div class="left">
+                  <img :src='item1.GoodsImgPath + "@!standard_square_s"'>
+                </div>
+                <div class="center">
+                  <p>{{item1.GoodsTitle}}</p>
+                  <p class="style">{{item1.GoodsPropertyName}}</p>
+                </div>
+                <div class="right">
+                  <p>¥ {{item1.GoodsPrice}}</p>
+                  <p class="thirdtext">×{{item1.GoodsQuantity}}</p>
+                </div>
+              </router-link>
+            </div>
+            <div class="total">合计：¥<span>{{item.OrderMoney}}</span>(含运费¥{{item.FreightMoney}})</div>
+            <div class="o-tabbtn">
+              <ul class="MyBuyInOrderOper">
+                <li v-if="item.OrderStatus === 1 && item.PayStatus === 1" @click="gopay(item.OrderBaseId)">我要付款</li>
+                <li v-if="item.OrderStatus === 1 && item.PayStatus === 1" @click="cancleOrdel(item.OrderBaseId)">取消订单</li>
+                <li v-if="item.OrderStatus === 1 && item.PayStatus !==1 && item.ExpressStatus === 1" @click="remindDelivery(item.OrderBaseId)">提醒发货</li>
+                <li v-if="(item.OrderStatus === 1 || item.OrderStatus === 2) && (item.ExpressStatus === 2 || item.ExpressStatus === 3)"><router-link :to='"/Order/Express/" + item.OrderBaseId'>查看物流</router-link></li>
+                <li v-if="item.OrderStatus === 1 && item.ExpressStatus === 2" @click="confirmExpress(item.OrderBaseId, item.PayType, item.OrderMoney, item.OrderGoodsList)">确认收货</li>
+                <li v-if="item.OrderStatus === 1 && item.PayStatus !== 1 && item.ExpressStatus === 3 || item.OrderStatus === 2 || item.OrderStatus === 9" @click="delOrderFun(item.OrderBaseId)">删除订单</li>
+                <li v-if="item.ExpressStatus === 3 && item.CommentStatus === 0" class="comment"><router-link :to="'/Order/Comment/'+ item.OrderBaseId">立即评价</router-link></li>
+              </ul>
+            </div>
+          </template>
+          <template v-else>
+              <div class="topxl">
+              <div class="padf">
+                申请退款时间：{{item.ApplyTime}}
+                <span class="state" v-if="item.Status===2">退货中</span>
+                <span class="state" v-else-if="item.Status===3">等待买家退货</span>
+                <span class="state" v-else-if="item.Status===4 && item.RejectedType===1">退款被拒绝</span>
+                <span class="state" v-else-if="item.Status===4 && item.RejectedType===2">退货被拒绝</span>
+                <span class="state" v-else-if="item.Status===4 && item.RejectedType!==1 && item.RejectedType!==2">退款中</span>
+                <span class="state" v-if="item.Status===5">退款成功</span>
+                <span class="state" v-if="item.Status===6">退款关闭</span>
               </div>
-              <div class="center">
-                <p>{{item.OrderGoodsList[0].GoodsTitle}}</p>
-                <p class="style">{{item.OrderGoodsList[0].GoodsPropertyName}}</p>
-              </div>
-              <div class="right">
-                <p>¥ {{item.OrderGoodsList[0].GoodsPrice}}</p>
-                <p class="thirdtext">×{{item.OrderGoodsList[0].GoodsQuantity}}</p>
-              </div>
-            </router-link>
-          </div>
-          <div class="total">合计：¥<span>{{item.OrderMoney}}</span>(含运费¥{{item.FreightMoney}})</div>
-          <div class="o-tabbtn">
-            <ul class="MyBuyInOrderOper">
-              <li data-id="18510">删除订单</li>
-            </ul>
-          </div>
+            </div>
+            <div class="item">
+              <router-link :to='"/Order/RefundHistory/"+ item.OrderGoodsId'>
+                <div class="left">
+                  <img :src='item.GoodsImgPath + "@!standard_square_s"'>
+                </div>
+                <div class="center">
+                  <p>{{item.GoodsTitle}}</p>
+                  <p class="style">{{item.GoodsPropertyName}}</p>
+                </div>
+              </router-link>
+            </div>
+            <div class="total">退款金额：¥<span>{{item.RefundMoney}}</span></div>
+            <div class="o-tabbtn"  v-if="item.Status === 3 || item.Status ===4">
+              <ul class="MyBuyInOrderOper">
+                <li v-if="item.Status ===3"><router-link :to='"/Order/ReturnGoods/" + item.OrderGoodsId'>退货</router-link></li>
+                <li v-if="item.Status ===4"><router-link :to='"/Order/ApplyRefund/" + item.OrderGoodsId'>修改申请</router-link></li>
+                <li v-if="item.Status ===4" @click="CancelRefund(item.OrderGoodsId)">撤销申请</li>
+              </ul>
+            </div>
+          </template>
         </li>
       </ul>
     </section>
@@ -61,10 +101,11 @@ import apiport from '../../util/api'
 import infiniteScroll from 'vue-infinite-scroll'
 import head from '@/components/common/header'
 import goTop from '@/components/common/scrolltop'
+import orderDetail from '@/util/Order_Detail'
 
 Vue.use(infiniteScroll)
 export default {
-  name: 'zulinbuyin',
+  name: 'buyin',
   components: {
     vHeader: head,
     goTop: goTop
@@ -82,11 +123,16 @@ export default {
     }
   },
   mounted: function () {
+    this.OrderState = this.$route.query.status
   },
   methods: {
     infinite () {
       this.cunrrentPageIndex += 1
       this.busy = true
+      let getlisturl = apiport.Order_GetMyList
+      if (this.OrderState === 4) {
+        getlisturl = apiport.Order_GetMyRefundList
+      }
       let model = {
         Token: this.$store.state.UserToken,
         OrderType: 1,
@@ -95,12 +141,12 @@ export default {
         pageSize: this.pageSize
       }
       this.$http({
-        url: apiport.Order_GetMyList,
+        url: getlisturl,
         method: 'post',
         data: qs.stringify({ reqJson: JSON.stringify(model) })
       })
         .then(res => {
-          console.log('我的租赁', res.data)
+          console.log('我的订单', res.data)
           if (res.data.Data.length > 0) {
             this.orderlist = this.orderlist.concat(res.data.Data)
             this.busy = false
@@ -124,6 +170,56 @@ export default {
       this.tips = '正在加载'
       this.busy = false
       this.infinite()
+    },
+    CancelRefund (id) {
+      let _that = this
+      orderDetail.CancelRefund(id, this.$store.state.UserToken).then(function () {
+        _that.CancelRefundcallback()
+      })
+    },
+    CancelRefundcallback () {
+      this.currentPageIndex = 0
+      this.orderlist = []
+      this.tips = '正在加载'
+      this.busy = false
+      this.infinite()
+    },
+    delOrderFun (id) {
+      orderDetail.DeleteOrder(id, this.delcallback)
+    },
+    delcallback (id) {
+      let num
+      this.orderlist.forEach(function (item, index) {
+        if (item.OrderBaseId === id) {
+          num = index
+        }
+      })
+      this.orderlist.splice(num, 1)
+    },
+    remindDelivery (id) {
+      orderDetail.RemindDelivery(id)
+    },
+    // 确认收货
+    confirmExpress (id, type, money, goodsList) {
+      let _that = this
+      orderDetail.confirmExpress(id, type, money, goodsList, this.$store.state.UserToken).then(function () {
+        _that.cancleOrdelcallback()
+      })
+    },
+    // 我要付款
+    gopay (orderid) {
+      orderDetail.gopay(orderid, this.$store.state.UserToken)
+    },
+    // 取消订单
+    cancleOrdel (orderid) {
+      let _that = this
+      orderDetail.cancleOrdel(orderid, this.$store.state.UserToken).then(function () {
+        _that.cancleOrdelcallback()
+      })
+    },
+    // 取消订单和确认收货回调
+    cancleOrdelcallback () {
+      this.changestate(0, 1)
     }
   }
 }
@@ -176,7 +272,7 @@ export default {
     .item{
       a{
         display:flex;
-        padding: 0 .2rem;
+        padding: .2rem 0;
         .left{
           width: 1.6rem;
           margin-left: .2rem;
@@ -200,6 +296,7 @@ export default {
           .style{
             line-height: .3rem;
             min-height: .6rem;
+            color: #9fa0a0;
           }
         }
         .right{

@@ -41,6 +41,8 @@
                   <p v-if="item1.Status===2" class="refund">退货中</p>
                   <p v-else-if="item1.Status===3" class="refund">等待买家退货</p>
                   <p v-else-if="item1.Status===4" class="refund">{{item.PayType === 5 ? "归还中" : "退租中"}}</p>
+                  <p v-else-if="item1.Status===5 || item1.Status===8" class="refund">{{item.PayType === 5 ? "归还成功" : "退租成功"}}</p>
+                  <p v-else-if="item1.Status===6" class="refund">{{item.PayType === 5 ? "归还关闭" : "退租关闭"}}</p>
                 </div>
               </router-link>
             </div>
@@ -53,7 +55,7 @@
                 <li v-if="item.OrderStatus === 1 && item.PayStatus !==1 && item.ExpressStatus === 1" @click="remindDelivery(item.OrderBaseId)">提醒发货</li>
                 <li v-if="(item.OrderStatus === 1 || item.OrderStatus === 2) && (item.ExpressStatus === 2 || item.ExpressStatus === 3)"><router-link :to='"/Order/Express/" + item.OrderBaseId'>查看物流</router-link></li>
                 <li v-if="item.OrderStatus === 1 && item.ExpressStatus === 2" @click="confirmExpress(item.OrderBaseId, item.PayType, item.OrderMoney, item.OrderGoodsList)">确认收货</li>
-                <li v-if="item.OrderStatus === 1 && item.ExpressStatus === 3 || item.OrderStatus === 2 || item.OrderStatus === 9" @click="delOrderFun(item.OrderBaseId)">删除订单</li>
+                <li v-if="item.OrderStatus === 1 && item.PayStatus !== 1 && item.ExpressStatus === 3 || item.OrderStatus === 2 || item.OrderStatus === 9" @click="delOrderFun(item.OrderBaseId)">删除订单</li>
                 <li v-if="item.ExpressStatus === 3 && item.CommentStatus === 0" class="comment"><router-link :to="'/Order/Comment/'+ item.OrderBaseId">立即评价</router-link></li>
               </ul>
             </div>
@@ -66,13 +68,15 @@
                 {{item.ApplyTime}}
                 <span class="state" v-if="item.Status===2">退货中</span>
                 <span class="state" v-else-if="item.Status===3">等待买家退货</span>
-                <span class="state" v-else-if="item.Status===4">{{item.PayType === 5 ? "归还中" : "退租中"}}</span>
-                <span class="state" v-else-if="item.Status===5">{{item.PayType === 5 ? "归还成功" : "退租成功"}}</span>
+                <span class="state" v-else-if="item.Status===4 && item.RejectedType === 1">申请被拒绝</span>
+                <span class="state" v-else-if="item.Status===4 && item.RejectedType === 2">退货被拒绝</span>
+                <span class="state" v-else-if="item.Status===4  && item.RejectedType !== 1 && item.RejectedType !== 2">{{item.PayType === 5 ? "归还中" : "退租中"}}</span>
+                <span class="state" v-else-if="item.Status===5 || item.Status===8">{{item.PayType === 5 ? "归还成功" : "退租成功"}}</span>
                 <span class="state" v-else-if="item.Status===6">{{item.PayType === 5 ? "归还关闭" : "退租关闭"}}</span>
               </div>
             </div>
             <div class="item">
-              <router-link :to='"/Order/RefundHistory"+ item.OrderGoodsId'>
+              <router-link :to='"/Order/RefundHistory/"+ item.OrderGoodsId'>
                 <div class="left">
                   <img :src='item.GoodsImgPath + "@!standard_square_s"'>
                 </div>
@@ -83,7 +87,7 @@
               </router-link>
             </div>
             <div class="total">退款金额：¥<span>{{item.RefundMoney}}</span></div>
-            <div class="o-tabbtn" v-if="item.Status === 3 || item.Status ===4 ">
+            <div class="o-tabbtn" v-if="item.Status === 3 || item.Status ===4">
               <ul class="MyBuyInOrderOper">
                 <li v-if="item.Status === 3"><router-link :to='"/Order/ReturnGoods/" + item.OrderGoodsId'>退货</router-link></li>
                 <li v-if="item.Status === 4"><router-link :to='"/Order/ApplyRefund/" + item.OrderGoodsId'>修改申请</router-link></li>
@@ -128,7 +132,9 @@ export default {
       tips: '正在加载'
     }
   },
-  mounted: function () {},
+  mounted: function () {
+    this.OrderState = this.$route.query.status
+  },
   methods: {
     infinite () {
       this.currentPageIndex += 1
@@ -175,7 +181,10 @@ export default {
       this.infinite()
     },
     CancelRefund (id) {
-      orderDetail.CancelRefund(id, this.$store.state.UserToken, this.CancelRefundcallback)
+      let _that = this
+      orderDetail.CancelRefund(id, this.$store.state.UserToken).then(function () {
+        _that.CancelRefundcallback()
+      })
     },
     CancelRefundcallback () {
       this.currentPageIndex = 0
@@ -212,7 +221,10 @@ export default {
     },
     // 确认收货
     confirmExpress (id, type, money, goodsList) {
-      orderDetail.confirmExpress(id, type, money, goodsList, this.$store.state.UserToken, this.cancleOrdelcallback)
+      let _that = this
+      orderDetail.confirmExpress(id, type, money, goodsList, this.$store.state.UserToken).then(function () {
+        _that.cancleOrdelcallback()
+      })
     },
     // 我要付款
     gopay (orderid) {
@@ -220,7 +232,10 @@ export default {
     },
     // 取消订单
     cancleOrdel (orderid) {
-      orderDetail.cancleOrdel(orderid, this.$store.state.UserToken, this.cancleOrdelcallback)
+      let _that = this
+      orderDetail.cancleOrdel(orderid, this.$store.state.UserToken).then(function () {
+        _that.cancleOrdelcallback()
+      })
     },
     // 取消订单和确认收货回调
     cancleOrdelcallback () {
@@ -301,6 +316,7 @@ export default {
           .style {
             line-height: 0.3rem;
             min-height: 0.6rem;
+            color: #9fa0a0;
           }
         }
         .right {
