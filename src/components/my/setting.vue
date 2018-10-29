@@ -9,7 +9,7 @@
         </router-link>
       </div>
       <div class="tag">
-        <router-link to="/My/SetPassword">
+        <router-link :to='hasPassword ? {name: "changepassword"} : {name: "setpassword"}'>
           <div class="tag-core">密码修改</div>
           <div class="tag-arrow iconfont">&#xe61e;</div>
         </router-link>
@@ -58,8 +58,12 @@ export default {
   },
   data () {
     return {
-      headinfo: {title: '设置'}
+      headinfo: {title: '设置'},
+      hasPassword: false
     }
+  },
+  mounted () {
+    this.CheckPwdFunc()
   },
   methods: {
     signout () {
@@ -126,6 +130,25 @@ export default {
     },
     SettingEnabledSound () {
       console.log('IM 待改')
+    },
+    CheckPwdFunc () {
+      let model = {
+        Token: this.$store.state.UserToken
+      }
+      this.$http({
+        url: apiport.Account_CheckPassword,
+        method: 'post',
+        data: qs.stringify({ reqJson: JSON.stringify(model) })
+      })
+        .then(res => {
+          console.log('是否有密码', res.data)
+          if (res.data.ResultNo === '00000000') {
+            this.hasPassword = true
+          }
+        })
+        .catch(error => {
+          console.log(error)
+        })
     }
   }
 }

@@ -45,6 +45,7 @@ const Setting = resolve => require(['@/components/my/setting'], resolve)
 const Bindset = resolve => require(['@/components/my/bindset'], resolve)
 const Dataset = resolve => require(['@/components/my/dataset'], resolve)
 const SetPassword = resolve => require(['@/components/my/setpassword'], resolve)
+const ChangePassword = resolve => require(['@/components/my/changepassword'], resolve)
 const ZulinBuyIn = resolve => require(['@/components/my/zulinbuyin'], resolve)
 const BuyIn = resolve => require(['@/components/my/buyin'], resolve)
 const Deposit = resolve => require(['@/components/my/deposit'], resolve)
@@ -167,6 +168,14 @@ export default new Router({
     path: '/My/SetPassword',
     name: 'setpassword',
     component: SetPassword,
+    meta: {
+      requireAuth: true,
+      index: 2
+    }
+  }, {
+    path: '/My/ChangePassword',
+    name: 'changepassword',
+    component: ChangePassword,
     meta: {
       requireAuth: true,
       index: 2
