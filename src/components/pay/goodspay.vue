@@ -64,7 +64,7 @@
         <div>
             <img src="https://cdn.sys.img.95laibei.com/Content/Images/paying.png" alt="正在支付中">
         </div>
-        <p>支付失败？<span id="reCheckPay">重新选择支付方式</span></p>
+        <p>支付失败？<span id="reCheckPay" @click="reCheckPay">重新选择支付方式</span></p>
       </div>
   </section>
   </div>
@@ -123,9 +123,9 @@ export default {
      baseInfoHelper.GetLoginInfo().then(function (res) {
         var loginResult = res;
         if (loginResult == null) {
-            var returnUrl = apiport.CurrentDomain + "/Pay/GoodsPay?id=" +this.$route.query.id +"&paydetailId="+this.$route.query.paydetailId;
+            var returnUrl = "/Pay/GoodsPay?id=" +this.$route.query.id +"&paydetailId="+this.$route.query.paydetailId;
             var url = "/Index/Account?ReturnUrl=" + returnUrl;
-             this.$router.push(url);
+             this.$router.push({path:url});
         }
         else {
          _that.tel=loginResult.Mobile;
@@ -186,12 +186,12 @@ export default {
 
         if (data.HasPaySuccess && !data.HasOrderNotPay && _that.paydetailId == "") {
                 alert('订单已支付')
-                 this.$router.push(_that.returnUrl)
+                 this.$router.push({path:_that.returnUrl})
                 return;
             }
              if (data.HasPaySuccess && data.HasOrderNotPay) {
                 alert('订单状态不一致')
-                this.$router.push(_that.returnUrl)
+                this.$router.push({path:_that.returnUrl})
                 return;
             }
             if (data.PinTuanStatus == 1) {
@@ -242,9 +242,9 @@ export default {
             }
 
              //判断是否需要第三方支付
-            if ((data.PointsUsable + data.GoodsPrice) < data.PointsQuantity) {
-                var thirdPayPoint = data.PointsQuantity - data.PointsUsable - data.GoodsPrice;
-                var thirdPayPrice = (Number(thirdPayPoint)).toFixed(2);
+             var thirdPayPoint = data.PointsQuantity - data.PointsUsable - data.GoodsPrice;
+             var thirdPayPrice = (Number(thirdPayPoint)).toFixed(2);
+            if (thirdPayPrice>0) {
                this.thirdPayPoint=thirdPayPrice;
                 if (!this.isWx) {
                  this.checkPayType='zfb';
@@ -365,7 +365,6 @@ export default {
                            var slt=res.data;
                           if (slt != null && slt.ResultNo == "00000000") {
                                           if (slt.PayState > 0) {
-                                              alert('支付成功');
                                               if (this.setIntervalObj != null) {
                                                   clearInterval(this.setIntervalObj);
                                               }
@@ -377,25 +376,30 @@ export default {
                       });
     },
     CashPaySucess(paydetailId){
-       //  alert(this.orderId);
-        alert('支付成功')
-     //   return;
       // Global_StorageHelper.DelSessionByKey("validCodeCache31");
         if (this.paydata.IsPinTuan) {
-            this.$router.push(apiport.CurrentDomain + "/PinTuan/OrderDetail?code=" + this.paydata.PinTuanCode);
+            this.$router.push("/PinTuan/OrderDetail?code=" + this.paydata.PinTuanCode);
         }
          else if (this.paydata.IsRecharge) {
-            this.$router.push(apiport.CurrentDomain + '/Activitys/FreeSeatApply');
+            this.$router.push('/Activitys/FreeSeatApply');
         }
         else if (this.paydata.IsLocalOrder) {
-            this.$router.push(apiport.CurrentDomain + "/Local/PaySuccess/" + this.orderId.replace("local", ""));
+            this.$router.push( "/Local/PaySuccess/" + this.orderId.replace("local", ""));
         }
         else {
-            this.$router.push(apiport.CurrentDomain + "/Order/PaySucess/" + this.orderId);
+            alert("/Order/PaySucess/" + this.orderId);
+            this.$router.push( "/Order/PaySucess/" + this.orderId);
         }
     },
     CashPayErr(){
       alert('支付遇到阻碍')
+      
+    },
+    reCheckPay(){
+      this.paying=false;
+       if (this.setIntervalObj != null) {
+           clearInterval(this.setIntervalObj)
+       }
     },
     confirmpay() {
         try {
@@ -443,7 +447,7 @@ export default {
                       ParentOrderId:this.$route.query.id,
                       PointPay: PayPoints > 0,
                       TimesCardPay: TimesCardPayPrice > 0,
-                      Token:Token
+                      Token:this.$store.state.UserToken
                     }
                     this.PointPay(model);
                 }
@@ -537,13 +541,13 @@ export default {
                     if (typeof (data.ResultNo) != "undefined" && data.ResultNo == "00000000") {
                             //  Global_StorageHelper.DelSessionByKey("validCodeCache31");
                               if (this.paydata.IsPinTuan) { 
-                                 window.location= apiport.CurrentDomain + "/PinTuan/OrderDetail?code=" + _that.paydata.PinTuanCode;
+                                 this.$router.push({path:"/PinTuan/OrderDetail?code=" + _that.paydata.PinTuanCode});
                               }
                               else if (this.paydata.IsLocalOrder) {
-                                  window.location=apiport.CurrentDomain + "/Local/PaySuccess/" + _that.orderId.replace("local", "");
+                                 this.$router.push({path:"/Local/PaySuccess/" + _that.orderId.replace("local", "")});
                               }
                               else {
-                                   window.location=apiport.CurrentDomain + "/Order/PaySucess/" + _that.orderId;
+                                 this.$router.push({path:"/Order/PaySucess/" + _that.orderId});
                               }
                           }
                           else if (typeof (data.ResultRemark) != "undefined") {
@@ -562,12 +566,6 @@ export default {
                   console.log(error);
                 });
         
-    },
-    sucFun(payDetailId) {
-      this.$router.push("/Order/PaySucess/" + this.$route.query.id);
-    },
-    errFun() {
-      alert("支付失败");
     },
     sendValidCode(dataid){
        validCodeHelper.GetValidCode(31,this.tel, "OrderPaySendVerifyCode", dataid);

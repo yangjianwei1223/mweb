@@ -1,7 +1,8 @@
 <template>
   <div>
-    <v-header :headinfo="headinfo"></v-header>
-    <section class="confirmadd">
+    <v-header :headinfo="headinfo" @hidediv="pagetrigger(1)"></v-header>
+    <div v-show="deliverypage === 0">
+    <section class="confirmadd" v-show="deliverypage === 0">
       <router-link class="clearfix" :to='{path:"/My/AddressManage",query:{returnUrl:"/Order/ZulinConfirm/" + orderid}}'>
         <div class="iconfont dwlogo">&#xe61a;</div>
         <div class="title">
@@ -59,36 +60,59 @@
         <label>邀请码</label>
         <div class="con"><span class="thirdtext" id="OldPromotionCodeMark" style="display:none;">(M为旧邀请码标识)</span><input type="text" :value="PromotionCode" placeholder="请输入邀请码"></div>
       </div>
-      <div class="la">
+      <div class="la" @click="pagetrigger(2)">
         <label>选择免邮券</label>
-        <a class="tr ui-link" id="availableCount">0张可用</a>
+        <a class="tr iconfont" id="availableCount">{{coupontips}} &#xe60b;</a>
       </div>
     </section>
     <section class="paydetail">
       <div class="line"><div class="left">领用押金</div><span>¥ {{GoodsPrice}}</span></div>
-      <div class="line"><div class="left">优惠券金额</div><span>¥ 0.00</span></div>
+      <div class="line"><div class="left">优惠券金额</div><span>¥ {{CouponMoney}}</span></div>
       <div class="line"><div class="left">运费</div><span>¥ {{FreightMoney}}</span></div>
     </section>
     <div class="zcfoot">
-      <p class="left price">需支付 :&nbsp;&nbsp;<span>¥ {{parseFloat(GoodsPrice + FreightMoney).toFixed(2)}}</span></p>
+      <p class="left price">需支付 :&nbsp;&nbsp;<span>¥ {{parseFloat(GoodsPrice + FreightMoney-CouponMoney).toFixed(2)}}</span></p>
       <a href="javascript:;"  @click="AddZulinBase" class="right">提交订单</a>
+    </div>
+    </div>
+        <!-- 选择优惠券 -->
+    <div class="couponpage" v-show="deliverypage === 2">
+      <div class="couponmenu">
+        <div :class="{active: coupontype===1}" @click="triggercoupon(1)">
+          <span>可用优惠券(<span>{{availableList.length}}</span>)</span>
+        </div>
+        <div :class="{active: coupontype===2}" @click="triggercoupon(2)">
+          <span>不可用优惠券(<span>{{unavailableList.length}}</span>)</span>
+        </div>
+      </div>
+      <ul v-show="coupontype===1">
+        <v-coupon v-for="(item, index) in availableList" :key="index+'_cou'" :couponinfo='item' :class="{checked:item.MbrDiscountCouponId===CouponId}" @emitcoupon="usecoupon(item.MbrDiscountCouponId, item.DeductMoney)"></v-coupon>
+      </ul>
+      <ul class="unavail" v-show="coupontype===2">
+        <v-coupon v-for="(item, index) in unavailableList" :key="index+'_uncou'" :couponinfo='item'></v-coupon>
+      </ul>
+      <button class="btnabb" @click="pagetrigger(1)">确定</button>
     </div>
   </div>
 </template>
 
 <script>
+/* eslint-disable */
 import qs from 'qs'
 import apiport from '../../util/api'
-
+import BaseInfoHelper from '@/util/Global_BaseInfoHelper'
+import orderDetail from '@/util/Order_Detail'
 import head from '@/components/common/header'
+import coupon from '@/components/common/coupon'
 export default {
   name: 'zulinconfirm',
   components: {
-    'vHeader': head
+    'vHeader': head,
+    'vCoupon': coupon,
   },
   data () {
     return {
-      headinfo: {'title': '领用确认'},
+      headinfo: {'title': '领用确认', leftfun: 1},
       ConsigneeId: 0,
       ContactName: '',
       ContactPhone: '',
@@ -104,10 +128,26 @@ export default {
       rentid: '',
       RentName: '',
       RentAmount: '',
-      PromotionCode: 99010
+      PromotionCode: '',
+      deliverypage:0,
+      coupontype: 1,
+      CouponId: 0,
+      CouponMoney: 0,
+      availableList:[],
+      unavailableList:[]
+    }
+  },
+  computed:{
+    coupontips: function () {
+      if (this.CouponId !== 0) {
+        return '已选择1张优惠券(省¥' + this.CouponMoney.toFixed(2) + ')'
+      } else {
+        return this.availableList.length + '张可用'
+      }
     }
   },
   mounted: function () {
+    let _that = this
     this.ConsigneeId = window.sessionStorage.getItem('ChooseConsigneeId') || 0
     this.orderid = this.$route.params.id
     this.rentid = this.$route.query.rentid ? this.$route.query.rentid : ''
@@ -120,14 +160,10 @@ export default {
     this.$http({
       url: apiport.Goods_GetZulinByGoodsId,
       method: 'post',
-      header: {
-        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-      },
       data: qs.stringify({ reqJson: JSON.stringify(model) })
     })
       .then(res => {
         let data = res.data
-        console.log('领用信息', data)
         this.ConsigneeId = data.ConsigneeId
         this.ContactName = data.ContactName
         this.ContactPhone = data.ContactPhone
@@ -141,15 +177,25 @@ export default {
         this.InsuredPersonSex = data.SeatPolicyModel.InsuredPersonSex
         this.RentName = data.RentName
         this.RentAmount = data.RentAmount
+        data.availableList.forEach(function (item, index) {
+          item.status = 11
+        })
+        data.unavailableList.forEach(function (item, index) {
+          item.status = 12
+        })
+        this.availableList=data.availableList
+        this.unavailableList=data.unavailableList
+        BaseInfoHelper.GetLoginInfo().then(function (res) {
+            _that.PromotionCode = !!res.TGCode ?res.TGCode.toUpperCase():""
+          })
       })
       .catch(error => {
-        console.log(2)
         console.log(error)
       })
   },
   methods: {
     AddZulinBase () {
-      // let _that = this
+      let _that = this
       let model = {
         Token: this.$store.state.UserToken,
         BirthDay: this.BirthDay,
@@ -162,30 +208,50 @@ export default {
         PromotionCode: this.PromotionCode,
         RentId: 0
       }
-      this.$http({
-        url: apiport.Order_AddZulinBase,
-        method: 'post',
-        header: {
-          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-        },
-        data: qs.stringify({ reqJson: JSON.stringify(model) })
+      orderDetail.CheckPromotionCode(this.PromotionCode).then(function (res) {
+        if (res === 1) {
+          _that.$http({
+            url: apiport.Order_AddZulinBase,
+            method: 'post',
+            data: qs.stringify({ reqJson: JSON.stringify(model) })
+          })
+            .then(res => {
+              orderDetail.PageToGoodsPay(res.data.Data)
+            })
+            .catch(error => {
+              console.log(error)
+            })
+        }
       })
-        .then(res => {
-          let data = res.data
-          console.log('提交订单', data)
-          let openid = JSON.parse(window.sessionStorage.getItem('MainOpenId'))
-          // eslint-disable-next-line
-          if (!openid && navigator.userAgent.toLowerCase().match(/MicroMessenger/i) == 'micromessenger') {
-            window.location.href = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx7ff0669994ee3210&redirect_uri=https%3a%2f%2ft-mweb.95laibei.com%2fpay%2fWxCode&response_type=code&scope=snsapi_userinfo&state=GoodsPay|' + res.data.Data + '#wechat_redirect'
-            return true
-          }
-          // _that.$router.push({path: '/Pay/GoodsPay', query: {id: res.data.Data}})
-          window.location.href = '/Pay/GoodsPay?id=' + res.data.Data
-        })
-        .catch(error => {
-          console.log(2)
-          console.log(error)
-        })
+    },
+    pagetrigger (i) {
+      if (i === 1) {
+        if (this.deliverypage === 0) {
+          this.$router.back()
+        } else {
+          this.deliverypage = 0
+          this.headinfo.title = '确认购买'
+        }
+      } else {
+        this.deliverypage = 2
+        this.headinfo.title = '选择优惠券'
+      }
+    },
+    triggercoupon (i) {
+      if (i === this.coupontype) {
+        return true
+      } else {
+        this.coupontype = i
+      }
+    },
+    usecoupon (couponid, money) {
+      if (this.CouponId === couponid) {
+        this.CouponId = 0
+        this.CouponMoney = 0
+      } else {
+        this.CouponId = couponid
+        this.CouponMoney = money
+      }
     }
   }
 }
@@ -430,6 +496,50 @@ export default {
     font-size: 14px;
     color: #fff;
     background-color: @base-ycolor3;
+  }
+}
+.btnabb {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  background-color: #ff9c00;
+  font-size: 16px;
+  color: #fff;
+  padding: 12px;
+  border: none;
+}
+.couponmenu{
+  padding-top: 1rem;
+  display:-webkit-box;
+  display:flex;
+  background-color:#fff;
+  font-size:14px;
+  &>div{
+    flex: 1;
+    line-height: 40px;
+    text-align: center;
+    &.active>span{
+      color:#f1bc19;
+      padding-bottom:9px;
+      border-bottom:2px solid #f1bc19;
+    }
+  }
+}
+.couponpage{
+  ul{
+    padding-bottom: 1rem;
+  }
+  .unavail li{
+    background-color: #E5E5E5;
+    border: 1px solid #CCC;
+    &::before{
+      border-color: #ccc #ccc transparent transparent;
+    }
+    &::after{
+      border-color: transparent transparent #ccc #ccc;
+    }
   }
 }
 </style>

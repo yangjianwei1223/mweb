@@ -104,6 +104,7 @@
 </template>
 
 <script>
+/* eslint-disable */
 import Vue from 'vue'
 import qs from 'qs'
 import apiport from '../../util/api'
@@ -133,7 +134,7 @@ export default {
     }
   },
   mounted: function () {
-    this.OrderState = this.$route.query.status
+    this.OrderState=parseInt(this.$route.query.status);
   },
   methods: {
     infinite () {

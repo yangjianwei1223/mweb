@@ -106,7 +106,7 @@ import qs from 'qs'
 import apiport from '../../util/api'
 import swiper from '../common/swiper'
 import vFooter from './footer'
-import comment from './comment'
+import comment from '../common/comment'
 export default {
   name: 'seatdetail',
   components: {

@@ -64,14 +64,14 @@ import http from './http.js'
          if (!IsExist())
             return model;
          var sysTypeStorage = storage.getLocal("jpushSystemType");
-         if (sysTypeStorage != undefined && sysTypeStorage != null) {
-             model.SystemType = sysTypeStorage;
+         if (sysTypeStorage != undefined && sysTypeStorage.ObjectData != null) {
+             model.SystemType = sysTypeStorage.ObjectData;
          } else {
              model.SystemType =2;
          }
          var registerStorage = storage.getLocal("jpushRegisterId");
-         if (registerStorage != undefined && registerStorage.StorageData != null) {
-             model.RegistrationId = registerStorage;
+         if (registerStorage != undefined && registerStorage.ObjectData != null) {
+             model.RegistrationId = registerStorage.ObjectData;
          } else {
              model.RegistrationId = '';
          }
@@ -208,5 +208,6 @@ import http from './http.js'
         getTagPrevFix:getTagPrevFix,
         Init:Init,
         JoinTag:JoinTag,
-        ReceiveCallBack:ReceiveCallBack
+        ReceiveCallBack:ReceiveCallBack,
+        GetStorage:GetStorage
     }

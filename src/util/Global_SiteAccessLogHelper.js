@@ -37,7 +37,7 @@ function GetSiteAccessInfo() {
             model.GUID = ClientIdData;
         }
         if (AppQueryString != null) {
-            var querystring = JSON.parse(AppQueryString);
+            var querystring = AppQueryString;
             model.AppChannel = querystring.AppChannel;
             model.AppType = querystring.AppType;
         }

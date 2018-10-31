@@ -67,7 +67,6 @@ function time(o) {
         IsDisabled = false;
         CommonHelper.removeClass(document.getElementById(o), "regetvalidcodebtn");
         document.getElementById(o).innerHTML = '获取验证码'
-        validCode = "";
         wait = 60;
     } else {
         document.getElementsByClassName("SendTTSValidCode")[0].style.color = "#9fa0a0";

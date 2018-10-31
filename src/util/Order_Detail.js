@@ -45,7 +45,6 @@ let orderDetail = {
           data: qs.stringify({ reqJson: JSON.stringify(model) })
         })
           .then(res => {
-            console.log('验证邀请码', res.data)
             let data = res.data
             if (data.ResultNo === '00000000') {
               resolve(data.Data)

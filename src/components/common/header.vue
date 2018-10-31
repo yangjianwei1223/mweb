@@ -92,4 +92,7 @@ export default {
     font-size: 22px;
   }
 }
+.sbdetail .header .rightbtn1{
+  font-size: 20px;
+}
 </style>

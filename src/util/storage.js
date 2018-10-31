@@ -33,7 +33,7 @@ export default {
   getLocal (key = STORAGE_USER_KEY) {
     // console.log('get local operation')
     let val = window.localStorage.getItem(key)
-    if (val.indexOf('{') > -1) {
+    if (val !== undefined && val.indexOf('{') > -1) {
       return JSON.parse(val)
     } else {
       return val
@@ -45,10 +45,10 @@ export default {
     if (isSaveOldData) {
       if (this.getLocal(key)) {
         let oldData = this.getLocal(key)
-        return window.localStorage.setItem(key, JSON.stringify(oldData.concat(res)))
+        return window.localStorage.setItem(key, oldData.concat(res))
       }
     }
-    return window.localStorage.setItem(key, JSON.stringify(res))
+    return window.localStorage.setItem(key, res)
   },
   setUserTokenToStorage (data, expTime) {
     let expTime1 = new Date()

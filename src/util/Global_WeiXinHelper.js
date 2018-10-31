@@ -2,7 +2,7 @@ import qs from 'qs'
 import ApicloudHelper from './Global_ApicloudHelper'
 import BaseInfoHelper from './Global_BaseInfoHelper'
 import apiport from './api'
-import storage from './storage'
+import wx from 'weixin-js-sdk'
 import http from './http.js'
 
 /* eslint-disable */
@@ -17,7 +17,7 @@ function IsWXBrowser () {
 }
 
 function IsWXSmallProgram()
-{
+{  
     if (window.__wxjs_environment === 'miniprogram') {
         return true;
     } else {
@@ -34,6 +34,18 @@ function GetOpenId()
     }
     return openId;
 }
+
+var SetParameter = function (smallopenid,xcxName) {
+    //小程序OPENid
+    var openId = smallopenid
+    if (openId != ""&&openId!=undefined)
+        window.sessionStorage.setItem("smallopenid", openId);
+    //小程序name
+    var xcxName = xcxName;
+    if (xcxName != ""&&xcxName!=undefined)
+       window.sessionStorage.setItem("xcxName", xcxName);
+}
+
 var Pay = function (IsMixPay, hasPointPay, hasTimesCardPay, remark, type, relationId, sucFun, errFun) {
     var Token = BaseInfoHelper.GetToken();
    if (ApicloudHelper.IsApp() || IsWXSmallProgram()) {
@@ -41,12 +53,13 @@ var Pay = function (IsMixPay, hasPointPay, hasTimesCardPay, remark, type, relati
         var openId = "", xcxname = "";
         var paymentMethod=4;
         if (IsWXSmallProgram()) {
-            openId = storage.getLocal("smallopenid");
-            xcxname =storage.getLocal("xcxName");
+            openId = window.sessionStorage.getItem("smallopenid");
+            xcxname = window.sessionStorage.getItem("xcxName");
             paymentMethod = 7;
         } else {
             openId = GetOpenId();
         }
+   
         var model = {
             IsMixPay: IsMixPay,
             PaymentMethod: paymentMethod,
@@ -60,7 +73,7 @@ var Pay = function (IsMixPay, hasPointPay, hasTimesCardPay, remark, type, relati
             hasTimesCardPay: hasTimesCardPay
         };
         var url = IsWXSmallProgram() ?apiport.WeiXin_XCXGetOrderId : apiport.WeiXin_GetOrderId;
-       
+  
         http({
             url: url,
             method: "post",
@@ -68,9 +81,9 @@ var Pay = function (IsMixPay, hasPointPay, hasTimesCardPay, remark, type, relati
           })
         .then(res => {
             var data=res.data;
-            alert(JSON.stringify(data));
             if (data.ResultNo == "00000000") {
                 if (ApicloudHelper.IsApp()) {
+                    alert('is app pay');
                     //APP支付
                     ApicloudHelper.wxPay(data.mchId, data.nonceStr, data.orderId, data.payDetailId, data.timeStamp, data.sign, sucFun, errFun);
                 } else {
@@ -116,7 +129,6 @@ var Pay = function (IsMixPay, hasPointPay, hasTimesCardPay, remark, type, relati
               var data=res.data;
               if (data.ResultNo == "00000000") {
                 if (IsWXBrowser()) {
-                    alert(data.jsApiParamJson);
                     callpay(JSON.parse(data.jsApiParamJson), data.payDetailId, sucFun, errFun);
                 } else {
                     console.log(apiport.CurrentDomain + "/Pay/GoodsPay?id=" + relationId + "&paydetailId=" + data.payDetailId + "&paymentmethod=6");
@@ -170,5 +182,6 @@ export default {
     IsWXBrowser: IsWXBrowser,
     GetOpenId: GetOpenId,
     IsWXSmallProgram:IsWXSmallProgram,
-    Pay:Pay
+    Pay:Pay,
+    SetParameter:SetParameter
 }

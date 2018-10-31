@@ -58,7 +58,10 @@ const ShareQRCode = resolve => require(['@/components/my/shareqrcode'], resolve)
 const LoginCenter = resolve => require(['@/components/wechat/logincenter'], resolve)
 const SeatInstallVideo = resolve => require(['@/components/activitys/seatinstallvideo'], resolve)
 const FreeInstall = resolve => require(['@/components/zulin/freeinstall'], resolve)
+const OptimizationDetail = resolve => require(['@/components/optimization/detail'], resolve)
+const OptimizationProduct = resolve => require(['@/components/search/optimizationproduct'], resolve)
 const IM = resolve => require(['@/components/wechat/im'], resolve)
+const IM1 = resolve => require(['@/components/wechat/im1'], resolve)
 
 Vue.use(Router)
 
@@ -226,6 +229,13 @@ export default new Router({
     path: '/Optimization/List',
     name: 'optimization',
     component: OptimizationList,
+    meta: {
+      index: 2
+    }
+  }, {
+    path: '/Optimization/Detail/:id',
+    name: 'optimizationdetail',
+    component: OptimizationDetail,
     meta: {
       index: 2
     }
@@ -471,6 +481,21 @@ export default new Router({
     component: IM,
     meta: {
       requireAuth: true,
+      index: 2
+    }
+  }, {
+    path: '/wechat/im1',
+    name: 'im1',
+    component: IM1,
+    meta: {
+      requireAuth: true,
+      index: 2
+    }
+  }, {
+    path: '/Search/OptimizationProduct',
+    name: 'optimizationproduct',
+    component: OptimizationProduct,
+    meta: {
       index: 2
     }
   }

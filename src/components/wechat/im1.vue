@@ -128,7 +128,7 @@ import Exif from 'exif-js'
 
 Vue.use(infiniteScroll)
 export default {
-  name: 'im',
+  name: 'im1',
   components: {
     goTop: goTop,
     vHeader: head
@@ -185,13 +185,14 @@ export default {
   },
   mounted () {
     let _that = this
+    let IMServiceUrl = 'http://t-im2.95laibei.com'
     let options = {
-      qs: {MbrToken: this.$store.state.UserToken}
+      qs: {Token: this.$store.state.UserToken, Source: 0}
     }
     _that.selfclientid = JSON.parse(window.localStorage.getItem('UserToken')).ObjectData.BaseId
     console.log(_that.selfclientid)
-    const connection = hubConnection(apiport.IMServiceUrl, options)
-    const hubProxy = connection.createHubProxy('Chatmessagehub')
+    const connection = hubConnection(IMServiceUrl, options)
+    const hubProxy = connection.createHubProxy('ChatHub')
     window.hubProxy = hubProxy
     // 接收消息
     hubProxy.on('ReceiveMessage', function (clientContext, message) {
@@ -228,15 +229,29 @@ export default {
         }
       }
     })
+    // 初始化会话
+    hubProxy.on('InitDialogByCustomer', function (customDialogId, hismessage) {
+      console.log('会话id', customDialogId)
+    })
+    // 排队人数
+    hubProxy.on('toLoadWaitingCountBefore', function () {
+      hubProxy.on('loadWaitingCountBefore', function (count) {
+        console.log('前面排队人数', count)
+      })
+    })
+    // 加载客服信息
+    hubProxy.on('LoadReceiver', function (data) {
+      console.log('客服信息', data)
+    })
     // connect
     connection.start({ jsonp: false })
       .done(function () {
         console.log('Now connected, connection ID=' + connection.id)
         _that.getUnReadTotal()
       })
-      .done(function () {
-        _that.getGroupList(1)
-      })
+      // .done(function () {
+      //   _that.getGroupList(1)
+      // })
       .fail(function () { console.log('Could not connect') })
     this.getMyface()
     this.dateformat()
@@ -261,15 +276,26 @@ export default {
       }
     },
     getUnReadTotal () {
-      let _that = this
-      window.hubProxy.invoke('CountUnReadMessage').done(function (data) {
+      // let _that = this
+      // 用户加载会话
+      window.hubProxy.invoke('LoadDialogByCustomer').done(function (data) {
         console.log('未读条数', data)
-        _that.setTotalUnRead(data)
+        // _that.setTotalUnRead(data)
+      }).fail()
+
+      // 用户获取历史消息
+      window.hubProxy.invoke('GetHistoryMessageByCustomer', '2016-09-03', '2018-10-30', '', 1, 20).done(function (ss) {
+        console.log(ss)
+      })
+
+      // 加载用户前面排队人数
+      window.hubProxy.invoke('LoadWaitingCountBefore').done(function (data) {
+        console.log('排队人数', data)
       }).fail()
     },
     getGroupList (pageIndex) {
       let _that = this
-      return window.hubProxy.invoke('GetMessagePreviewList', { PageIndex: pageIndex, PageSize: 12 }, null, '').done(function (data) {
+      return window.hubProxy.invoke('GetHistoryMessageByCustomer', { PageIndex: pageIndex, PageSize: 12 }, null, '').done(function (data) {
         console.log('获取第' + pageIndex + '页预览数据成功')
         _that.busy = false
         // 过滤掉评论、赞和小助手消息并且给系统提醒添加默认头像以及转化时间

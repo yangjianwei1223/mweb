@@ -56,6 +56,15 @@ img{
 .borderbottom {
     border-bottom: 1px solid #ededed;
 }
+.laibeimask{
+    position: fixed;
+    left: 0;
+    width: 100%;
+    top: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,.6);
+    z-index: 1005;
+}
 // 表单
 .form-group{
     background-color: #fff;
@@ -87,4 +96,26 @@ img{
     line-height: .8rem;
     margin: .4rem .25rem .2rem;
     text-align: center;
+}
+.sharehome a .message:after, .header>div:last-child .message:after, .header>div:last-child .cart:after {
+    content: attr(data-msg);
+    background-color: #E62327;
+    color: #fff;
+    position: absolute;
+    -moz-transform: scale(.75);
+    -ms-transform: scale(.75);
+    -webkit-transform: scale(.75);
+    text-align: center;
+    top: .15rem;
+    right: .1rem;
+    border-radius: 50%;
+    vertical-align: middle;
+    width: .4rem;
+    line-height: .4rem;
+    display: inline-block;
+    // right: -.2rem;
+    // top: -.2rem;
+    font-size: 12px;
+    -o-transform: scale(.75);
+    transform: scale(.75);
 }

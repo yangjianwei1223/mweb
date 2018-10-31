@@ -13,8 +13,8 @@ module.exports = {
     proxyTable: {
       '/api': {
         // target: 'http://v2base-api.95laibei.com',  // 通过本地服务器将你的请求转发到这个地址
-        // target: 'https://t-base-api.95laibei.com',  // 通过本地服务器将你的请求转发到这个地址
-        target: 'https://base-api.95laibei.com', 
+        target: 'http://t-base-api.95laibei.com',  // 通过本地服务器将你的请求转发到这个地址
+        // target: 'https://base-api.95laibei.com', 
         changeOrigin: true,  // 设置这个参数可以避免跨域
         pathRewrite: {
             '/api': '/'

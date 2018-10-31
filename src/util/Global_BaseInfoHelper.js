@@ -18,7 +18,7 @@ function GetLoginInfo() {
                     data: qs.stringify({ reqJson: JSON.stringify({ "Token": token }) })
                 }).then((res) => {
                     if (!!res.data && res.data.ResultNo == "00000000") {
-                        storage.setSession(res.data, "BaseInfo");
+                        storage.setSession(JSON.stringify(res.data), "BaseInfo");
                         loginInfo = res.data;
                         var PromotionCodeSession = storage.getLocal("ZulinPromotionCode")
                         if (!!PromotionCodeSession) {

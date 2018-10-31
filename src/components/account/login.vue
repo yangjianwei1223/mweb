@@ -29,9 +29,13 @@
 </template>
 
 <script>
+/* eslint-disable */
 import qs from 'qs'
 import apiport from '../../util/api'
 import storage from '../../util/storage'
+import apicloudHelper from '../../util/Global_ApicloudHelper'
+import aJpushHelper from '../../util/Global_AJpushHelper'
+
 export default {
   name: 'Login',
   data () {
@@ -59,7 +63,9 @@ export default {
       that.flag = 0
       let model = {
         Mobile: this.tel,
-        Password: this.password
+        Password: this.password,
+        JpushRegisterId:aJpushHelper.GetStorage().RegistrationId,
+        SystemType:aJpushHelper.GetStorage().SystemType
       }
       this.$http({
         url: apiport.Account_CheckLoginByPwd,
@@ -69,6 +75,9 @@ export default {
         that.$store.commit('SET_TOKEN', res.data.Token)
         storage.setUserTokenToStorage(res.data, that.$Global.TokenExpTime)
         that.flag = 1
+        //极光推送加标签
+        if (apicloudHelper.IsApp())
+            aJpushHelper.JoinTag(res.data.BaseId, []);
         if (that.$route.query.redict) {
           that.$router.push({path: that.$route.query.redict})
         } else {

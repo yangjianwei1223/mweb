@@ -35,11 +35,11 @@
             </div>
           </router-link>
         </div>
-        <div class="tag-wrap delivery" @click="pagetrigger(0)" v-show="item.FreightList[0].Status === 1">
+        <div class="tag-wrap delivery" @click="pagetrigger(0)">
           <div class="tag">
             <a href="javascript:;">
               <div class="tag-core">配送方式</div>
-              <div class="tag-arrow iconfont"><span>{{item.FreightList[0].Title}}</span>&#xe60b;</div>
+              <div class="tag-arrow iconfont"><span>{{FreightTemplateId>0?item.FreightList.find(e=>e.FreightTemplateId==FreightTemplateId).Title:""}}</span>&#xe60b;</div>
             </a>
           </div>
         </div>
@@ -73,12 +73,12 @@
           </a>
         </div>
         <ul class="courier">
-          <li class="freightLi0" v-for="(item, index) in orderdata.OrderInfoList[0].FreightList" :key="index+'_f'">
-            <span class="iconfont textcolorr" v-html="index===0? '&#xe605;' : '&#xe66e;'"></span>{{item.Title}}
+          <li class="freightLi0" @click="triggerFreightTemplate(item.FreightTemplateId)" v-for="(item, index) in orderdata.OrderInfoList[0].FreightList" :key="index+'_f'">
+            <span class="iconfont textcolorr" v-html="item.FreightTemplateId===FreightTemplateId? '&#xe605;' : '&#xe66e;'"></span>{{item.Title}}
           </li>
         </ul>
       </section>
-      <button class="btnabb">确定</button>
+      <button class="btnabb" @click="pagetrigger(1)">确定</button>
     </div>
     <!-- 选择优惠券 -->
     <div class="couponpage" v-show="deliverypage === 2">
@@ -102,6 +102,7 @@
 </template>
 
 <script>
+/* eslint-disable */
 import qs from 'qs'
 import apiport from '../../util/api'
 import storage from '@/util/storage'
@@ -131,12 +132,12 @@ export default {
       CouponId: 0,
       CouponMoney: 0,
       OrderRemark: [''],
-      FreightTemplateArr: [],
       IdCardImgIdArr: [],
       imguploaddata: {
         max: 2,
         imglist: []
-      }
+      },
+      FreightTemplateId:0
     }
   },
   computed: {
@@ -177,7 +178,7 @@ export default {
             item.GoodsList.forEach(function (item2) {
               goodslist.push({GoodsId: item2.GoodsId, GoodsQuantity: item2.GoodsQuantity, ProductBaseId: item2.ProductBaseId})
             })
-            orderlist.unshift({OrderRemark: _that.OrderRemark[index], FreightTemplateId: _that.FreightTemplateArr[index], GoodsList: goodslist, CuponId: _that.CouponId})
+            orderlist.unshift({OrderRemark: _that.OrderRemark[index], FreightTemplateId: _that.FreightTemplateId, GoodsList: goodslist, CuponId: _that.CouponId})
           })
           let model = {
             Token: _that.$store.state.UserToken,
@@ -196,14 +197,8 @@ export default {
           })
             .then(res => {
               let data = res.data
-              console.log('提交订单', data)
-              let openid = JSON.parse(window.sessionStorage.getItem('MainOpenId'))
-              // eslint-disable-next-line
-              if (!openid && navigator.userAgent.toLowerCase().match(/MicroMessenger/i) == 'micromessenger') {
-                window.location.href = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx7ff0669994ee3210&redirect_uri=https%3a%2f%2ft-mweb.95laibei.com%2fpay%2fWxCode&response_type=code&scope=snsapi_userinfo&state=GoodsPay|' + res.data.ParentOrderId + '#wechat_redirect'
-                return true
-              }
-              window.location.href = '/Pay/GoodsPay?id=' + res.data.ParentOrderId
+              storage.DelSessionByKey('ShoppingCartGoodsIds')
+              orderDetail.PageToGoodsPay(res.data.ParentOrderId)
             })
             .catch(error => {
               console.log(error)
@@ -242,30 +237,24 @@ export default {
       })
         .then(res => {
           let data = res.data
-          console.log('商品信息', data)
-          // 优惠券有效的状态设置为11无效为12和优惠券列表公用组件区分
           data.availableList.forEach(function (item, index) {
             item.status = 11
           })
           data.unavailableList.forEach(function (item, index) {
             item.status = 12
           })
-          data.OrderInfoList.forEach(function (item, index) {
-            _that.FreightTemplateArr.push(item.FreightList[0].FreightTemplateId)
-          })
           // 身份证照片传递
           if (data.IsOverSeas) {
             if (data.IdCardFrontPath && data.IdCardOppositeImgPath) {
-              this.IdCardImgIdArr.push(data.IdCardFrontImgId, data.IdCardOppositeImgId)
-              this.imguploaddata.imglist.push({imgpath: data.IdCardFrontPath + '@!standard_square_s', imgbaseid: data.IdCardFrontImgId}, {imgpath: data.IdCardOppositeImgPath + '@!standard_square_s', imgbaseid: data.IdCardOppositeImgId})
+              _that.IdCardImgIdArr.push(data.IdCardFrontImgId, data.IdCardOppositeImgId)
+              _that.imguploaddata.imglist.push({imgpath: data.IdCardFrontPath + '@!standard_square_s', imgbaseid: data.IdCardFrontImgId}, {imgpath: data.IdCardOppositeImgPath + '@!standard_square_s', imgbaseid: data.IdCardOppositeImgId})
             }
           }
-          this.orderdata = data
-          this.ConsigneeId = data.ConsigneeId
-          let GetLoginInfo = BaseInfoHelper.GetLoginInfo()
-          console.log(GetLoginInfo)
+          _that.orderdata = data
+          _that.ConsigneeId = data.ConsigneeId
+          _that.FreightTemplateId=data.OrderInfoList[0].FreightList[0].FreightTemplateId
           BaseInfoHelper.GetLoginInfo().then(function (res) {
-            _that.PromotionCode = res.TGCode.toUpperCase()
+            _that.PromotionCode = !!res.TGCode ?res.TGCode.toUpperCase():""
           })
         })
         .catch(error => {
@@ -286,29 +275,24 @@ export default {
       })
         .then(res => {
           let data = res.data
-          console.log('购物车商品信息', data)
           data.availableList.forEach(function (item, index) {
             item.status = 11
           })
           data.unavailableList.forEach(function (item, index) {
             item.status = 12
           })
-          data.OrderInfoList.forEach(function (item, index) {
-            _that.FreightTemplateArr.push(item.FreightList[0].FreightTemplateId)
-          })
           // 身份证照片传递
           if (data.IsOverSeas) {
             if (data.IdCardFrontPath && data.IdCardOppositeImgPath) {
-              this.IdCardImgIdArr.push(data.IdCardFrontImgId, data.IdCardOppositeImgId)
-              this.imguploaddata.imglist.push({imgpath: data.IdCardFrontPath + '@!standard_square_s', imgbaseid: data.IdCardFrontImgId}, {imgpath: data.IdCardOppositeImgPath + '@!standard_square_s', imgbaseid: data.IdCardOppositeImgId})
+              _that.IdCardImgIdArr.push(data.IdCardFrontImgId, data.IdCardOppositeImgId)
+              _that.imguploaddata.imglist.push({imgpath: data.IdCardFrontPath + '@!standard_square_s', imgbaseid: data.IdCardFrontImgId}, {imgpath: data.IdCardOppositeImgPath + '@!standard_square_s', imgbaseid: data.IdCardOppositeImgId})
             }
           }
-          this.orderdata = data
-          this.ConsigneeId = data.ConsigneeId
-          let GetLoginInfo = BaseInfoHelper.GetLoginInfo()
-          console.log(GetLoginInfo)
+          _that.orderdata = data
+          _that.ConsigneeId = data.ConsigneeId
+          _that.FreightTemplateId=data.OrderInfoList[0].FreightList[0].FreightTemplateId
           BaseInfoHelper.GetLoginInfo().then(function (res) {
-            _that.PromotionCode = res.TGCode.toUpperCase()
+            _that.PromotionCode =!!res.TGCode ?res.TGCode.toUpperCase():""
           })
         })
         .catch(error => {
@@ -338,6 +322,10 @@ export default {
       } else {
         this.IdCardImgIdArr.push(imgid)
       }
+    },
+    triggerFreightTemplate(id){
+      this.FreightTemplateId=id
+      this.orderdata.FreightMoney=this.orderdata.OrderInfoList[0].FreightList.find(e=>e.FreightTemplateId==id).FreightMoney
     }
   }
 }

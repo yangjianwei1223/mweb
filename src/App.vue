@@ -12,6 +12,7 @@ import '../static/js/rem.js'
 import goTop from './components/common/scrolltop'
 import SiteAccessLogHelper from './util/Global_SiteAccessLogHelper'
 import aJpushHelper from './util/Global_AJpushHelper'
+import weiXinHelper from './util/Global_WeiXinHelper'
 
 export default {
   name: 'App',
@@ -40,7 +41,7 @@ export default {
         if (window.JpushData != undefined && window.JpushData != null
                && window.JpushData != '') {
              aJpushHelper.ReceiveCallBack(false, window.JpushData);
-            }
+       }
     }
   },
   created: function () {
@@ -53,6 +54,13 @@ export default {
         window.JpushData = dataStr;
         aJpushHelper.ReceiveCallBack(true, window.JpushData);
      }
+     var _that=this;
+     setTimeout(function(){
+      //小程序初次进入设置参数
+       console.log('start')
+       console.log(JSON.stringify(_that.$route.query))
+       weiXinHelper.SetParameter(_that.$route.query.smallopenid,_that.$route.query.xcxName)
+     },100)
   },
   beforeMount: function () {
   }
