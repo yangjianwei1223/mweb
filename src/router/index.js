@@ -60,6 +60,7 @@ const SeatInstallVideo = resolve => require(['@/components/activitys/seatinstall
 const FreeInstall = resolve => require(['@/components/zulin/freeinstall'], resolve)
 const OptimizationDetail = resolve => require(['@/components/optimization/detail'], resolve)
 const OptimizationProduct = resolve => require(['@/components/search/optimizationproduct'], resolve)
+const SearchProduct = resolve => require(['@/components/search/product'], resolve)
 const IM = resolve => require(['@/components/wechat/im'], resolve)
 const IM1 = resolve => require(['@/components/wechat/im1'], resolve)
 
@@ -495,6 +496,13 @@ export default new Router({
     path: '/Search/OptimizationProduct',
     name: 'optimizationproduct',
     component: OptimizationProduct,
+    meta: {
+      index: 2
+    }
+  }, {
+    path: '/Search/Product',
+    name: 'searchproduct',
+    component: SearchProduct,
     meta: {
       index: 2
     }

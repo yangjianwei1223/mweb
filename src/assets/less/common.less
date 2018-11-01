@@ -56,16 +56,7 @@ img{
 .borderbottom {
     border-bottom: 1px solid #ededed;
 }
-.laibeimask{
-    position: fixed;
-    left: 0;
-    width: 100%;
-    top: 0;
-    bottom: 0;
-    background-color: rgba(0,0,0,.6);
-    z-index: 1005;
-}
-// 表单
+// 表单 修改密码
 .form-group{
     background-color: #fff;
     line-height: 1rem;
@@ -97,6 +88,81 @@ img{
     margin: .4rem .25rem .2rem;
     text-align: center;
 }
+// dialog
+.laibeimask{
+    position: fixed;
+    left: 0;
+    width: 100%;
+    top: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,.6);
+    z-index: 1005;
+}
+.alerts{
+    .dialog{
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      width: 72%;
+      transform: translate(-50%,-50%);
+      z-index: 1006;
+      line-height: 25px;
+      background-color: #fff;
+      color: #000;
+      text-align: center;
+      border: 1px solid #fff;
+      border-radius: 8px;
+      &.toasts{
+          background-color: rgba(0,0,0,.8);
+          width: auto;
+          min-width: 3rem;
+          line-height: 40px;
+          color:#fff;
+      }
+    }
+    h2{
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: normal;
+      font-size: 14px;
+      line-height: 1.8;
+      margin: .2rem;
+      color: #333;
+    }
+    .btns{
+        display:flex;
+    }
+    button{
+      flex: 1;
+      -webkit-appearance: none;
+      color: #33a6ff;
+      font-size: 14px;
+      line-height: 42px;
+      border: none;
+      border-top: 1px solid #ebebeb;
+      background-color: transparent;
+      box-sizing: border-box;
+      outline: none;
+    }
+    .leftbtn{
+        color:#666;
+        border-right: 1px solid #ebebeb;
+    }
+    .promptinput{
+        -webkit-appearance: none;
+        font-size: 16px;
+        line-height: 42px;
+        display: block;
+        width: 90%;
+        margin: 5%;
+        padding-left: 10px;
+        border: 1px solid #dcdddd;
+        box-sizing: border-box;
+        outline: none;
+    }
+  }
+
 .sharehome a .message:after, .header>div:last-child .message:after, .header>div:last-child .cart:after {
     content: attr(data-msg);
     background-color: #E62327;

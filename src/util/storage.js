@@ -28,12 +28,17 @@ function DelSessionByKey (key) {
   var storage = window.sessionStorage
   storage.removeItem(key)
 }
+// 删除localstorage
+function DelLocalByKey (key) {
+  var storage = window.localStorage
+  storage.removeItem(key)
+}
 export default {
   // 获取
   getLocal (key = STORAGE_USER_KEY) {
     // console.log('get local operation')
     let val = window.localStorage.getItem(key)
-    if (val !== undefined && val.indexOf('{') > -1) {
+    if (val && val.indexOf('{') > -1 && val.indexOf('}') > -1) {
       return JSON.parse(val)
     } else {
       return val
@@ -55,6 +60,25 @@ export default {
     expTime1.setHours(new Date().getHours() + expTime)
     let storagedata = {ExpTime: expTime1, ObjectData: JSON.stringify(data)}
     return window.localStorage.setItem('UserToken', JSON.stringify(storagedata))
+  },
+  // 获取有期限的localstorage
+  getDatawithDeadline (key = STORAGE_USER_KEY) {
+    let itemData = this.getLocal(key)
+    let result = null
+    if (itemData) {
+      let nowtime = new Date()
+      let expTime = new Date(itemData.ExpTime)
+      if (nowtime < expTime || !itemData.ExpTime) {
+        result = itemData.ObjectData
+      }
+    }
+    return result
+  },
+  // 设置有期限的localstorage
+  setDatawithDeadline (key, data, ExpTime) {
+    let nowtime = new Date()
+    nowtime.setHours(nowtime.getHours() + ExpTime)
+    window.localStorage.setItem(key, JSON.stringify({ExpTime: nowtime, ObjectData: JSON.stringify(data)}))
   },
   // 获取
   getSession (key = STORAGE_USER_KEY) {
@@ -79,5 +103,6 @@ export default {
   },
   GetStorageDataByKey: GetStorageDataByKey,
   SetDataToStorage: SetDataToStorage,
-  DelSessionByKey: DelSessionByKey
+  DelSessionByKey: DelSessionByKey,
+  DelLocalByKey: DelLocalByKey
 }

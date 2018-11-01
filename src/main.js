@@ -10,8 +10,7 @@ import http from './util/http.js'
 import store from './store'
 import Global from './util/Global'
 import BaseInfoHelper from './util/Global_BaseInfoHelper'
-import alert from './components/common/dialog/alert/alert'
-import confirm from './components/common/dialog/confirm/confirm'
+import dialog from './components/common/dialog'
 
 Vue.use(Vuex)
 Vue.use(VueAwesomeSwiper)
@@ -19,8 +18,7 @@ Vue.use(VueLazyLoad, {
   error: 'https://cdn.sys.img.95laibei.com/Content/Images/lazyLoad-placeholder-Half.jpg',
   loading: 'https://cdn.sys.img.95laibei.com/Content/Images/lazyLoad-placeholder-Half.jpg'
 })
-Vue.use(alert)
-Vue.use(confirm)
+Vue.use(dialog)
 
 Vue.prototype.$http = http
 Vue.prototype.$Global = Global

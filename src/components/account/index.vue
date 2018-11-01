@@ -62,21 +62,21 @@ export default {
       }
       that.flag = 0;
       if (that.tel == "") {
-        alert("手机号码不能为空");
+        this.$alert('手机号码不能为空')
         that.flag = 1;
         return;
       }
       if (!apiport.MobileCheckStr.test(that.tel)) {
-        alert("您填写的手机号格式有误，请输入11位大陆手机号码");
+        this.$alert("您填写的手机号格式有误，请输入11位大陆手机号码");
         that.flag = 1;
         return;
       }
       if (that.valid == "") {
-        alert("验证码不能为空");
+        this.$alert("验证码不能为空");
         that.flag = 1;
         return;
       } else if (that.valid.length != 4) {
-        alert("验证码位数错误");
+        this.$alert("验证码位数错误");
         that.flag = 1;
         return;
       }
@@ -97,7 +97,7 @@ export default {
             CommonHelper.LoginSuccess(res.data);
             that.$router.push({ name: "index" });
           } else {
-            alert(res.data.ResultRemark);
+            this.$alert(res.data.ResultRemark);
           }
           that.flag = 1;
         })
