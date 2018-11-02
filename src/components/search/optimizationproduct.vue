@@ -1,8 +1,8 @@
 <template>
   <div>
     <div class="searchtabnav">
-      <a class="iconfont back" href="javascript:;">&#xe60a;</a>
-      <input type="search" class="inputbox" v-model="goodsname"  value="" placeholder="搜商品名称" @keyup.enter="searchproduct()">
+      <a class="iconfont back" href="javascript:;" @click="back">&#xe60a;</a>
+      <input type="search" ref="searchbox" class="inputbox" v-model="goodsname" placeholder="搜商品名称" @keyup.enter="searchproduct()" @blur="clearreallist" @focus="getRealSearch(goodsname)">
       <span class="iconfont search">&#xe608;</span>
     </div>
     <div style="height:1px;"></div>
@@ -10,7 +10,7 @@
     <div class="searchhis mtop" v-if="localsearchlist.length>0">
       <ul>
         <li v-for="(item, index) in localsearchlist" :key="index">
-          <a href="javascript:;" @click="gotosearchresult(item.SearchKey)">{{item.SearchKey}}</a>
+          <a href="javascript:;" @click="hotsearchfn(item.SearchKey)">{{item.SearchKey}}</a>
           <span class="iconfont" @click="delonelocalsearch(index)">&#xe665;</span>
         </li>
       </ul>
@@ -23,6 +23,12 @@
         <li v-for="(item1, index1) in hotlist" :key="index1" @click="hotsearchfn(item1.SearchKey)">{{item1.SearchKey}}</li>
       </ul>
     </div>
+    <!-- 实时搜索 -->
+    <div class="hoverlist" v-show="reallist.length>0">
+      <ul>
+        <li v-for="(item2, index2) in reallist" :key="index2" @click="hotsearchfn(item2.suggestion)">{{item2.suggestion}}</li>
+      </ul>
+    </div>
   </div>
 </template>
 
@@ -30,6 +36,7 @@
 import apiport from '../../util/api'
 import qs from 'qs'
 import storage from '@/util/storage'
+import GlobalSearchKeyHelper from '@/util/Global_SearchKeyHelper'
 
 export default {
   name: 'OptimizationProduct',
@@ -37,14 +44,15 @@ export default {
     return {
       localsearchlist: [],
       hotlist: [],
+      reallist: [],
       goodsname: '',
       searchType: 4
     }
   },
   mounted () {
+    let _that = this
     // 获取搜索历史
     this.localsearchlist = JSON.parse(storage.getDatawithDeadline('UserSearchKey' + this.searchType)) || []
-    console.log(this.localsearchlist)
     let model = {
       searchType: 4,
       pageIndex: 1,
@@ -62,23 +70,23 @@ export default {
       .catch(error => {
         console.log(error)
       })
+    // 监听输入框
+    this.$watch('goodsname', GlobalSearchKeyHelper.debounce((newQuery) => {
+      // newQuery为输入的值
+      _that.getRealSearch(newQuery)
+    }, 200))
   },
   methods: {
+    back () {
+      this.$router.back()
+    },
     searchproduct (name) {
       let goodsname = name || this.goodsname.trim()
-      let _that = this
-      if (goodsname !== '') {
-        this.localsearchlist.forEach(function (item, index) {
-          if (item.SearchKey === goodsname) {
-            _that.localsearchlist.splice(index, 1)
-          }
-        })
+      if (!goodsname) {
+        return true
       }
-      if (this.localsearchlist.length > 19) {
-        this.localsearchlist.pop()
-      }
-      this.localsearchlist.unshift({SearchKey: goodsname})
-      storage.setDatawithDeadline('UserSearchKey' + this.searchType, this.localsearchlist, apiport.UserSearchExpTime)
+      let newlocalsearchlist = GlobalSearchKeyHelper.settlesearchlist(goodsname, this.localsearchlist)
+      storage.setDatawithDeadline('UserSearchKey' + this.searchType, newlocalsearchlist, apiport.UserSearchExpTime)
       this.gotosearchresult(goodsname)
     },
     delonelocalsearch (index) {
@@ -95,6 +103,25 @@ export default {
     },
     gotosearchresult (name) {
       this.$router.push({name: 'searchproduct', query: {searchWord: name}})
+    },
+    getRealSearch (query) {
+      query = query.trim()
+      let _that = this
+      if (!query) {
+        this.reallist = []
+        return true
+      }
+      GlobalSearchKeyHelper.getRealSearch(query).then(function (data) {
+        if (_that.$refs.searchbox === document.activeElement) {
+          _that.reallist = data || []
+        } else {
+          _that.reallist = []
+        }
+      })
+      console.log(this.reallist)
+    },
+    clearreallist () {
+      this.reallist = []
     }
   }
 }
@@ -219,6 +246,20 @@ export default {
       box-sizing: border-box;
       padding-left: .2rem;
     }
+  }
+}
+.hoverlist{
+  position:fixed;
+  top:1rem;
+  left: 0;
+  width: 100%;
+  background: #fafafa;
+  padding: 0 .2rem .2rem .3rem;
+  li{
+    padding: 10px 0;
+    font-size: 15px;
+    border-bottom: 1px solid #e4e8e7;
+    .onelinetext();
   }
 }
 .mtop{

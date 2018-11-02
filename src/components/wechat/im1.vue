@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-header :headinfo = 'headinfo' @hidediv = 'back'></v-header>
+    <v-header :headinfo='headinfo' @hidediv='leftbackfun'></v-header>
     <div class="msglist" :class="{mt50: !isTwain}" v-infinite-scroll="getMessageList" infinite-scroll-disabled="busy" infinite-scroll-distance="10">
       <!-- 聊天列表 -->
       <template v-if="!openwindow">
@@ -135,7 +135,7 @@ export default {
   },
   data () {
     return {
-      headinfo: {headtitle: '消息', leftfun: 1},
+      headinfo: {title: '消息', leftfun: 1},
       currentPageIndex: 0,
       pushPageIndex: 0,
       pageSize: 20,
@@ -180,7 +180,9 @@ export default {
       issend: false,
       increaseId: 0,
       earlymsgtips: '查看更早的消息',
-      SendTimesLimit: true
+      SendTimesLimit: true,
+      ReceiverInfo: [],
+      imUserInfo: {}
     }
   },
   mounted () {
@@ -241,7 +243,13 @@ export default {
     })
     // 加载客服信息
     hubProxy.on('LoadReceiver', function (data) {
-      console.log('客服信息', data)
+      console.log('客服信息', arguments)
+      _that.ReceiverInfo.push(...arguments)
+    })
+    // 加载我的信息
+    hubProxy.on('loadIMUser', function (data) {
+      console.log('我的信息', arguments[0])
+      _that.imUserInfo.push(...arguments)
     })
     // connect
     connection.start({ jsonp: false })
@@ -260,10 +268,10 @@ export default {
     window.hubProxy.connection.stop()
   },
   methods: {
-    back () {
+    leftbackfun () {
       if (this.openwindow) {
         this.openwindow = !this.openwindow
-        this.headtitle = '消息'
+        this.headinfo.headtitle = '消息'
         this.currentPageIndex = this.pushPageIndex
         this.currentGroupID = this.pushGroupID
         this.tips = '正在加载中...'
@@ -1109,7 +1117,7 @@ export default {
   width: 100%;
   left: 0;
   background-color: #efefef;
-  z-index: 1002;
+  z-index: 21;
   overflow-y: hidden;
 }
 .dialog-content {

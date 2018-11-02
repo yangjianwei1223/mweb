@@ -135,7 +135,7 @@ export default {
   },
   data () {
     return {
-      headinfo: {headtitle: '消息', leftfun: 1},
+      headinfo: {title: '消息', leftfun: 1},
       currentPageIndex: 0,
       pushPageIndex: 0,
       pageSize: 20,
@@ -1083,7 +1083,7 @@ export default {
   width: 100%;
   left: 0;
   background-color: #efefef;
-  z-index: 1002;
+  z-index: 21;
   overflow-y: hidden;
 }
 .dialog-content {
