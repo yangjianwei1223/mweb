@@ -4,28 +4,17 @@
     <div class="msglist" :class="{mt50: !isTwain}" v-infinite-scroll="getMessageList" infinite-scroll-disabled="busy" infinite-scroll-distance="10">
       <!-- 聊天列表 -->
       <template v-if="!openwindow">
-        <section v-for="(item, index) in MsgPreviewList" :key="index" :data-groupid="item.GroupPreview.GroupID" class="meslist" @click="openchat(index)">
+        <section :data-groupid="ReceiverInfo[0]" class="meslist" @click="openchat(0)">
           <div class="padf clearfix">
-            <div class="left" :class='item.UnReadTotal >99 ? "plurality" : "singular"' :data-msg='item.UnReadTotal>0 ? item.UnReadTotal : ""'>
-              <img :src="item.GroupPreview.GroupIcon">
+            <div class="left">
+              <img :src="ReceiverInfo[4]">
             </div>
             <div class="right">
-              <div class="name">{{item.GroupPreview.GroupTitle}}</div>
-              <div class="cont" v-if="item.Group.LastMessage" v-html="item.Group.LastMessage.Content"></div>
+              <div class="name">{{ReceiverInfo[5]}}</div>
+              <!-- <div class="cont" v-if="item.Group.LastMessage" v-html="item.Group.LastMessage.Content"></div> -->
             </div>
-            <div class="time" v-if="item.Group.LastMessage">{{item.Group.LastMessage.SendTimeFormat}}</div>
+            <!-- <div class="time" v-if="item.Group.LastMessage">{{item.Group.LastMessage.SendTimeFormat}}</div> -->
           </div>
-        </section>
-        <section v-for="(item1) in MsgPushList" :key="item1._id" class="sysmessage">
-          <p class="time">{{item1.SendTimeFormat}}</p>
-          <a class="blocka" href="javascript:;" @click="pushskipfun(item1.MessageDetail.Link)">
-            <p class="content">{{item1.Content.Title}}</p>
-            <div class="blockpic" v-if="item1.MessageDetail.ImageID">
-              <img :src='"https://cdn." + item1.MessageDetail.ImagePath + ".img.95laibei.com/" + item1.MessageDetail.ImageName + "@!standard_src_l"'>
-            </div>
-            <p class="dcon">{{item1.Content.Description}}</p>
-            <div class="moredetail" v-if="item1.MessageDetail.Link">更多详情<span>&#xe60b;</span></div>
-          </a>
         </section>
       </template>
       <!-- 聊天窗口 -->
@@ -140,7 +129,7 @@ export default {
       pushPageIndex: 0,
       pageSize: 20,
       busy: true,
-      showLoading: true,
+      showLoading: false,
       tips: '正在加载',
       selfclientid: '',
       FaceImage: '',
@@ -182,7 +171,8 @@ export default {
       earlymsgtips: '查看更早的消息',
       SendTimesLimit: true,
       ReceiverInfo: [],
-      imUserInfo: {}
+      imUserInfo: {},
+      historymes: []
     }
   },
   mounted () {
@@ -196,50 +186,9 @@ export default {
     const connection = hubConnection(IMServiceUrl, options)
     const hubProxy = connection.createHubProxy('ChatHub')
     window.hubProxy = hubProxy
-    // 接收消息
-    hubProxy.on('ReceiveMessage', function (clientContext, message) {
-      console.log(message)
-      // 判断是否系统推送消息
-      if (message.ObjectType === _that.ChatMessage.SystemPushMsg) {
-        message.SendTimeFormat = _that.getTimeMark(message.SendTime)
-        _that.MsgPushList.unshift(message)
-        _that.MsgPushList.pop()
-      } else {
-        message.SendTimeFormat = _that.getTimeMark(message.SendTime)
-        message.Content = _that.getMsgContent(message)
-        let isExistence = false
-        _that.MsgPreviewList.forEach(ele => {
-          if (ele.Group.GroupID === message.GroupID) {
-            ele.Group.LastMessage.SendTimeFormat = message.SendTimeFormat
-            ele.Group.LastMessage.Content = message.Content
-            ele.UnReadTotal += 1
-            isExistence = true
-          }
-        })
-        if (!isExistence) {
-          // 不存在的聊天组需要重新去请求一次
-          _that.getGroupPreviewFromServer(message.SenderClientID)
-        }
-        // 如果是当前聊天且是对方发来的，内容直接加进去
-        // eslint-disable-next-line
-        if (_that.openwindow && _that.currentGroupID === message.GroupID && _that.selfclientid != message.SenderClientID) {
-          _that.MsgList.push(message)
-          _that.$nextTick(function () {
-            let chatdialog = document.getElementsByClassName('dialog-content')[0]
-            chatdialog.scrollTop = chatdialog.scrollHeight
-          })
-        }
-      }
-    })
     // 初始化会话
     hubProxy.on('InitDialogByCustomer', function (customDialogId, hismessage) {
       console.log('会话id', customDialogId)
-    })
-    // 排队人数
-    hubProxy.on('toLoadWaitingCountBefore', function () {
-      hubProxy.on('loadWaitingCountBefore', function (count) {
-        console.log('前面排队人数', count)
-      })
     })
     // 加载客服信息
     hubProxy.on('LoadReceiver', function (data) {
@@ -250,6 +199,15 @@ export default {
     hubProxy.on('loadIMUser', function (data) {
       console.log('我的信息', arguments[0])
       _that.imUserInfo.push(...arguments)
+    })
+    // 加载历史信息
+    hubProxy.on('historyMessageByCustomer', function (data) {
+      console.log('历史信息', arguments)
+      _that.historymes.push(...arguments)
+    })
+    // 加载消息预览
+    hubProxy.on('messagePreview', function (data) {
+      console.log('消息预览', arguments)
     })
     // connect
     connection.start({ jsonp: false })
@@ -292,14 +250,14 @@ export default {
       }).fail()
 
       // 用户获取历史消息
-      window.hubProxy.invoke('GetHistoryMessageByCustomer', '2016-09-03', '2018-10-30', '', 1, 20).done(function (ss) {
-        console.log(ss)
-      })
+      // window.hubProxy.invoke('GetHistoryMessageByCustomer', '2016-09-03', '2018-10-30', '', 1, 20).done(function (ss) {
+      //   console.log(ss)
+      // })
 
       // 加载用户前面排队人数
-      window.hubProxy.invoke('LoadWaitingCountBefore').done(function (data) {
-        console.log('排队人数', data)
-      }).fail()
+      // window.hubProxy.invoke('LoadWaitingCountBefore').done(function (data) {
+      //   console.log('排队人数', data)
+      // }).fail()
     },
     getGroupList (pageIndex) {
       let _that = this
