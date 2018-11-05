@@ -387,7 +387,6 @@ export default {
             this.$router.push( "/Local/PaySuccess/" + this.orderId.replace("local", ""));
         }
         else {
-            alert("/Order/PaySucess/" + this.orderId);
             this.$router.push( "/Order/PaySucess/" + this.orderId);
         }
     },

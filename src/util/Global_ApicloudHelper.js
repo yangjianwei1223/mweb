@@ -7,6 +7,33 @@ function IsApp() {
         return false;
     }
 }
+    //获取accesstoken
+    var WX_getToken = function (SucFun) {
+        var wx = api.require('wx');
+        WX_auth(wx, callback)
+        function callback(ret) {
+            if (ret.status) {
+                wx.getToken({
+                    apiKey: '',
+                    apiSecret: '',
+                    code: ret.code
+                }, function (ret, err) {
+                    if (err.code == 0) {
+                        SucFun(ret);
+                    }
+                });
+            }
+        }
+    }
+
+      //去授权
+  var WX_auth = function (wx, callback) {
+        wx.auth({
+            apiKey: ''
+        }, function (ret, err) {
+            callback(ret);
+        });
+    }
 //应用版本号
 function get_appVersion() {
     if (!api) {
@@ -141,5 +168,6 @@ export default {
     get_screenHeight: get_screenHeight,
     get_connectionType: get_connectionType,
     wxPay:wxPay,
-    aliPay:aliPay
+    aliPay:aliPay,
+    WX_getToken:WX_getToken
 }

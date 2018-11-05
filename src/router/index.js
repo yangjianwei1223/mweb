@@ -56,6 +56,7 @@ const Share = resolve => require(['@/components/my/share'], resolve)
 const Points = resolve => require(['@/components/my/points'], resolve)
 const ShareQRCode = resolve => require(['@/components/my/shareqrcode'], resolve)
 const LoginCenter = resolve => require(['@/components/wechat/logincenter'], resolve)
+// const WechatAuthorize=resolve => require(['@/components/wechat/authorize'], resolve)
 const SeatInstallVideo = resolve => require(['@/components/activitys/seatinstallvideo'], resolve)
 const FreeInstall = resolve => require(['@/components/zulin/freeinstall'], resolve)
 const OptimizationDetail = resolve => require(['@/components/optimization/detail'], resolve)
@@ -462,6 +463,13 @@ export default new Router({
     meta: {
       index: 2
     }
+  // }, {
+  //   path: '/Wechat/authorize',
+  //   name: 'wxAuthorize',
+  //   component: WechatAuthorize,
+  //   meta: {
+  //     index: 2
+  //   }
   }, {
     path: '/Activitys/SeatInstallVideo',
     name: 'seatinstallvideo',

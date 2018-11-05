@@ -29,8 +29,8 @@ function GetOpenId()
 {
     var openId = "";
     var dataSession = window.sessionStorage.getItem("MainOpenId");
-    if (dataSession != null) {
-        openId = JSON.parse(window.sessionStorage.getItem("MainOpenId"));
+    if (!!dataSession) {
+        openId =dataSession;
     }
     return openId;
 }

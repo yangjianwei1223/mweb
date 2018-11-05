@@ -36,10 +36,10 @@
             <div class="dialog-content-real">
               <a href="javascript:;" class="earlymsg" @click="getMessageList">{{earlymsgtips}}</a>
               <template v-for="(item3, index3) in MsgList">
-                <section class="msg-list" :key='item3._id + "time"' v-if="index3 === 0 || new Date(item3.SendTime).getTime()-new Date(MsgList[index3-1].SendTime).getTime()> 5*60*1000">
-                  <span class="showtime">{{new Date(item3.SendTime).format('yyyy年MM月dd日 HH:mm:ss')}}</span>
+                <section class="msg-list" :key='index3 + "time"' v-if="index3 === 0 || new Date(item3.CreateTime).getTime()-new Date(MsgList[index3-1].CreateTime).getTime()> 5*60*1000">
+                  <span class="showtime">{{new Date(item3.CreateTime).format('yyyy年MM月dd日 HH:mm:ss')}}</span>
                 </section>
-                <section  class="goodsviewed clearfix" v-if="item3.ObjectType === 4" :key='item3._id + "pro"' @click.stop="msgproductlink(item3.Content.ProductClassify, item3.Content.ProductID)">
+                <section  class="goodsviewed clearfix" v-if="item3.Type === 2 || item3.Type === 3 || item3.Type === 4 ||item3.Type === 5" :key='index3 + "pro"' @click.stop="msgproductlink(item3.Content.ProductClassify, item3.Content.ProductID)">
                   <div class="left clearfix">
                     <img :src="item3.Content.Image">
                   </div>
@@ -48,26 +48,26 @@
                     <p class="title">{{item3.Content.Title}}</p>
                   </div>
                 </section>
-                <section class="msg-list" v-else-if="selfclientid == item3.SenderClientID" :key='item3.MessageID + "imsg"'>
+                <section class="msg-list" v-else-if="ReceiverInfo[1] == item3.ReceiverMbrBaseId" :key='item3.MessageID + "imsg"'>
                   <div class="imsg">
                     <p>
-                      <span class="content" :class="{bubbles: item3.ObjectType === 1}"><i class="refreshicon" v-if="item3.sendStatus && item3.sendStatus === 2" @click="resendmsg(item3, index3)"></i><i class="beforerefresh" v-if="item3.sendStatus && item3.sendStatus === 1"></i>
-                        <span v-if="item3.ObjectType === 2" :class='["brow-theme"+ item3.Content.Theme +"-thumbnail", "brow-theme"+ item3.Content.Theme + "-" + item3.Content.Item]'></span>
-                        <img v-else-if="item3.ObjectType === 3" :src='item3.ImageContent.ImageName ? "https://cdn.im.img.95laibei.com/"+ item3.ImageContent.ImageName +"@!standard_src_M" : "https://cdn.other.img.95laibei.com/Content/Images/loading.gif"' class="dialog-image">
-                        <span v-else v-html="item3.Content"></span>
+                      <span class="content" :class="{bubbles: item3.Type === 0}"><i class="refreshicon" v-if="item3.sendStatus && item3.sendStatus === 2" @click="resendmsg(item3, index3)"></i><i class="beforerefresh" v-if="item3.sendStatus && item3.sendStatus === 1"></i>
+                        <span v-if="item3.Type === 6" :class='["brow-theme"+ item3.Content.Theme +"-thumbnail", "brow-theme"+ item3.Content.Theme + "-" + item3.Content.Item]'></span>
+                        <img v-else-if="item3.Type === 1" :src='item3.Content.ImageName ? "https://cdn.im.img.95laibei.com/"+ item3.Content.ImageName +"@!standard_src_M" : "https://cdn.other.img.95laibei.com/Content/Images/loading.gif"' class="dialog-image">
+                        <span v-else v-html="item3.Content.Text"></span>
                       </span>
                     </p>
                     <img class="px40" :src="FaceImage">
                   </div>
                 </section>
-                <section class="msg-list" v-else :key='item3._id + "umsg"'>
+                <section class="msg-list" v-else :key='index3 + "umsg"'>
                   <div class="umsg">
                     <img class="px40" :src="currentGroupIcon">
                     <p>
-                      <span class="content" :class="{bubbles: item3.ObjectType === 1}">
-                        <span v-if="item3.ObjectType === 2" :class='["brow-theme"+ item3.BrowContent.Theme +"-thumbnail", "brow-theme"+ item3.BrowContent.Theme + "-" + item3.BrowContent.Item]'></span>
-                        <img v-else-if="item3.ObjectType === 3" :src='item3.ImageContent.ImageName ? "https://cdn.im.img.95laibei.com/"+ item3.ImageContent.ImageName +"@!standard_src_M" : "https://cdn.other.img.95laibei.com/Content/Images/loading.gif"' class="dialog-image">
-                        <span v-else v-html="item3.Content"></span>
+                      <span class="content" :class="{bubbles: item3.Type === 0}">
+                        <span v-if="item3.Type === 6" :class='["brow-theme"+ item3.Content.Theme +"-thumbnail", "brow-theme"+ item3.Content.Theme + "-" + item3.Content.Item]'></span>
+                        <img v-else-if="item3.Type === 1" :src='item3.Content.ImageName ? "https://cdn.im.img.95laibei.com/"+ item3.Content.ImageName +"@!standard_src_M" : "https://cdn.other.img.95laibei.com/Content/Images/loading.gif"' class="dialog-image">
+                        <span v-else v-html="item3.Content.Text"></span>
                       </span>
                     </p>
                   </div>
@@ -172,7 +172,8 @@ export default {
       SendTimesLimit: true,
       ReceiverInfo: [],
       imUserInfo: {},
-      historymes: []
+      historymes: [],
+      customDialogId: 0
     }
   },
   mounted () {
@@ -181,14 +182,16 @@ export default {
     let options = {
       qs: {Token: this.$store.state.UserToken, Source: 0}
     }
-    _that.selfclientid = JSON.parse(window.localStorage.getItem('UserToken')).ObjectData.BaseId
+    _that.selfclientid = JSON.parse(JSON.parse(window.localStorage.getItem('UserToken')).ObjectData).BaseId
     console.log(_that.selfclientid)
+    // eslint-disable-next-line
     const connection = hubConnection(IMServiceUrl, options)
     const hubProxy = connection.createHubProxy('ChatHub')
     window.hubProxy = hubProxy
     // 初始化会话
     hubProxy.on('InitDialogByCustomer', function (customDialogId, hismessage) {
-      console.log('会话id', customDialogId)
+      console.log('会话id', customDialogId, hismessage)
+      _that.customDialogId = customDialogId
     })
     // 加载客服信息
     hubProxy.on('LoadReceiver', function (data) {
@@ -197,17 +200,30 @@ export default {
     })
     // 加载我的信息
     hubProxy.on('loadIMUser', function (data) {
-      console.log('我的信息', arguments[0])
-      _that.imUserInfo.push(...arguments)
+      console.log('我的信息', arguments)
+      _that.imUserInfo = arguments[0]
     })
     // 加载历史信息
     hubProxy.on('historyMessageByCustomer', function (data) {
       console.log('历史信息', arguments)
       _that.historymes.push(...arguments)
+      _that.MsgList = _that.historymes[0]
+      _that.MsgList.forEach(function (item, index) {
+        item.SendTimeFormat = _that.getTimeMark(item.CreateTime)
+        item.Content = JSON.parse(item.Content)
+      })
     })
     // 加载消息预览
     hubProxy.on('messagePreview', function (data) {
       console.log('消息预览', arguments)
+    })
+    // 排队信息
+    hubProxy.on('ToLoadWaitingCountBefore', function (data) {
+      console.log('排队消息', arguments)
+    })
+    // 停止轮询
+    hubProxy.on('StopLoadDialogCustomer', function (data) {
+      console.log('停止轮询', arguments)
     })
     // connect
     connection.start({ jsonp: false })
@@ -229,13 +245,13 @@ export default {
     leftbackfun () {
       if (this.openwindow) {
         this.openwindow = !this.openwindow
-        this.headinfo.headtitle = '消息'
+        this.headinfo.title = '消息'
         this.currentPageIndex = this.pushPageIndex
         this.currentGroupID = this.pushGroupID
         this.tips = '正在加载中...'
-        this.busy = false
+        this.busy = true
         this.isTwain = false
-        this.showLoading = true
+        this.showLoading = false
         this.earlymsgtips = '查看更早的消息'
       } else {
         this.$router.back()
@@ -245,25 +261,14 @@ export default {
       // let _that = this
       // 用户加载会话
       window.hubProxy.invoke('LoadDialogByCustomer').done(function (data) {
-        console.log('未读条数', data)
-        // _that.setTotalUnRead(data)
+        console.log('用户加载会话', data)
       }).fail()
-
-      // 用户获取历史消息
-      // window.hubProxy.invoke('GetHistoryMessageByCustomer', '2016-09-03', '2018-10-30', '', 1, 20).done(function (ss) {
-      //   console.log(ss)
-      // })
-
-      // 加载用户前面排队人数
-      // window.hubProxy.invoke('LoadWaitingCountBefore').done(function (data) {
-      //   console.log('排队人数', data)
-      // }).fail()
     },
     getGroupList (pageIndex) {
       let _that = this
       return window.hubProxy.invoke('GetHistoryMessageByCustomer', { PageIndex: pageIndex, PageSize: 12 }, null, '').done(function (data) {
         console.log('获取第' + pageIndex + '页预览数据成功')
-        _that.busy = false
+        _that.busy = true
         // 过滤掉评论、赞和小助手消息并且给系统提醒添加默认头像以及转化时间
         let msglist = []
         data.Data.forEach(item => {
@@ -299,7 +304,7 @@ export default {
               item.SendTimeFormat = _that.getTimeMark(item.SendTime)
             })
             _that.MsgPushList = _that.MsgPushList.concat(data.Data)
-            _that.busy = false
+            _that.busy = true
           } else {
             _that.tips = '已经到底了...'
           }
@@ -311,7 +316,7 @@ export default {
               item.SendTimeFormat = _that.getTimeMark(item.SendTime)
             })
             _that.MsgList = _that.MsgList.concat(data.Data)
-            _that.busy = false
+            _that.busy = true
           } else {
             _that.tips = '已经到底了...'
           }
@@ -415,15 +420,24 @@ export default {
     },
     openchat (index) {
       this.openwindow = true
-      this.headtitle = this.MsgPreviewList[index].GroupPreview.GroupTitle
-      this.currentGroupID = this.MsgPreviewList[index].Group.GroupID
-      this.MsgEndTime = this.MsgPreviewList[index].Group.LastMessage ? this.MsgPreviewList[index].Group.LastMessage.AddTime : ''
-      this.currentGroupIcon = this.MsgPreviewList[index].GroupPreview.GroupIcon
+      this.isTwain = true
+      // this.headinfo.title = this.ReceiverInfo[5]
+      this.headinfo.title = '客服'
+      this.currentGroupIcon = this.ReceiverInfo[4]
+      // this.currentGroupID = this.MsgPreviewList[index].Group.GroupID
+      // this.MsgEndTime = this.MsgPreviewList[index].Group.LastMessage ? this.MsgPreviewList[index].Group.LastMessage.AddTime : ''
       this.pushPageIndex = this.currentPageIndex
       this.currentPageIndex = 0
       this.MsgList = []
       this.busy = true
-      this.getMessageList()
+      // this.getMessageList()
+      this.getHistoryMessageByCustomer()
+    },
+    // 用户获取历史消息
+    getHistoryMessageByCustomer () {
+      window.hubProxy.invoke('GetHistoryMessageByCustomer', '2016-09-03', '2018-10-30', '', 1, 20).done(function (ss) {
+        console.log('用户获取历史消息', ss)
+      })
     },
     // 系统提醒跳转订单详情页
     skiporder (orderid, ordertype) {
@@ -540,7 +554,7 @@ export default {
           ObjectType: this.ChatMessage.Text,
           sendStatus: 1 // 1:已发送 2：发送失败 0：发送成功
         }
-        window.hubProxy.invoke('sendMessage', msg).done(function (msg1) {
+        window.hubProxy.invoke('Send', 4, 0, '{"Text":"你好！"}', this.ReceiverInfo[0], this.ReceiverInfo[1], this.ReceiverInfo[2], this.ReceiverInfo[3], this.ReceiverInfo[4], this.ReceiverInfo[5], this.imUserInfo.NickName).done(function (msg1) {
           console.log('消息发送成功', msg1)
           _that.chattextcontent = ''
           _that.issend = false
@@ -590,7 +604,7 @@ export default {
           BrowContent: {Theme: 1, Item: num},
           ObjectType: this.ChatMessage.Brow
         }
-        window.hubProxy.invoke('sendMessage', msg).done(function (msg1) {
+        window.hubProxy.invoke('send', msg).done(function (msg1) {
           console.log('消息发送成功', msg1)
         }).fail(function (err) {
           console.log('消息发送失败', err)
@@ -698,7 +712,7 @@ export default {
         let chatdialog = document.getElementsByClassName('dialog-content')[0]
         chatdialog.scrollTop = chatdialog.scrollHeight
       }
-      window.hubProxy.invoke('sendMessage', msg).done(function (msg1) {
+      window.hubProxy.invoke('send', msg).done(function (msg1) {
         console.log('消息发送成功', msg1)
       }).fail(function (err) {
         console.log('消息发送失败', err)

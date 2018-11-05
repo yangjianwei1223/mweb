@@ -25,7 +25,10 @@
     <p class="get-voice-validate">收不到短信？使用<span class="SendTTSValidCode" @click="GetValidCode(1)">语音验证码</span></p>
     <button type="button" class="loginbtn" :class={disabled:disabled} @click="login" :disabled="disabled">立即登录</button>
     <router-link :to='"/account/login"' class="forgetbtn" data-role="none">密码登录</router-link>
-
+     <div class="thirdparty" :style="{display:((isWX||isApp)?'block':'none')}">
+        <p class="title thirdtext">其他登录方式</p>
+        <a  id="wx_login"  class="weixin" @click="wxLogin"><img src="https://cdn.sys.img.95laibei.com/Content/Images/thirdweixin.png@!standard_src_src"/><p>微信</p></a>
+    </div>
   </div>
 </template>
 
@@ -36,14 +39,36 @@ import apiport from "../../util/api";
 import storage from "../../util/storage";
 import CommonHelper from "../../util/Global_CommonHelper";
 import ValidCodeHelper from "../../util/Global_ValidCodeHelper";
+import weiXinHelper from "../../util/Global_WeiXinHelper";
+import connectLoginHelper from "../../util/Global_ConnectLoginHelper";
+import apicloudHelper from "../../util/Global_ApicloudHelper";
+
 export default {
   name: "index",
   data() {
     return {
       tel: "",
       valid: "",
-      flag: 1
+      flag: 1,
+      returnUrl:'',
+      isWX:false,
+      isApp:false
     };
+  },
+  mounted:function()
+  {
+     var returnUrl="/";
+      if (this.$route.query.ReturnUrl!=undefined&&this.$route.query.ReturnUrl!='')
+            {
+                returnUrl = this.$route.query.ReturnUrl;
+                if (returnUrl.IndexOf(',') != -1)
+                {
+                    returnUrl = returnUrl.Split(',')[1];
+                }
+            }
+     this.returnUrl=returnUrl
+     this.isWX=weiXinHelper.IsWXBrowser()
+     this.isApp=apicloudHelper.IsApp()
   },
   computed: {
     disabled: function() {
@@ -110,6 +135,17 @@ export default {
     },
     GetValidCode(type) {
       ValidCodeHelper.GetValidCode(21,this.tel, "sendVerifyCode", type);
+    },
+    wxLogin:function()
+    {
+      storage.setSession(this.returnUrl,"wx_login_backurl");
+      if(this.isWX)
+      {
+         window.location.href= apiport.CurrentDomain + "/WeChat/Authorize?state=wxlogin";
+      }else
+      {
+          connectLoginHelper.wxlogin();
+      }  
     }
   }
 };
@@ -242,5 +278,30 @@ export default {
 .get-voice-validate.get {
   margin-top: 0;
   padding-bottom: 0.2rem;
+}
+
+.thirdparty{
+    margin-top:80px;
+    width:100%;
+    text-align:center;
+}
+.thirdparty .title:before,.thirdparty .title:after{
+    content:"";
+    display:inline-block;
+    height:1px;
+    width:2rem;
+    background-color:#dcdddd;
+    vertical-align:middle;
+    margin:0 12px;
+}
+.thirdparty .weixin{
+    display:inline-block;
+    margin:30px 10px;
+}
+.thirdparty .weixin img{
+    width:40px;
+    border:1px solid #dcdddd;
+    border-radius:50%;
+    padding:10px;
 }
 </style>

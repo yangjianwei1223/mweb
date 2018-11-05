@@ -64,14 +64,14 @@ import http from './http.js'
          if (!IsExist())
             return model;
          var sysTypeStorage = storage.getLocal("jpushSystemType");
-         if (sysTypeStorage != undefined && sysTypeStorage.ObjectData != null) {
-             model.SystemType = sysTypeStorage.ObjectData;
+         if (sysTypeStorage != undefined && sysTypeStorage != null) {
+             model.SystemType = sysTypeStorage;
          } else {
              model.SystemType =2;
          }
          var registerStorage = storage.getLocal("jpushRegisterId");
-         if (registerStorage != undefined && registerStorage.ObjectData != null) {
-             model.RegistrationId = registerStorage.ObjectData;
+         if (registerStorage != undefined && registerStorage != null) {
+             model.RegistrationId = registerStorage;
          } else {
              model.RegistrationId = '';
          }
@@ -96,14 +96,17 @@ import http from './http.js'
                          TemplateHelper.changePage(Global_ServiceUrlHelper.CurrentDomain + extra.LinkUrl);
                      }
                  });*/
+                 alert('弹出是否跳页选择框:'+extra.LinkUrl)
              } else {
                 // TemplateHelper.changePage(Global_ServiceUrlHelper.CurrentDomain + extra.LinkUrl);
+                alert('跳页:'+extra.LinkUrl)
              }
          } else {
             /* Global_PopupHelper.alert({
                  'title': "【通知】：" + getfromatMsg(ajpush.content)
              });
              */
+            alert('【通知】：'+ getfromatMsg(ajpush.content))
          }
          
 
@@ -165,18 +168,20 @@ import http from './http.js'
      var setSystemType = function () {
          var str = api.systemType.toString();
          if (str.toLowerCase() == "ios") {
-             storage.setLocal("jpushSystemType", 0);
+             storage.setLocal(0,"jpushSystemType");
          } else if (str.toLowerCase() == "android") {
-            storage.setLocal("jpushSystemType", 1);
+            storage.setLocal(1,"jpushSystemType");
          } else {
-            storage.setLocal("jpushSystemType", 2);
+            storage.setLocal(2,"jpushSystemType");
          }
      }
      var setRegisterId = function () {
          var ajpush = api.require('ajpush');
          ajpush.getRegistrationId(function (ret) {
              var registrationId = ret.id;
-             storage.setLocal("jpushRegisterId", registrationId);
+             //alert('初始值:'+registrationId);
+             storage.setLocal(registrationId,"jpushRegisterId");
+            // alert('取出值'+storage.getLocal("jpushRegisterId"));
          });
      };
 

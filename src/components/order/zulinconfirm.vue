@@ -125,7 +125,7 @@ export default {
       BirthDay: '',
       InsuredPersonSex: 0,
       orderid: '',
-      rentid: '',
+      rentid: 0,
       RentName: '',
       RentAmount: '',
       PromotionCode: '',
@@ -150,7 +150,7 @@ export default {
     let _that = this
     this.ConsigneeId = window.sessionStorage.getItem('ChooseConsigneeId') || 0
     this.orderid = this.$route.params.id
-    this.rentid = this.$route.query.rentid ? this.$route.query.rentid : ''
+    this.rentid = this.$route.query.rentid ?parseInt(this.$route.query.rentid)  : 0
     let model = {
       Token: this.$store.state.UserToken,
       GoodsBaseId: this.orderid,
@@ -200,13 +200,13 @@ export default {
         Token: this.$store.state.UserToken,
         BirthDay: this.BirthDay,
         ConsigneeId: this.ConsigneeId,
-        DiscountCouponId: '0',
+        DiscountCouponId:this.CouponId,
         GoodsId: this.$route.params.id,
         IdentityCard: '',
         InsuredPersonSex: this.InsuredPersonSex,
         IsChangeDeposit: 0,
         PromotionCode: this.PromotionCode,
-        RentId: 0
+        RentId: this.rentid
       }
       orderDetail.CheckPromotionCode(this.PromotionCode).then(function (res) {
         if (res === 1) {

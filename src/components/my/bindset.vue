@@ -12,9 +12,14 @@
 </template>
 
 <script>
+/* eslint-disable */
 import qs from 'qs'
 import apiport from '../../util/api'
 import head from '@/components/common/header'
+import weiXinHelper from "../../util/Global_WeiXinHelper";
+import apicloudHelper from "../../util/Global_ApicloudHelper";
+import baseInfoHelper from "../../util/Global_BaseInfoHelper";
+
 export default {
   name: 'bindset',
   components: {
@@ -37,7 +42,7 @@ export default {
   },
   mounted: function () {
     let model = {
-      Token: this.$store.state.UserToken
+      Token: baseInfoHelper.GetToken()
     }
     this.$http({
       url: apiport.Account_GetBindInfo,
@@ -58,7 +63,7 @@ export default {
       // 解除绑定
       if (this.IsWxBind) {
         let model = {
-          Token: this.$store.state.UserToken,
+          Token:  baseInfoHelper.GetToken(),
           Type: 1
         }
         this.$http({
@@ -76,13 +81,67 @@ export default {
           })
       } else {
         // 绑定
-        // eslint-disable-next-line
-        if (navigator.userAgent.toLowerCase().match(/MicroMessenger/i) == 'micromessenger') {
-          window.location.href = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx7ff0669994ee3210&redirect_uri=https%3a%2f%2ft-mweb.95laibei.com%2fpay%2fWxCode&response_type=code&scope=snsapi_userinfo&state=wxlogin#wechat_redirect'
-          return true
-        } else {
-          alert('微信关联请在app内或者微信内')
-        }
+               var url = apiport.CurrentDomain + "/WeChat/Authorize?state=wxlogin";
+                if (weiXinHelper.IsWXBrowser()) {
+                    window.location.href = url;
+                }
+                else if (apicloudHelper.IsApp()) {
+                    apicloudHelper.WX_getToken(SucCallBack);
+                    function SucCallBack(ret) {
+                          let model={
+                              Type:1,
+                              UnionId:'',
+                              OpenId: ret.openId,
+                              access_token:ret.accessToken,
+                              NickName:'',
+                              Sex:'',
+                              Headimgurl:'',
+                              Token: baseInfoHelper.GetToken()
+                            }
+                            this.$http({
+                                  url: apiport.Account_BindingConnect,
+                                  method: "post",
+                                  header: {
+                                    "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+                                  },
+                                  data: qs.stringify({ reqJson: JSON.stringify(model) })
+                                })
+                                .then(res => {
+                                    var data=res.data;
+                                      if (typeof (data.ResultNo) != "undefined" && data.ResultNo == "00000000") {
+                                         this.IsWxBind =true;
+                                          alert('关联微信成功')
+                                      }
+                                      else if (typeof (data) != "undefined" && data.ResultRemark != null) {
+                                         alert(data.ResultRemark)
+                                      }
+                                      else {
+                                        alert('操作失败')
+                                      }
+                              });
+                       /* var data = GetBindsetData.Binding('1', '', ret.openId, '', '', '', TokenObj.Token, ret.accessToken);
+                        if (typeof (data.ResultNo) != "undefined" && data.ResultNo == "00000000") {
+                            $("#wx_span").html("关联");
+                            $("#wx_bind").html("解除关联");
+                            $("#wx_bind").attr("data-IsWxBind", 'true');
+                            Global_PopupHelper.dialogautoclose({
+                                'title': '关联微信成功',
+                                'timer': '2000',//毫秒
+                                'type': '1'
+                            });
+                        }
+                        else if (typeof (data) != "undefined" && data.ResultRemark != null) {
+                              alert(data.ResultRemark)
+                        }
+                        else {
+                           alert('操作失败')
+                        }*/
+                    }
+                }
+                else{
+                   alert('微信关联请在app内或者微信内')
+                }
+    
       }
     }
   }

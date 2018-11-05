@@ -25,13 +25,13 @@ export default {
       data: qs.stringify({ reqJson: JSON.stringify(model) })
     })
       .then(res => {
-        console.log('获取微信openid信息', res)
+        console.log('获取微信openid信息' + res)
         console.log(this.state.indexOf('GoodsPay|'))
         // 支付页面
         if (this.state.indexOf('GoodsPay|') > -1) {
           let stateArr = this.state.split('|')
           if (stateArr.length > 1) {
-            window.sessionStorage.setItem('MainOpenId', JSON.stringify(res.data.openId))
+            window.sessionStorage.setItem('MainOpenId', res.data.openId)
             // this.$router.push({path: '/Pay/GoodsPay', query: {id: stateArr[1], openId: res.data.openId}})
             window.location.href = '/Pay/GoodsPay?id=' + stateArr[1] + '&openId=' + res.data.openId
           } else {
@@ -39,7 +39,7 @@ export default {
           }
         } else if (this.state.indexOf('wxlogin') > -1) {
           // 关联页面
-          this.$router.push({path: '/WeChat/LoginCenter', query: {openid: res.data.openId, access_token: res}})
+          this.$router.push({path: '/WeChat/LoginCenter', query: {openid: res.data.openId, access_token: res.data.access_token}})
           // end 关联页面
         }
       })

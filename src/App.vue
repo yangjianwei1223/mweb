@@ -13,6 +13,7 @@ import goTop from './components/common/scrolltop'
 import SiteAccessLogHelper from './util/Global_SiteAccessLogHelper'
 import aJpushHelper from './util/Global_AJpushHelper'
 import weiXinHelper from './util/Global_WeiXinHelper'
+import storage from './util/storage'
 
 export default {
   name: 'App',
@@ -37,11 +38,6 @@ export default {
       }, 3000)
       SiteAccessLogHelper.PageVisit()
       SiteAccessLogHelper.SetAppQueryString()
-       //Jpush通知回调，初次加载完成
-        if (window.JpushData != undefined && window.JpushData != null
-               && window.JpushData != '') {
-             aJpushHelper.ReceiveCallBack(false, window.JpushData);
-       }
     }
   },
   created: function () {
@@ -51,14 +47,11 @@ export default {
       aJpushHelper.Init();
     };
     window.JpushCallBack=function(type,dataStr) {
-        window.JpushData = dataStr;
-        aJpushHelper.ReceiveCallBack(true, window.JpushData);
+        aJpushHelper.ReceiveCallBack(true, dataStr);
      }
      var _that=this;
      setTimeout(function(){
       //小程序初次进入设置参数
-       console.log('start')
-       console.log(JSON.stringify(_that.$route.query))
        weiXinHelper.SetParameter(_that.$route.query.smallopenid,_that.$route.query.xcxName)
      },100)
   },

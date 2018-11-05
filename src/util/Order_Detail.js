@@ -3,7 +3,7 @@ import apiport from './api'
 import http from './http.js'
 // import router from '../router'
 import BaseInfoHelper from './Global_BaseInfoHelper'
-import globalWeiXinHelper from '@/util/Global_WeiXinHelper'
+import globalWeiXinHelper from './Global_WeiXinHelper'
 
 let orderDetail = {
   DeleteOrder: function (id, sucFun) {
@@ -82,9 +82,9 @@ let orderDetail = {
       })
   },
   PageToGoodsPay: function (orderid) {
-    if (globalWeiXinHelper.IsWXBrowser) {
+    if (globalWeiXinHelper.IsWXBrowser()) {
       let openId = globalWeiXinHelper.GetOpenId()
-      if (openId === null) {
+      if (!openId) {
         window.location.href = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx7ff0669994ee3210&redirect_uri=https%3a%2f%2ft-mweb.95laibei.com%2fpay%2fWxCode&response_type=code&scope=snsapi_userinfo&state=GoodsPay|' + orderid + '#wechat_redirect'
       } else {
         window.location.href = '/Pay/GoodsPay?id=' + orderid
