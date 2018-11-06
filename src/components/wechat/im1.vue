@@ -57,12 +57,12 @@
                         <span v-else v-html="item3.Content.Text"></span>
                       </span>
                     </p>
-                    <img class="px40" :src="FaceImage">
+                    <img class="px40" :src="imUserInfo.AvatarUrl">
                   </div>
                 </section>
                 <section class="msg-list" v-else :key='index3 + "umsg"'>
                   <div class="umsg">
-                    <img class="px40" :src="currentGroupIcon">
+                    <img class="px40" :src="ReceiverInfo[4]">
                     <p>
                       <span class="content" :class="{bubbles: item3.Type === 0}">
                         <span v-if="item3.Type === 6" :class='["brow-theme"+ item3.Content.Theme +"-thumbnail", "brow-theme"+ item3.Content.Theme + "-" + item3.Content.Item]'></span>
@@ -131,12 +131,9 @@ export default {
       busy: true,
       showLoading: false,
       tips: '正在加载',
-      selfclientid: '',
-      FaceImage: '',
       pushGroupID: '',
       systemGroupID: '',
       currentGroupID: '',
-      currentGroupIcon: '',
       // 拿第一条消息的添加时间做获取聊天记录的过滤条件,防止分页拉取聊天记录数据重复
       MsgEndTime: '',
       isTwain: false,
@@ -182,8 +179,6 @@ export default {
     let options = {
       qs: {Token: this.$store.state.UserToken, Source: 0}
     }
-    _that.selfclientid = JSON.parse(JSON.parse(window.localStorage.getItem('UserToken')).ObjectData).BaseId
-    console.log(_that.selfclientid)
     // eslint-disable-next-line
     const connection = hubConnection(IMServiceUrl, options)
     const hubProxy = connection.createHubProxy('ChatHub')
@@ -229,13 +224,9 @@ export default {
     connection.start({ jsonp: false })
       .done(function () {
         console.log('Now connected, connection ID=' + connection.id)
-        _that.getUnReadTotal()
+        _that.getConnectInfo()
       })
-      // .done(function () {
-      //   _that.getGroupList(1)
-      // })
       .fail(function () { console.log('Could not connect') })
-    this.getMyface()
     this.dateformat()
   },
   beforeDestroy () {
@@ -257,11 +248,17 @@ export default {
         this.$router.back()
       }
     },
-    getUnReadTotal () {
+    getConnectInfo () {
       // let _that = this
       // 用户加载会话
       window.hubProxy.invoke('LoadDialogByCustomer').done(function (data) {
         console.log('用户加载会话', data)
+      }).fail()
+      window.hubProxy.invoke('InitDialogByCustomer').done(function (data) {
+        console.log('初始化获取会话id和最近五条消息', data)
+      }).fail()
+      window.hubProxy.invoke('LoadIMUser').done(function (data) {
+        console.log('获取我的消息', data)
       }).fail()
     },
     getGroupList (pageIndex) {
@@ -423,7 +420,6 @@ export default {
       this.isTwain = true
       // this.headinfo.title = this.ReceiverInfo[5]
       this.headinfo.title = '客服'
-      this.currentGroupIcon = this.ReceiverInfo[4]
       // this.currentGroupID = this.MsgPreviewList[index].Group.GroupID
       // this.MsgEndTime = this.MsgPreviewList[index].Group.LastMessage ? this.MsgPreviewList[index].Group.LastMessage.AddTime : ''
       this.pushPageIndex = this.currentPageIndex
@@ -446,24 +442,6 @@ export default {
       } else {
         this.$router.push({path: '/Order/buydetail/' + orderid})
       }
-    },
-    // get自己的头像
-    getMyface () {
-      let model = {
-        Token: this.$store.state.UserToken
-      }
-      this.$http({
-        url: apiport.Account_GetBaseByToken,
-        method: 'post',
-        data: qs.stringify({ reqJson: JSON.stringify(model) })
-      })
-        .then(res => {
-          let data = res.data
-          this.FaceImage = data.FaceImage
-        })
-        .catch(error => {
-          console.log(error)
-        })
     },
     // 日期格式化
     dateformat () {
@@ -546,7 +524,7 @@ export default {
         let _that = this
         let msg = {
           Content: this.chattextcontent,
-          SenderClientID: this.selfclientid,
+          SenderClientID: this.imUserInfo.MbrBaseId,
           GroupID: this.currentGroupID,
           MessageID: this.increaseId++,
           SendTime: new Date(),
@@ -597,7 +575,7 @@ export default {
         }, 1000)
         let msg = {
           Content: {Theme: 1, Item: num},
-          SenderClientID: this.selfclientid,
+          SenderClientID: this.imUserInfo.MbrBaseId,
           GroupID: this.currentGroupID,
           MessageID: this.increaseId++,
           SendTime: new Date(),
@@ -625,7 +603,7 @@ export default {
       let _that = this
       let msg = {
         Content: {ImagePath: '', ImageName: '', ImageID: 0},
-        SenderClientID: this.selfclientid,
+        SenderClientID: this.imUserInfo.MbrBaseId,
         GroupID: this.currentGroupID,
         MessageID: this.increaseId++,
         SendTime: new Date(),
