@@ -49,7 +49,7 @@ var Pay = function (IsMixPay, hasPointPay, hasTimesCardPay, remark, showUrl, typ
             data: qs.stringify({ reqJson: JSON.stringify(model) })
           })
             .then(res => {
-             alert(JSON.stringify(res.data));
+             //alert(JSON.stringify(res.data));
               var data=res.data;
               if (data.ResultNo == "00000000") {
                 ApicloudHelper.aliPay(data.AlipayHtml, SucFun, ErrFun);

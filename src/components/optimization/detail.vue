@@ -63,7 +63,7 @@ import apiport from '../../util/api'
 import vHeader from '../common/header'
 import swiper from '../common/swiper'
 import vFooter from './footer'
-import comment from '../seat/comment'
+import comment from '../common/comment'
 import goTop from '@/components/common/scrolltop'
 import skuChoose from '@/components/common/skuchoose'
 import moreRecommend from './morecomend'
@@ -120,18 +120,9 @@ export default {
     }
   },
   computed: {
-    // title: function () {
-    //   if (this.SaleType === 1) {
-    //     return '座椅购买'
-    //   }
-    //   return '座椅租赁'
-    // },
     footdata: function () {
       return {'Status': this.Status, 'IsCurrentUserPraise': this.IsCurrentUserPraise, 'Praisecount': this.Praisecount}
     },
-    // isopensku: function () {
-    //   return this.isopensku
-    // },
     initialskuinfo: function () {
       return {
        'skuinfo' :this.skuinfo,
@@ -143,9 +134,6 @@ export default {
     }
   },
   methods: {
-    // TopNaviToggle () {
-    //   this.TopNaviShow = !this.TopNaviShow
-    // },
     rightbtn1click (){
       this.$router.push("/Home/Cart")
     },
@@ -238,12 +226,6 @@ export default {
         method: 'post',
         data: qs.stringify({ reqJson: JSON.stringify(model1) })
       }).then((res) => {
-
-        // this.skugoodsimg = res.data
-        // console.log(2, this.$route.params.id)
-        // console.log('商品属性', res.data)
-        // //  this.GoodsBaseList = res.data.GoodsBaseList
-        // this.goodsPrice = this.GoodsBaseList[0].Price
         // 给每个销售属性价格状态0：未选 1：选中 2：不能选
         for (let i = 0; i < res.data.SalePropertyList.length; i++) {
           for (let j = 0; j < res.data.SalePropertyList[i].ItemList.length; j++) {
@@ -251,78 +233,10 @@ export default {
           }
         }
         this.skuinfo = res.data
-        // this.SalePropertyList = res.data.SalePropertyList
-        // console.log(123123, this.SalePropertyList)
-        // // 获取商品的总库存和商品最低显示价格
-        // for (let i = 0; i < this.GoodsBaseList.length; i++) {
-        //   this.totalStockQuentity += this.GoodsBaseList[i].StockQuentity
-        //   this.goodsPrice = this.goodsPrice > this.GoodsBaseList[i].Price ? this.GoodsBaseList[i].Price : this.goodsPrice
-        // }
-        // this.$nextTick(function () {
-        //   //  this.propertvalueInit()
-        // })
       }).catch((error) => {
         console.log(error)
       })
     },
-    // checkprops (pitem, item, index) {
-    //   console.log(pitem)
-    //   if (item.state === 2) {
-    //     return true
-    //   } else if (item.state === 1) {
-    //     item.state = 0
-    //   } else {
-    //     let checkCode = pitem.Code
-    //     for (let i = 0; i < this.SalePropertyList.length; i++) {
-    //       // 同一属性值单选
-    //       if (this.SalePropertyList[i].Code === checkCode) {
-    //         for (let j = 0; j < this.SalePropertyList[i].ItemList.length; j++) {
-    //           this.SalePropertyList[i].ItemList[j].state = 0
-    //         }
-    //         item.state = 1
-    //       }
-    //       // 同一属性值单选 end
-    //     }
-    //   }
-    //   // 库存为0 的sku不让点
-    //   this.$nextTick(function () {
-    //     let _that = this
-    //     _that.SalePropertyList.forEach(function (item, index) {
-    //       item.ItemList.forEach(function (item1, index1) {
-    //         let totalItemStockQuentity = 0
-    //         _that.GoodsBaseList.forEach(function (item2, index2) {
-    //           let IsCurrenType = true
-    //           item2.GoodsTypeItemList.forEach(function (item3, index3) {
-    //             if (item1.PropertyId === item3.PropertyId) {
-    //               if (item1.PropertyItemId !== item3.PropertyItemId) {
-    //                 IsCurrenType = false
-    //                 return true
-    //               }
-    //             } else {
-    //               let checkEle = document.querySelectorAll('#SalePropertyList li.checked')
-    //               checkEle.forEach(function (ele, index4) {
-    //                 let chkPropertyId = parseInt(ele.dataset.propertyid)
-    //                 let chkPropertyItemId = parseInt(ele.dataset.propertyitemid)
-    //                 if (item3.PropertyId === chkPropertyId && item3.PropertyItemId !== chkPropertyItemId) {
-    //                   IsCurrenType = false
-    //                   return true
-    //                 }
-    //               })
-    //             }
-    //           })
-    //           IsCurrenType && (totalItemStockQuentity += item2.StockQuentity)
-    //         })
-    //         if (totalItemStockQuentity === 0) {
-    //           item1.state = 2
-    //         } else {
-    //           item1.state === 1 || (item1.state = 0)
-    //         }
-    //       })
-    //     })
-    //     // 所有属性值选择完成，切换商品图片和标题等相关数据
-    //     this.propertvalueInit()
-    //   })
-    // },
     judgemoreline () {
       let ele = document.getElementById('ProductContent')
       let styles = window.getComputedStyle(ele, null)
@@ -341,13 +255,6 @@ export default {
         this.isshowmoreline = false
       }
     },
-    // chooseonly (index) {
-    //   if (this.periodindex === index) {
-    //     this.periodindex = ''
-    //   } else {
-    //     this.periodindex = index
-    //   }
-    // },
     ProductPraise () {
       let model = {
         ProductBaseId: this.$route.params.id,
@@ -366,21 +273,6 @@ export default {
         console.log(error)
       })
     },
-    // gotRelatedProducts () {
-    //   let model1 = {
-    //     ProductBaseId: this.$route.params.id,
-    //     GetCount: 8
-    //   }
-    //   this.$http({
-    //     url: apiport.Product_GetMoreList,
-    //     method: 'post',
-    //     data: qs.stringify({ reqJson: JSON.stringify(model1) })
-    //   }).then((res) => {
-    //   //  console.log(2, this.$route.params.id)
-    //     console.log('相关商品列表--1011', res.data)
-    //     this.ListOtherProducts = res.data.Data
-    //   })
-    // }
   },
   mounted: function () {
     this.getdetaildata()

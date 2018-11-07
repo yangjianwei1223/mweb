@@ -49,19 +49,6 @@ export default {
   props: ['initialskuinfo'],
   data () {
     return {
-      // mysku:this.initialskuinfo
-      // isopensku: isopensku,
-      // skuinfoinit: this.initialskuinfo,
-      // periodindex: 0,
-      // SalePropertyList: this.initialskuinfo.skuinfo.SalePropertyList,
-      // Status:this.skuinfoinit.skuinfo.status
-
-
-            // _that.skugoodsimg = item.ImgPath
-            // _that.skugoodstitle = item.Title
-            // _that.goodsPrice = item.Price
-            // _that.totalStockQuentity = item.StockQuentity
-
       skugoodsimg:this.initialskuinfo.skugoodsimg,
       skugoodstitle:this.initialskuinfo.skugoodstitle,
       totalStockQuentity: 0,
@@ -83,31 +70,6 @@ export default {
       console.log("当前选择个数" + document.querySelectorAll("#SalePropertyList .checked").length)
       this.$emit('closebtn')
     },
-    // getskudetail () {
-    //   // debugger
-    //   // console.log(skuinfo)
-    //   this.skugoodsimg = this.skuinfoinit.skugoodsimg
-    //     console.log(2, this.$route.params.id)
-    //     console.log('商品属性', skuinfo)
-    //     //  this.GoodsBaseList = skuinfo.GoodsBaseList
-    //     this.goodsPrice = this.GoodsBaseList[0].Price
-    //     // 给每个销售属性价格状态0：未选 1：选中 2：不能选
-    //     for (let i = 0; i < skuinfo.SalePropertyList.length; i++) {
-    //       for (let j = 0; j < skuinfo.SalePropertyList[i].ItemList.length; j++) {
-    //         skuinfo.SalePropertyList[i].ItemList[j].state = 0
-    //       }
-    //     }
-    //     initialskuinfo.skuinfo.SalePropertyList= skuinfo.SalePropertyList
-    //     //  console.log(123123, this.SalePropertyList)
-    //     // 获取商品的总库存和商品最低显示价格
-    //     for (let i = 0; i < this.GoodsBaseList.length; i++) {
-    //       this.totalStockQuentity += this.GoodsBaseList[i].StockQuentity
-    //       this.goodsPrice = this.goodsPrice > this.GoodsBaseList[i].Price ? this.GoodsBaseList[i].Price : this.goodsPrice
-    //     }
-    //     this.$nextTick(function () {
-    //       this.propertvalueInit()
-    //     })
-    // },
     maskclosesku (e) {
       if (e.target.tagName === 'SECTION') {
         this.closesku()
@@ -288,14 +250,8 @@ export default {
         //if(ItemList.length)
         return this.skubaseid = sk.GoodsBaseList[0].GoodsBaseId 
       }
-      
     },
     updateTotalQuenti: function(){
-      
-      // console.log("computed执行")
-      // console.log(this.initialskuinfo)
-      // console.log(this.initialskuinfo.skuinfo.CartCount)
-      //  return this.initialskuinfo.skuinfo.CartCount
       let sk = this.initialskuinfo.skuinfo
       if(sk){
         for (let i = 0; i < sk.GoodsBaseList.length; i++) {
@@ -312,28 +268,9 @@ export default {
         }
         let salelist =this.initialskuinfo.skuinfo.SalePropertyList
          let goodlist =this.initialskuinfo.skuinfo.GoodsBaseList
-        // if(salelist && goodlist){
-        //   for (let i = 0; i < salelist.length; i++) {
-        //     for (let j = 0; j < salelist[i].ItemList.length; j++) {
-        //       alert(i+"---"+j)
-        //       salelist[i].ItemList[j].state = 0
-        //     }
-        //   }
-        //   //this.propertvalueInit(salelist,goodlist)
-        // }
-        // this.$nextTick(function () {
-         
-        // })
       return this.goodsPrice
       }
     }
-  },
-  created: function () {
-
-    //  this.getskudata()
-    //  console.log(initialskuinfo)
-    // debugger
-    // console.log(this.initialskuinfo)
   }
 }
 </script>

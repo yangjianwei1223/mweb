@@ -83,7 +83,6 @@ var Pay = function (IsMixPay, hasPointPay, hasTimesCardPay, remark, type, relati
             var data=res.data;
             if (data.ResultNo == "00000000") {
                 if (ApicloudHelper.IsApp()) {
-                    alert('is app pay');
                     //APP支付
                     ApicloudHelper.wxPay(data.mchId, data.nonceStr, data.orderId, data.payDetailId, data.timeStamp, data.sign, sucFun, errFun);
                 } else {

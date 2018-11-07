@@ -11,9 +11,9 @@
             </div>
             <div class="right">
               <div class="name">{{ReceiverInfo[5]}}</div>
-              <!-- <div class="cont" v-if="item.Group.LastMessage" v-html="item.Group.LastMessage.Content"></div> -->
+              <div class="cont" v-if="thelastmes" v-html="thelastmes.text"></div>
             </div>
-            <!-- <div class="time" v-if="item.Group.LastMessage">{{item.Group.LastMessage.SendTimeFormat}}</div> -->
+            <div class="time" v-if="thelastmes">{{thelastmes.SendTimeFormat}}</div>
           </div>
         </section>
       </template>
@@ -34,7 +34,7 @@
         <div class="dialog-wrap" v-else>
           <div class="dialog-content" :style='{bottom: showbrow ? "230px" : "50px"}'  @click="showbroworboard(2)">
             <div class="dialog-content-real">
-              <a href="javascript:;" class="earlymsg" @click="getMessageList">{{earlymsgtips}}</a>
+              <a href="javascript:;" class="earlymsg" @click="getHistoryMessageByCustomer">{{earlymsgtips}}</a>
               <template v-for="(item3, index3) in MsgList">
                 <section class="msg-list" :key='index3 + "time"' v-if="index3 === 0 || new Date(item3.CreateTime).getTime()-new Date(MsgList[index3-1].CreateTime).getTime()> 5*60*1000">
                   <span class="showtime">{{new Date(item3.CreateTime).format('yyyy年MM月dd日 HH:mm:ss')}}</span>
@@ -48,7 +48,7 @@
                     <p class="title">{{item3.Content.Title}}</p>
                   </div>
                 </section>
-                <section class="msg-list" v-else-if="ReceiverInfo[1] == item3.ReceiverMbrBaseId" :key='item3.MessageID + "imsg"'>
+                <section class="msg-list" v-else-if="imUserInfo.MbrBaseId !== item3.ReceiverMbrBaseId" :key='index3 + "imsg"'>
                   <div class="imsg">
                     <p>
                       <span class="content" :class="{bubbles: item3.Type === 0}"><i class="refreshicon" v-if="item3.sendStatus && item3.sendStatus === 2" @click="resendmsg(item3, index3)"></i><i class="beforerefresh" v-if="item3.sendStatus && item3.sendStatus === 1"></i>
@@ -131,7 +131,6 @@ export default {
       busy: true,
       showLoading: false,
       tips: '正在加载',
-      pushGroupID: '',
       systemGroupID: '',
       currentGroupID: '',
       // 拿第一条消息的添加时间做获取聊天记录的过滤条件,防止分页拉取聊天记录数据重复
@@ -148,17 +147,14 @@ export default {
         SystemPush: 5
       },
       ChatMessage: {
-        Text: 1,
-        Brow: 2,
-        Image: 3,
-        Product: 4,
+        Text: 0,
+        Image: 1,
+        Product: 2,
+        Article: 3,
+        localbath: 4,
         Order: 5,
-        Article: 6,
-        SystemMsg: 7,
-        Comment: 8,
-        Praise: 9,
-        SystemPushMsg: 10,
-        ActivityLocalLife: 11
+        Brow: 6,
+        other: 10
       },
       openwindow: false,
       showbrow: false,
@@ -170,7 +166,8 @@ export default {
       ReceiverInfo: [],
       imUserInfo: {},
       historymes: [],
-      customDialogId: 0
+      customDialogId: 0,
+      thelastmes: {text: '', SendTimeFormat: ''}
     }
   },
   mounted () {
@@ -187,6 +184,8 @@ export default {
     hubProxy.on('InitDialogByCustomer', function (customDialogId, hismessage) {
       console.log('会话id', customDialogId, hismessage)
       _that.customDialogId = customDialogId
+      _that.thelastmes.text = _that.getMsgContent(hismessage[0])
+      _that.thelastmes.SendTimeFormat = _that.getTimeMark(hismessage[0].CreateTime)
     })
     // 加载客服信息
     hubProxy.on('LoadReceiver', function (data) {
@@ -200,13 +199,40 @@ export default {
     })
     // 加载历史信息
     hubProxy.on('historyMessageByCustomer', function (data) {
-      console.log('历史信息', arguments)
+      console.log('聊天记录', arguments)
+      _that.historymes = []
       _that.historymes.push(...arguments)
-      _that.MsgList = _that.historymes[0]
-      _that.MsgList.forEach(function (item, index) {
+      if (_that.historymes[0].length === 0) {
+        _that.earlymsgtips = '无更多消息'
+        return true
+      }
+      _that.historymes[0] = _that.historymes[0].reverse()
+      _that.historymes[0].forEach(function (item, index) {
         item.SendTimeFormat = _that.getTimeMark(item.CreateTime)
         item.Content = JSON.parse(item.Content)
       })
+      _that.MsgList = _that.MsgList.concat(_that.historymes[0])
+      if (_that.currentPageIndex === 1) {
+        _that.$nextTick(function () {
+          let chatdialog = document.getElementsByClassName('dialog-content')[0]
+          chatdialog.scrollTop = chatdialog.scrollHeight
+        })
+      }
+    })
+    // 接收消息
+    hubProxy.on('receive', function (message, id, unreadnum) {
+      console.log(message)
+      message.SendTimeFormat = _that.getTimeMark(message.CreateTime)
+      message.Content = JSON.parse(message.Content)
+      // 如果是当前聊天且是对方发来的，内容直接加进去
+      // eslint-disable-next-line
+      if (_that.openwindow) {
+        _that.MsgList.push(message)
+        _that.$nextTick(function () {
+          let chatdialog = document.getElementsByClassName('dialog-content')[0]
+          chatdialog.scrollTop = chatdialog.scrollHeight
+        })
+      }
     })
     // 加载消息预览
     hubProxy.on('messagePreview', function (data) {
@@ -238,7 +264,6 @@ export default {
         this.openwindow = !this.openwindow
         this.headinfo.title = '消息'
         this.currentPageIndex = this.pushPageIndex
-        this.currentGroupID = this.pushGroupID
         this.tips = '正在加载中...'
         this.busy = true
         this.isTwain = false
@@ -251,38 +276,14 @@ export default {
     getConnectInfo () {
       // let _that = this
       // 用户加载会话
-      window.hubProxy.invoke('LoadDialogByCustomer').done(function (data) {
-        console.log('用户加载会话', data)
+      window.hubProxy.invoke('LoadDialogByCustomer').done(function () {
+        console.log('用户加载会话')
       }).fail()
-      window.hubProxy.invoke('InitDialogByCustomer').done(function (data) {
-        console.log('初始化获取会话id和最近五条消息', data)
+      window.hubProxy.invoke('InitDialogByCustomer').done(function () {
+        console.log('初始化获取会话id和最近五条消息')
       }).fail()
-      window.hubProxy.invoke('LoadIMUser').done(function (data) {
-        console.log('获取我的消息', data)
-      }).fail()
-    },
-    getGroupList (pageIndex) {
-      let _that = this
-      return window.hubProxy.invoke('GetHistoryMessageByCustomer', { PageIndex: pageIndex, PageSize: 12 }, null, '').done(function (data) {
-        console.log('获取第' + pageIndex + '页预览数据成功')
-        _that.busy = true
-        // 过滤掉评论、赞和小助手消息并且给系统提醒添加默认头像以及转化时间
-        let msglist = []
-        data.Data.forEach(item => {
-          if (item.GroupPreview.ObjectType === _that.ChatGroup.SystemPush) {
-            _that.pushGroupID = item.Group.GroupID
-            _that.currentGroupID = item.Group.GroupID
-          } else if (item.GroupPreview.ObjectType !== _that.ChatGroup.Praise && item.GroupPreview.ObjectType !== _that.ChatGroup.Comment) {
-            if (item.GroupPreview.ObjectType === _that.ChatGroup.System) {
-              _that.systemGroupID = item.Group.GroupID
-              item.GroupPreview.GroupIcon = 'https://cdn.sys.img.95laibei.com/Content/Images/mes-sys.png'
-            }
-            item.Group.LastMessage.SendTimeFormat = _that.getTimeMark(item.Group.LastMessage.SendTime)
-            item.Group.LastMessage.Content = _that.getMsgContent(item.Group.LastMessage)
-            msglist.push(item)
-          }
-        })
-        _that.MsgPreviewList = _that.MsgPreviewList.concat(msglist)
+      window.hubProxy.invoke('LoadIMUser').done(function () {
+        console.log('获取我的消息')
       }).fail()
     },
     setTotalUnRead (total) {
@@ -293,51 +294,6 @@ export default {
       let _that = this
       _that.currentPageIndex += 1
       _that.busy = true
-      window.hubProxy.invoke('GetMessageList', { PageIndex: _that.currentPageIndex, PageSize: _that.pageSize }, _that.currentGroupID, '', _that.MsgEndTime, null, '').done(function (data) {
-        if (_that.currentGroupID === _that.pushGroupID) {
-          console.log('获取系统推送消息', data)
-          if (data.Data && data.Data.length > 0) {
-            data.Data.forEach(item => {
-              item.SendTimeFormat = _that.getTimeMark(item.SendTime)
-            })
-            _that.MsgPushList = _that.MsgPushList.concat(data.Data)
-            _that.busy = true
-          } else {
-            _that.tips = '已经到底了...'
-          }
-        } else if (_that.currentGroupID === _that.systemGroupID) {
-          console.log('获取系统提醒', data)
-          _that.isTwain = false
-          if (data.Data && data.Data.length > 0) {
-            data.Data.forEach(item => {
-              item.SendTimeFormat = _that.getTimeMark(item.SendTime)
-            })
-            _that.MsgList = _that.MsgList.concat(data.Data)
-            _that.busy = true
-          } else {
-            _that.tips = '已经到底了...'
-          }
-        } else {
-          console.log('获取对聊消息', data)
-          _that.isTwain = true
-          _that.showLoading = false
-          if (data.Data && data.Data.length > 0) {
-            // data.Data.forEach(item => {
-            //   item.SendTimeFormat = _that.getTimeMark(item.SendTime)
-            // })
-            _that.MsgList = data.Data.reverse().concat(_that.MsgList)
-            if (_that.currentPageIndex === 1) {
-              _that.$nextTick(function () {
-                let chatdialog = document.getElementsByClassName('dialog-content')[0]
-                chatdialog.scrollTop = chatdialog.scrollHeight
-              })
-            }
-          } else {
-            _that.earlymsgtips = '无更多消息'
-            _that.tips = '已经到底了...'
-          }
-        }
-      }).fail()
     },
     getTimeMark (date) {
       if (typeof date === 'string') {
@@ -368,9 +324,9 @@ export default {
     },
     getMsgContent (msg) {
       let content = ''
-      switch (msg.ObjectType) {
+      switch (msg.Type) {
         case this.ChatMessage.Text:
-          content = msg.MsgContent
+          content = JSON.parse(msg.Content).Text
           break
         case this.ChatMessage.Brow:
           content = '[表情]'
@@ -381,8 +337,14 @@ export default {
         case this.ChatMessage.Product:
           content = '[商品链接]'
           break
-        case this.ChatMessage.SystemMsg:
-          content = msg.SystemDetail.MessageContent
+        case this.ChatMessage.Article:
+          content = '[呗圈链接]'
+          break
+        case this.ChatMessage.localbath:
+          content = '[商品链接]'
+          break
+        case this.ChatMessage.Order:
+          content = '[订单消息]'
           break
         default: console.log('错误的消息类型')
       }
@@ -399,29 +361,10 @@ export default {
         this.$router.push({path: url})
       }
     },
-    // 根据id获取头像昵称最后一条消息
-    getGroupPreviewFromServer (clientid) {
-      let _that = this
-      let model = {
-        ObjectType: 1,
-        ClientID: clientid
-      }
-      window.hubProxy.invoke('GetGroupPreview', model).done(function (data) {
-        // eslint-disable-next-line
-        if (!!data.Group.LastMessage) {
-          data.Group.LastMessage.SendTimeFormat = _that.getTimeMark(data.Group.LastMessage.SendTime)
-          data.Group.LastMessage.Content = _that.getMsgContent(data.Group.LastMessage)
-        }
-        _that.MsgPreviewList.unshift(data)
-      }).fail()
-    },
     openchat (index) {
       this.openwindow = true
       this.isTwain = true
-      // this.headinfo.title = this.ReceiverInfo[5]
       this.headinfo.title = '客服'
-      // this.currentGroupID = this.MsgPreviewList[index].Group.GroupID
-      // this.MsgEndTime = this.MsgPreviewList[index].Group.LastMessage ? this.MsgPreviewList[index].Group.LastMessage.AddTime : ''
       this.pushPageIndex = this.currentPageIndex
       this.currentPageIndex = 0
       this.MsgList = []
@@ -431,7 +374,8 @@ export default {
     },
     // 用户获取历史消息
     getHistoryMessageByCustomer () {
-      window.hubProxy.invoke('GetHistoryMessageByCustomer', '2016-09-03', '2018-10-30', '', 1, 20).done(function (ss) {
+      this.currentPageIndex += 1
+      window.hubProxy.invoke('GetHistoryMessageByCustomer', '', '', '', this.currentPageIndex, 20).done(function (ss) {
         console.log('用户获取历史消息', ss)
       })
     },
@@ -518,31 +462,29 @@ export default {
         this.issend = false
       }
     },
+    // 发送消息综合方法
+    sendmesCommon (type, con) {
+      window.hubProxy.invoke('Send', this.customDialogId, type, con, this.ReceiverInfo[0], this.ReceiverInfo[1], this.ReceiverInfo[2], this.ReceiverInfo[3], this.ReceiverInfo[4], this.ReceiverInfo[5], this.imUserInfo.NickName).done(function () {
+        console.log('消息发送成功')
+      }).fail(function (err) {
+        console.log('消息发送失败', err)
+      })
+    },
     // 发送文本消息
     sendtextmsg () {
       if (this.issend) {
         let _that = this
-        let msg = {
-          Content: this.chattextcontent,
-          SenderClientID: this.imUserInfo.MbrBaseId,
-          GroupID: this.currentGroupID,
-          MessageID: this.increaseId++,
-          SendTime: new Date(),
-          MsgContent: this.chattextcontent,
-          ObjectType: this.ChatMessage.Text,
-          sendStatus: 1 // 1:已发送 2：发送失败 0：发送成功
-        }
-        window.hubProxy.invoke('Send', 4, 0, '{"Text":"你好！"}', this.ReceiverInfo[0], this.ReceiverInfo[1], this.ReceiverInfo[2], this.ReceiverInfo[3], this.ReceiverInfo[4], this.ReceiverInfo[5], this.imUserInfo.NickName).done(function (msg1) {
-          console.log('消息发送成功', msg1)
-          _that.chattextcontent = ''
-          _that.issend = false
-          _that.changeSendStatus(msg.MessageID, 0)
-        }).fail(function (err) {
-          console.log('消息发送失败', err)
-          _that.changeSendStatus(msg.MessageID, 2)
-        })
+        let msg = {Text: this.chattextcontent}
+        this.chattextcontent = ''
+        this.sendmesCommon(this.ChatMessage.Text, JSON.stringify(msg))
         // 自己发送到消息直接显示并滚动下去
-        _that.MsgList.push(msg)
+        let nowTime = new Date().format('yyyy年MM月dd日 HH:mm:ss')
+        let msg1 = {
+          CreateTime: nowTime,
+          Content: msg,
+          Type: this.ChatMessage.Text
+        }
+        _that.MsgList.push(msg1)
         _that.$nextTick(function () {
           let chatdialog = document.getElementsByClassName('dialog-content')[0]
           chatdialog.scrollTop = chatdialog.scrollHeight
@@ -575,18 +517,10 @@ export default {
         }, 1000)
         let msg = {
           Content: {Theme: 1, Item: num},
-          SenderClientID: this.imUserInfo.MbrBaseId,
-          GroupID: this.currentGroupID,
-          MessageID: this.increaseId++,
-          SendTime: new Date(),
-          BrowContent: {Theme: 1, Item: num},
-          ObjectType: this.ChatMessage.Brow
+          CreateTime: new Date().format('yyyy年MM月dd日 HH:mm:ss'),
+          Type: this.ChatMessage.Brow
         }
-        window.hubProxy.invoke('send', msg).done(function (msg1) {
-          console.log('消息发送成功', msg1)
-        }).fail(function (err) {
-          console.log('消息发送失败', err)
-        })
+        this.sendmesCommon(this.ChatMessage.Brow, JSON.stringify(msg.Content))
         // 自己发送到消息直接显示并滚动下去
         _that.MsgList.push(msg)
         _that.$nextTick(function () {
@@ -599,16 +533,13 @@ export default {
     },
     // 发送图片
     sendimgmsg (ele) {
-      console.log(ele)
+      console.log('发图')
       let _that = this
       let msg = {
         Content: {ImagePath: '', ImageName: '', ImageID: 0},
-        SenderClientID: this.imUserInfo.MbrBaseId,
-        GroupID: this.currentGroupID,
+        CreateTime: new Date().format('yyyy年MM月dd日 HH:mm:ss'),
         MessageID: this.increaseId++,
-        SendTime: new Date(),
-        ImageContent: {ImagePath: '', ImageName: '', ImageID: 0},
-        ObjectType: this.ChatMessage.Image
+        Type: this.ChatMessage.Image
       }
       // 自己发送到消息直接显示并滚动下去
       _that.MsgList.push(msg)
@@ -677,10 +608,11 @@ export default {
     },
     imuploadimgsuc (imginfo, msgid) {
       let msg
+      let _that = this
       this.MsgList.forEach(function (val, index) {
         if (val.MessageID === msgid) {
-          val.ImageContent.ImagePath = imginfo.ImgPath
-          val.ImageContent.ImageName = imginfo.ImgName
+          val.Content.ImagePath = imginfo.ImgPath
+          val.Content.ImageName = imginfo.ImgName
           msg = val
         }
       })
@@ -690,11 +622,7 @@ export default {
         let chatdialog = document.getElementsByClassName('dialog-content')[0]
         chatdialog.scrollTop = chatdialog.scrollHeight
       }
-      window.hubProxy.invoke('send', msg).done(function (msg1) {
-        console.log('消息发送成功', msg1)
-      }).fail(function (err) {
-        console.log('消息发送失败', err)
-      })
+      _that.sendmesCommon(_that.ChatMessage.Image, JSON.stringify(msg.Content))
     },
     imuploadimgfail () {
       alert('失败了图片上传')

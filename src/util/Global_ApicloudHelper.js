@@ -143,7 +143,7 @@ var aliPay = function (orderInfo, SucFun, ErrFun) {
                 //Global_CommonHelper.ConfirmLoadingHide();
             }
             else {
-                alert(JSON.stringify(err));
+               // alert(JSON.stringify(err));
                 ErrFun();
                 //Global_CommonHelper.ConfirmLoadingHide();
             }
